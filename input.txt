@@ -1,0 +1,25 @@
+Configuration File for Monte Carlo Simulation
+--- General Simulation Parameters ---
+Total number of Monte Carlo steps per H/T point
+NUM_STEPS 100000
+
+Interaction Energies (3rd and 6th Nearest Neighbors)
+J_M3 150.0
+J_M6 100.0
+
+Flag to save the final lattice configuration (true or false)
+FLAG_SAVE_CONFIG false
+
+--- Temperature Sweep Parameters ---
+T_UPPER 365.0
+T_LOWER 365.0
+STEP_T 10.0
+
+--- Magnetic Field Sweep Parameters (H) ---
+H_UPPER 200.0
+H_LOWER -200.0
+STEP_H 1.0
+
+--- File List ---
+List of base filenames to simulate (must match the initial configuration file name, e.g., 'BASE_NAME_365.txt')
+FILE_ENTRY cu-al-mn_0.67-0.25-0.08_365.txt
