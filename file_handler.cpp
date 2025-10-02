@@ -11,8 +11,8 @@
  * @return bool True if the file was successfully opened, false otherwise.
  */
 bool OpenLROParametersFile(const char* nombrefile, std::ofstream& output_stream) {
-    // 1. Construct the full filename: e.g., "cu-al-mn_..._out.txt"
-    std::string fileOUT = std::string(nombrefile) + "_out.txt";
+    // 1. Construct the full filename: e.g., "LRO_cu-al-mn_....txt"
+    std::string fileOUT = "LRO_" + std::string(nombrefile) + ".txt";
     
     // 2. Attempt to open the file in output and append mode
     output_stream.open(fileOUT, std::ios::out | std::ios::app);
@@ -36,8 +36,8 @@ bool OpenLROParametersFile(const char* nombrefile, std::ofstream& output_stream)
  * @return bool True if the file was successfully opened, false otherwise.
  */
 bool OpenFinalRedFile(const char* nombrefile, float Hache, int count, std::ofstream& output_stream) {
-    // Construct the full filename: e.g., "cu-al-mn_..._200.0_0.txt"
-    std::string filefinal_h = std::string(nombrefile) + "_" + std::to_string(Hache) + "_" + std::to_string(count) + ".txt";
+    // Construct the full filename: e.g., "DUMP_cu-al-mn_..._200.0_0.txt"
+    std::string filefinal_h = "DUMP_" + std::string(nombrefile) + "_" + std::to_string(Hache) + "_" + std::to_string(count) + ".txt";
     
     // Attempt to open the file in output (default overwrite mode)
     output_stream.open(filefinal_h, std::ios::out);

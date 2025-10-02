@@ -33,6 +33,20 @@ struct SimulationParameters {
           H_upper(h_up), H_lower(h_low), step_H(dh), flag_save_config(flag_red) {}
 };
 
+inline std::ostream& operator<<(std::ostream& os, const SimulationParameters& p) {
+    os << "  NUM_STEPS: " << p.num_steps << '\n'
+       << "  J_M3: " << p.Jm3 << '\n'
+       << "  J_M6: " << p.Jm6 << '\n'
+       << "  T_UPPER: " << p.T_upper << '\n'
+       << "  T_LOWER: " << p.T_lower << '\n'
+       << "  STEP_T: " << p.step_T << '\n'
+       << "  H_UPPER: " << p.H_upper << '\n'
+       << "  H_LOWER: " << p.H_lower << '\n'
+       << "  STEP_H: " << p.step_H << '\n'
+       << "  FLAG_SAVE_CONFIG: " << (p.flag_save_config ? "true" : "false");
+    return os;
+}
+
 /**
  * @brief Encapsulates the lattice data and complex coordinate/neighbor logic.
  */

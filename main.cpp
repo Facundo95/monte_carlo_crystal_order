@@ -3,8 +3,8 @@
 #include <string>
 #include <ctime>
 #include <iomanip>
-#include <fstream> // New: For file input
-#include <sstream> // New: For string parsing
+#include <fstream> // For file input
+#include <sstream> // For string parsing
 
 #include "simulation.h"
 
@@ -89,22 +89,34 @@ bool readInputFile(const string& input_filename, SimulationParameters& params_ou
     return true;
 }
 
-int main(){
+int main(int argc, char* argv[]){
+    if (argc != 3){
+        cerr << "# Modo de uso: ./mc_simulation -in <input_file_name>" << endl;
+    } else{
+        cout << "--- Carlos Montes Iniciando (C++17) ---" << endl;
+
+    }
+
     clock_t start = clock(); // Iniciamos el reloj
 
     // 1. Declare variables to hold read data
     SimulationParameters params(0, 0, 0, 0, 0, 0, 0, 0, 0, false); // Dummy initialization
     vector<string> files;
+    string inputFile = argv[2];
 
     // 2. Read parameters and file list from "input.txt"
-    if (!readInputFile("input.txt", params, files)) {
+    if (!readInputFile(inputFile, params, files)) {
         cerr << "Falló la lectura del archivo de configuración. Terminando programa." << endl;
         return 1;
+    } else{
+        cout << "Archivo de entrada encontrado: " << inputFile << endl;
+        cout << "Parametros de la simulacion:" << endl;
+        cout << params << endl;
     }
 
     // 3. Start the simulation loop using the read data
     for (const auto& file : files){
-        cout << "Archivo entrada: " << file << endl;
+        cout << "Estructura inicial tomada de: " << file << endl;
         
         // Pass the parameters to the main simulation loop
         SimulationLoop(params, file.c_str());

@@ -21,5 +21,5 @@ H_LOWER -200.0
 STEP_H 1.0
 
 --- File List ---
-List of base filenames to simulate (must match the initial configuration file name, e.g., 'BASE_NAME_365.txt')
-FILE_ENTRY cu-al-mn_0.67-0.25-0.08_365.txt
+List of base filenames to simulate without the .txt extension (must match the initial configuration file name, e.g., 'BASE_NAME_365')
+FILE_ENTRY cu-al-mn_0.67-0.25-0.08_365

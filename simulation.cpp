@@ -282,7 +282,7 @@ void MonteCarloStep(Lattice& lattice, float T, float H, const SimulationParamete
 void SimulationLoop(const SimulationParameters& params, const char* nombrefile) {
     
     Lattice lattice; 
-    std::string init_file = std::string(nombrefile) + "_365.txt";
+    std::string init_file = std::string(nombrefile) + ".txt";
     
     // 1. Initialization
     try {
