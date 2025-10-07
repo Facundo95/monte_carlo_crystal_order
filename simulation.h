@@ -96,7 +96,6 @@ public:
 // Main simulation flow functions
 std::vector<float> createHSweepList(const SimulationParameters& params);
 void MonteCarloStep(Lattice& lattice, 
-                    float T, 
                     float H, 
                     const SimulationParameters& params, 
                     const BoltzmannTable& table,
