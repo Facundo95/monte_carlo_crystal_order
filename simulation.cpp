@@ -3,6 +3,49 @@
 #include "file_handler.h"
 #include <stdexcept>
 
+// --- Boltzmann Factor Table Utilities ---
+// Precompute exp(-ΔE/T) for all combinations of (sum3, sum6)
+/**
+ * @brief Precomputes a Boltzmann lookup table for exp(-ΔE/T) values.
+ * @param T Temperature.
+ * @param J3 3rd nearest neighbor interaction energy.
+ * @param J6 6th nearest neighbor interaction energy.
+ * @param H External magnetic field.
+ * @param mu Magnetic moment (default is 1.0).
+ * @return A BoltzmannTable struct containing the lookup table and temperature.
+ */
+BoltzmannTable buildBoltzmannTable(double T, double J3, double J6, double H)
+{
+    BoltzmannTable table;
+    table.T = T;
+
+    const int z3 = 12;
+    const int z6 = 6;
+
+    for (int sum3 = -z3; sum3 <= z3; sum3 += 2) {
+        for (int sum6 = -z6; sum6 <= z6; sum6 += 2) {
+            for (int si = -1; si <= 1; si += 2) {
+                double deltaE = 2.0 * si * (J3 * sum3 + J6 * sum6 + H);
+                int key = static_cast<int>(std::round(deltaE * 1000)); // avoid FP rounding errors
+                table.expTable[key] = std::exp(-deltaE / T);
+            }
+        }
+    }
+
+    return table;
+}
+
+double getBoltzmannFactor(double deltaE, const BoltzmannTable& table)
+{
+    int key = static_cast<int>(std::round(deltaE * 1000));
+    auto it = table.expTable.find(key);
+    if (it != table.expTable.end())
+        return it->second;
+    else
+        return std::exp(-deltaE / table.T);
+} // fallback if not found
+
+
 // --- Utility Functions for Lattice ---
 
 // Wraps X/Y coordinates using periodic boundary conditions
@@ -233,8 +276,12 @@ std::vector<float> createHSweepList(const SimulationParameters& params) {
 /**
  * @brief Executes one full Monte Carlo sweep (N spin flip attempts).
  */
-void MonteCarloStep(Lattice& lattice, float T, float H, const SimulationParameters& params, float& DeltaEAcumM) {
-    
+void MonteCarloStep(Lattice& lattice, 
+                    float H, 
+                    const SimulationParameters& params, 
+                    const BoltzmannTable& table,
+                    float& DeltaEAcumM) {
+
     for (int XLoc = 0; XLoc < LATTICE_SIDE; XLoc++) {
         for (int YLoc = 0; YLoc < LATTICE_SIDE; YLoc++) {
             for (int ZLoc = 0; ZLoc < LATTICE_DEPTH; ZLoc++) {
@@ -263,7 +310,7 @@ void MonteCarloStep(Lattice& lattice, float T, float H, const SimulationParamete
                     } else {
                         // Accept: Probabilistically
                         double epsilonM = Ran0a1();
-                        float BoltzmannM = exp(-deltaEM / T);
+                        float BoltzmannM = getBoltzmannFactor(deltaEM, table);
                         if (BoltzmannM >= epsilonM) {
                             lattice.flipSpin(XLoc, YLoc, ZLoc);
                             DeltaEAcumM += deltaEM;
@@ -277,8 +324,8 @@ void MonteCarloStep(Lattice& lattice, float T, float H, const SimulationParamete
 
 
 /**
- * @brief Main simulation loop, iterating over Temperature and Field. (Replaces PasoMC)
- */
+ * @brief Main simulation loop, iterating over Temperature and Field.
+*/
 void SimulationLoop(const SimulationParameters& params, const char* nombrefile) {
     
     Lattice lattice; 
@@ -302,20 +349,17 @@ void SimulationLoop(const SimulationParameters& params, const char* nombrefile) 
     std::vector<float> listaCampos = createHSweepList(params);
     int H_count = 0; // Counter for final file naming
 
-    std::cout << "J3=" << params.Jm3 << "; J6=" << params.Jm6 << std::endl;
-
     for (float TEMPERA = params.T_lower; TEMPERA <= params.T_upper; TEMPERA += params.step_T) {
-        std::cout << std::endl << "Trabajando a T = " << TEMPERA << std::endl;
-
         for (float Hache : listaCampos) {
-            std::cout << std::endl << "Trabajando a H = " << Hache << std::endl;
+            std::cout << std::endl << "Trabajando a T = " << TEMPERA << " y H = " << Hache << std::endl;
 
             float DeltaEAcumM = 0;
+            auto table = buildBoltzmannTable(TEMPERA, params.Jm3, params.Jm6, Hache);
 
             for (int contador = 1; contador <= params.num_steps; contador++) {
                 
                 // 3a. Single-Spin Update (Metropolis)
-                MonteCarloStep(lattice, TEMPERA, Hache, params, DeltaEAcumM);
+                MonteCarloStep(lattice, Hache, params, table, DeltaEAcumM);
 
                 // 3b. Measurement and Output (Occurs only in the last 200 steps)
                 if (contador > (params.num_steps - 200)) {

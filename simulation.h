@@ -6,11 +6,27 @@
 #include <vector>
 #include <string>
 #include <cmath>
+#include <unordered_map>
 
 // Define system dimensions
 static const int LATTICE_SIDE = 32;
 static const int LATTICE_DEPTH = 64; // 2 * LATTICE_SIDE
 static const int LATTICE_TOTAL_SITES = LATTICE_SIDE * LATTICE_SIDE * LATTICE_DEPTH;
+
+
+/**
+ * * @brief Look up table for exp(-ΔE/T) values to optimize Metropolis acceptance checks.
+ */
+struct BoltzmannTable {
+    std::unordered_map<int, double> expTable;
+    double T;
+};
+
+// Build the lookup table for exp(-ΔE/T)
+BoltzmannTable buildBoltzmannTable(double T, double J3, double J6, double H);
+
+// Retrieve precomputed exp(-ΔE/T)
+double getBoltzmannFactor(double deltaE, const BoltzmannTable& table);
 
 /**
  * @brief Groups all constant simulation parameters for cleaner function calls.
@@ -79,7 +95,12 @@ public:
 
 // Main simulation flow functions
 std::vector<float> createHSweepList(const SimulationParameters& params);
-void MonteCarloStep(Lattice& lattice, float T, float H, const SimulationParameters& params, float& DeltaEAcumM);
+void MonteCarloStep(Lattice& lattice, 
+                    float T, 
+                    float H, 
+                    const SimulationParameters& params, 
+                    const BoltzmannTable& table,
+                    float& DeltaEAcumM);
 void SimulationLoop(const SimulationParameters& params, const char* nombrefile);
 
 #endif // SIMULATION_H
