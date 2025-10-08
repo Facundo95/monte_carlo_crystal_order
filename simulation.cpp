@@ -13,7 +13,7 @@ void Lattice::loadInitialConfiguration(const std::string& filename) {
     if (!redin.is_open()) {
         throw std::runtime_error("No se pudo abrir el archivo de entrada inicial: " + filename);
     }
-    
+
     int aux;
     int count=0;
     redin.seekg(0, std::ios::beg);
@@ -234,8 +234,8 @@ void MonteCarloStep(Lattice& lattice,
         int SpinAct = lattice.getSpin(site);
         
         // Calculate neighbor sums for 3rd and 6th NN (as Jm1=Jm2=0)
-        float Sum3N = lattice.calculateNeighborSpinSum(site, 3);
-        float Sum6N = lattice.calculateNeighborSpinSum(site, 6);
+        int Sum3N = lattice.calculateNeighborSpinSum(site, 3);
+        int Sum6N = lattice.calculateNeighborSpinSum(site, 6);
         
         // Magnetic Energy Difference Calculation
         // Delta EM1: Spin-Spin Interactions
@@ -255,7 +255,7 @@ void MonteCarloStep(Lattice& lattice,
             } else {
                 // Accept: Probabilistically
                 double epsilonM = Ran0a1();
-                float BoltzmannM = table.lookup(SpinAct, static_cast<int>(Sum3N), static_cast<int>(Sum6N));
+                float BoltzmannM = table.lookup(SpinAct, Sum3N, Sum6N);
                 if (BoltzmannM >= epsilonM) {
                     lattice.flipSpin(site);
                     DeltaEAcumM += deltaEM;
@@ -294,7 +294,7 @@ void SimulationLoop(const SimulationParameters& params, const char* nombrefile) 
 
     for (float TEMPERA = params.T_lower; TEMPERA <= params.T_upper; TEMPERA += params.step_T) {
         for (float Hache : listaCampos) {
-            std::cout << std::endl << "Trabajando a T = " << TEMPERA << " y H = " << Hache << std::endl;
+            std::cout << "Trabajando a T = " << TEMPERA << " y H = " << Hache << std::endl;
 
             float DeltaEAcumM = 0;
             auto table = FastBoltzmannTable(params.Jm3, params.Jm6, Hache, TEMPERA);

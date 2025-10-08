@@ -10,9 +10,9 @@
 #include <cstdint> // For int8_t
 
 // Define system dimensions
-static const int LATTICE_SIDE = 32;
-static const int LATTICE_DEPTH = 64; // 2 * LATTICE_SIDE
-static const int LATTICE_TOTAL_SITES = LATTICE_SIDE * LATTICE_SIDE * LATTICE_DEPTH;
+static constexpr int LATTICE_SIDE = 32;
+static constexpr int LATTICE_DEPTH = 64; // 2 * LATTICE_SIDE
+static constexpr int LATTICE_TOTAL_SITES = LATTICE_SIDE * LATTICE_SIDE * LATTICE_DEPTH;
 
 /**
  * @struct BoltzmannTable
@@ -138,8 +138,8 @@ inline std::ostream& operator<<(std::ostream& os, const SimulationParameters& p)
  */
 class Lattice {
 private:
-    std::vector<int> magn_flat; // Flattened magnetic state for memory efficiency
-    std::vector<int> red_flat;  // Flattened species state for memory efficiency
+    int magn_flat[LATTICE_TOTAL_SITES]; // Flattened magnetic state for memory efficiency
+    int red_flat[LATTICE_TOTAL_SITES];  // Flattened species state for memory efficiency
 
     std::vector<std::array<int, 12>> neighbors3;
     std::vector<std::array<int, 6>>  neighbors6;
@@ -167,8 +167,6 @@ private:
 public:
     Lattice() {
         const int N = LATTICE_SIDE * LATTICE_SIDE * LATTICE_DEPTH;
-        magn_flat.resize(N);
-        red_flat.resize(N);
         neighbors3.resize(N);
         neighbors6.resize(N);
     }

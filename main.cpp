@@ -129,10 +129,11 @@ int main(int argc, char* argv[]){
     int hours = int(timeTaken / 3600);
     int minutes = int((timeTaken - hours * 3600) / 60);
     int seconds = int(timeTaken - hours * 3600 - minutes * 60);
+    cout << "-------------------------------" << endl;
     cout << "Tiempo total: "
               << setfill('0') << setw(2) << hours << ":"
               << setfill('0') << setw(2) << minutes << ":"
               << setfill('0') << setw(2) << seconds << endl;
-
+    cout << "-------------------------------" << endl;
     return 0;
 }
