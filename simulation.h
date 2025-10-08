@@ -25,7 +25,7 @@ static const int LATTICE_TOTAL_SITES = LATTICE_SIDE * LATTICE_SIDE * LATTICE_DEP
  */
 struct FastBoltzmannTable {
     // The flat vector storing the pre-computed Boltzmann factors.
-    std::vector<double> table;
+    std::vector<float> table;
 
     // Dimensions for the 3D to 1D index mapping
     const int N_si = 2;   // s_i can be {-1, 1}
@@ -165,6 +165,13 @@ private:
     }
 
 public:
+    Lattice() {
+        const int N = LATTICE_SIDE * LATTICE_SIDE * LATTICE_DEPTH;
+        magn_flat.resize(N);
+        red_flat.resize(N);
+        neighbors3.resize(N);
+        neighbors6.resize(N);
+    }
     // Initialization
     void loadInitialConfiguration(const std::string& filename);
     void initializeNeighbors(); // Pre-compute neighbor indices for efficiency

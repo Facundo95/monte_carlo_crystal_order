@@ -13,7 +13,7 @@ void Lattice::loadInitialConfiguration(const std::string& filename) {
     if (!redin.is_open()) {
         throw std::runtime_error("No se pudo abrir el archivo de entrada inicial: " + filename);
     }
-
+    
     int aux;
     int count=0;
     redin.seekg(0, std::ios::beg);
@@ -22,8 +22,8 @@ void Lattice::loadInitialConfiguration(const std::string& filename) {
             throw std::runtime_error("El archivo de entrada tiene más datos de los esperados.");
         }
         // Polynomial transformation from the original code
-        double temp_magn = (-1./12)*aux*aux*aux-(1./3)*aux*aux+(7./12)*aux+(5./6);
-        double temp_red = (-1./12)*aux*aux*aux+(1./3)*aux*aux+(7./12)*aux-(5./6);
+        float temp_magn = (-1./12)*aux*aux*aux-(1./3)*aux*aux+(7./12)*aux+(5./6);
+        float temp_red = (-1./12)*aux*aux*aux+(1./3)*aux*aux+(7./12)*aux-(5./6);
         magn_flat[count] = static_cast<int>(temp_magn);
         red_flat[count] = static_cast<int>(temp_red);
         count++;
@@ -77,7 +77,7 @@ float Lattice::calculateNeighborSpinSum(int site, int shell_type) const {
     if (shell_type != 3 && shell_type != 6) {
         throw std::invalid_argument("shell_type must be either 3 or 6.");
     }
-    int sum = 0;
+    float sum = 0;
     if (shell_type == 3) {
         const auto &n3 = neighbors3[site];
         for (int i = 0; i < 12; ++i) sum += magn_flat[n3[i]];
@@ -97,7 +97,7 @@ void Lattice::calculateAndWriteLRO(std::ofstream& parout, int step_count, float 
     int MnUpI=0, MnUpII=0, MnUpIII=0, MnUpIV=0, MnDownI=0, MnDownII=0, MnDownIII=0, MnDownIV=0; 
     int AlI=0, AlII=0, AlIII=0, AlIV=0;
 
-    long Magnetizacion = 0;
+    float Magnetizacion = 0;
     
     // Traversal and counting for LRO parameters
     for (int site = 0; site<LATTICE_TOTAL_SITES;site++){
@@ -231,7 +231,7 @@ void MonteCarloStep(Lattice& lattice,
     
     lattice.initializeNeighbors();
     for (int site = 0; site < LATTICE_TOTAL_SITES; site++) {
-        float SpinAct = lattice.getSpin(site);
+        int SpinAct = lattice.getSpin(site);
         
         // Calculate neighbor sums for 3rd and 6th NN (as Jm1=Jm2=0)
         float Sum3N = lattice.calculateNeighborSpinSum(site, 3);
