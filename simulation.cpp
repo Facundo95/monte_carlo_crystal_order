@@ -3,64 +3,7 @@
 #include "file_handler.h"
 #include <stdexcept>
 
-// --- Boltzmann Factor Table Utilities ---
-// Precompute exp(-ΔE/T) for all combinations of (sum3, sum6)
-/**
- * @brief Precomputes a Boltzmann lookup table for exp(-ΔE/T) values.
- * @param T Temperature.
- * @param J3 3rd nearest neighbor interaction energy.
- * @param J6 6th nearest neighbor interaction energy.
- * @param H External magnetic field.
- * @param mu Magnetic moment (default is 1.0).
- * @return A BoltzmannTable struct containing the lookup table and temperature.
- */
-BoltzmannTable buildBoltzmannTable(double T, double J3, double J6, double H)
-{
-    BoltzmannTable table;
-    table.T = T;
-
-    const int z3 = 12;
-    const int z6 = 6;
-
-    for (int sum3 = -z3; sum3 <= z3; sum3 += 2) {
-        for (int sum6 = -z6; sum6 <= z6; sum6 += 2) {
-            for (int si = -1; si <= 1; si += 2) {
-                double deltaE = 2.0 * si * (J3 * sum3 + J6 * sum6 + H);
-                int key = static_cast<int>(std::round(deltaE * 1000)); // avoid FP rounding errors
-                table.expTable[key] = std::exp(-deltaE / T);
-            }
-        }
-    }
-
-    return table;
-}
-
-double getBoltzmannFactor(double deltaE, const BoltzmannTable& table)
-{
-    int key = static_cast<int>(std::round(deltaE * 1000));
-    auto it = table.expTable.find(key);
-    if (it != table.expTable.end())
-        return it->second;
-    else
-        return std::exp(-deltaE / table.T);
-} // fallback if not found
-
-
 // --- Utility Functions for Lattice ---
-
-// Wraps X/Y coordinates using periodic boundary conditions
-int Lattice::wrapCoord(int coord, int max_size) const {
-    if (coord < 0) return coord + max_size;
-    if (coord >= max_size) return coord - max_size;
-    return coord;
-}
-
-// Wraps Z coordinate (size 2*side) using periodic boundary conditions
-int Lattice::wrapCoordZ(int coord) const {
-    if (coord < 0) return coord + LATTICE_DEPTH;
-    if (coord >= LATTICE_DEPTH) return coord - LATTICE_DEPTH;
-    return coord;
-}
 
 /**
  * @brief Loads the initial configuration from a .txt file.
@@ -71,66 +14,77 @@ void Lattice::loadInitialConfiguration(const std::string& filename) {
         throw std::runtime_error("No se pudo abrir el archivo de entrada inicial: " + filename);
     }
 
-    float aux;
+    int aux;
+    int count=0;
     redin.seekg(0, std::ios::beg);
-    for (int i = 0; i < LATTICE_SIDE; i++) {
-        for (int j = 0; j < LATTICE_SIDE; j++) {
-            for (int k = 0; k < LATTICE_DEPTH; k++) {
-                if (!(redin >> aux)) {
-                    throw std::runtime_error("Error de lectura o archivo incompleto en la red inicial.");
-                }
-                // Polynomial transformation from the original code
-                red[i][j][k] = (-1. / 12) * aux * aux * aux + (1. / 3) * aux * aux + (7. / 12) * aux - (5. / 6);
-                magn[i][j][k] = (-1. / 12) * aux * aux * aux - (1. / 3) * aux * aux + (7. / 12) * aux + (5. / 6);
-            }
+    while (redin >> aux) {
+        if (count >= LATTICE_TOTAL_SITES) {
+            throw std::runtime_error("El archivo de entrada tiene más datos de los esperados.");
         }
+        // Polynomial transformation from the original code
+        double temp_magn = (-1./12)*aux*aux*aux-(1./3)*aux*aux+(7./12)*aux+(5./6);
+        double temp_red = (-1./12)*aux*aux*aux+(1./3)*aux*aux+(7./12)*aux-(5./6);
+        magn_flat[count] = static_cast<int>(temp_magn);
+        red_flat[count] = static_cast<int>(temp_red);
+        count++;
     }
     redin.close();
 }
+
+void Lattice::initializeNeighbors() {
+    for (int site = 0; site < LATTICE_TOTAL_SITES; ++site) {
+        int x, y, z;
+        idxToXYZ(site, LATTICE_SIDE, LATTICE_DEPTH, x, y, z);
+
+        std::array<int, 12> n3;
+        std::array<int, 6> n6;
+
+        // 3rd Neighbors (12 sites)
+        int p = 0;
+        n3[p++] = idx3D(wrap(x + 1, LATTICE_SIDE), wrap(y + 1, LATTICE_SIDE), z);
+        n3[p++] = idx3D(wrap(x + 1, LATTICE_SIDE), wrap(y - 1, LATTICE_SIDE), z);
+        n3[p++] = idx3D(wrap(x - 1, LATTICE_SIDE), wrap(y + 1, LATTICE_SIDE), z);
+        n3[p++] = idx3D(wrap(x - 1, LATTICE_SIDE), wrap(y - 1, LATTICE_SIDE), z);
+        n3[p++] = idx3D(x, wrap(y + 1, LATTICE_SIDE), wrap(z + 2, LATTICE_DEPTH));
+        n3[p++] = idx3D(x, wrap(y - 1, LATTICE_SIDE), wrap(z + 2, LATTICE_DEPTH));
+        n3[p++] = idx3D(x, wrap(y + 1, LATTICE_SIDE), wrap(z - 2, LATTICE_DEPTH));
+        n3[p++] = idx3D(x, wrap(y - 1, LATTICE_SIDE), wrap(z - 2, LATTICE_DEPTH));
+        n3[p++] = idx3D(wrap(x + 1, LATTICE_SIDE), y, wrap(z + 2, LATTICE_DEPTH));
+        n3[p++] = idx3D(wrap(x - 1, LATTICE_SIDE), y, wrap(z + 2, LATTICE_DEPTH));
+        n3[p++] = idx3D(wrap(x + 1, LATTICE_SIDE), y, wrap(z - 2, LATTICE_DEPTH));
+        n3[p++] = idx3D(wrap(x - 1, LATTICE_SIDE), y, wrap(z - 2, LATTICE_DEPTH));
+        neighbors3[site] = n3;
+
+        // 6th Neighbors (6 sites)
+        p = 0;
+        n6[p++] = idx3D(wrap(x + 2, LATTICE_SIDE), y, z);
+        n6[p++] = idx3D(wrap(x - 2, LATTICE_SIDE), y, z);
+        n6[p++] = idx3D(x, wrap(y + 2, LATTICE_SIDE), z);
+        n6[p++] = idx3D(x, wrap(y - 2, LATTICE_SIDE), z);
+        n6[p++] = idx3D(x, y, wrap(z + 4, LATTICE_DEPTH));
+        n6[p++] = idx3D(x, y, wrap(z - 4, LATTICE_DEPTH));
+        neighbors6[site] = n6;
+    }
+}
+
 
 /**
  * @brief Calculates the sum of spins for a specific neighbor shell (3rd or 6th NN).
  * @param shell_type Must be 3 (3rd NN) or 6 (6th NN).
  * (Original Jm1 and Jm2 (1st and 2nd NN) were 0, so only 3 and 6 are implemented here).
  */
-float Lattice::calculateNeighborSpinSum(int XLoc, int YLoc, int ZLoc, int shell_type) const {
-    float sum = 0.0;
-    
-    if (shell_type == 3) {
-        // 3rd Neighbors (12 sites)
-        // (X+-1, Y+-1, Z), (X, Y+-1, Z+-1), (X+-1, Y, Z+-1) -- equivalent to FCC face diagonals
-        
-        // Neighbors in XY plane
-        sum += magn[wrapCoord(XLoc + 1, LATTICE_SIDE)][wrapCoord(YLoc + 1, LATTICE_SIDE)][ZLoc];
-        sum += magn[wrapCoord(XLoc + 1, LATTICE_SIDE)][wrapCoord(YLoc - 1, LATTICE_SIDE)][ZLoc];
-        sum += magn[wrapCoord(XLoc - 1, LATTICE_SIDE)][wrapCoord(YLoc + 1, LATTICE_SIDE)][ZLoc];
-        sum += magn[wrapCoord(XLoc - 1, LATTICE_SIDE)][wrapCoord(YLoc - 1, LATTICE_SIDE)][ZLoc];
-        
-        // Neighbors in YZ plane
-        sum += magn[XLoc][wrapCoord(YLoc + 1, LATTICE_SIDE)][wrapCoordZ(ZLoc + 2)]; // Z+2, Z-2 are 3rd NN
-        sum += magn[XLoc][wrapCoord(YLoc - 1, LATTICE_SIDE)][wrapCoordZ(ZLoc + 2)];
-        sum += magn[XLoc][wrapCoord(YLoc + 1, LATTICE_SIDE)][wrapCoordZ(ZLoc - 2)];
-        sum += magn[XLoc][wrapCoord(YLoc - 1, LATTICE_SIDE)][wrapCoordZ(ZLoc - 2)];
-
-        // Neighbors in XZ plane
-        sum += magn[wrapCoord(XLoc + 1, LATTICE_SIDE)][YLoc][wrapCoordZ(ZLoc + 2)];
-        sum += magn[wrapCoord(XLoc - 1, LATTICE_SIDE)][YLoc][wrapCoordZ(ZLoc + 2)];
-        sum += magn[wrapCoord(XLoc + 1, LATTICE_SIDE)][YLoc][wrapCoordZ(ZLoc - 2)];
-        sum += magn[wrapCoord(XLoc - 1, LATTICE_SIDE)][YLoc][wrapCoordZ(ZLoc - 2)];
-        
-    } else if (shell_type == 6) {
-        // 6th Neighbors (6 sites) - (X+-2, Y, Z), (X, Y+-2, Z), (X, Y, Z+-4)
-        sum += magn[wrapCoord(XLoc + 2, LATTICE_SIDE)][YLoc][ZLoc];
-        sum += magn[wrapCoord(XLoc - 2, LATTICE_SIDE)][YLoc][ZLoc];
-        sum += magn[XLoc][wrapCoord(YLoc + 2, LATTICE_SIDE)][ZLoc];
-        sum += magn[XLoc][wrapCoord(YLoc - 2, LATTICE_SIDE)][ZLoc];
-        sum += magn[XLoc][YLoc][wrapCoordZ(ZLoc + 4)];
-        sum += magn[XLoc][YLoc][wrapCoordZ(ZLoc - 4)];
+float Lattice::calculateNeighborSpinSum(int site, int shell_type) const {
+    if (shell_type != 3 && shell_type != 6) {
+        throw std::invalid_argument("shell_type must be either 3 or 6.");
     }
-    // Note: The original implementation in PasoMC defined SumaLin3NMagnActual 
-    // using neighbors that seem to correspond to the 3rd NN shell.
-    // The implementation here follows the structure suggested by the original indices (X+-1, Y+-1, Z, etc. and Z+-2)
-    
+    int sum = 0;
+    if (shell_type == 3) {
+        const auto &n3 = neighbors3[site];
+        for (int i = 0; i < 12; ++i) sum += magn_flat[n3[i]];
+    } else if (shell_type == 6) {
+        const auto &n6 = neighbors6[site];
+        for (int i = 0; i < 6; ++i) sum += magn_flat[n6[i]];
+    }
     return sum;
 }
 
@@ -146,49 +100,46 @@ void Lattice::calculateAndWriteLRO(std::ofstream& parout, int step_count, float 
     long Magnetizacion = 0;
     
     // Traversal and counting for LRO parameters
-    for (int i=0; i<LATTICE_SIDE;i++){
-        for (int j=0; j<LATTICE_SIDE; j++){
-            for (int k=0; k<LATTICE_DEPTH; k++){
-                
-                Magnetizacion += magn[i][j][k];
+    for (int site = 0; site<LATTICE_TOTAL_SITES;site++){
+        int i, j, k;
+        idxToXYZ(site, LATTICE_SIDE, LATTICE_DEPTH, i, j, k);
+        Magnetizacion += magn_flat[site];
 
-                // Determine sublattice (I, II, III, or IV)
-                bool Z_is_even = (k % 2 == 0);
-                bool XY_sum_is_even = ((i + j + (k/2)) % 2 == 0);
+        // Determine sublattice (I, II, III, or IV)
+        bool Z_is_even = (k % 2 == 0);
+        bool XY_sum_is_even = ((i + j + (k/2)) % 2 == 0);
 
-                int* Cu_ptr = nullptr;
-                int* MnUp_ptr = nullptr;
-                int* MnDown_ptr = nullptr;
-                int* Al_ptr = nullptr;
-                
-                // Simplified conditional logic using pointers
-                if (Z_is_even) {
-                    if (XY_sum_is_even) { // Sublattice I (Z even, X+Y+Z/2 even)
-                        Cu_ptr = &CuI; MnUp_ptr = &MnUpI; MnDown_ptr = &MnDownI; Al_ptr = &AlI;
-                    } else { // Sublattice II (Z even, X+Y+Z/2 odd)
-                        Cu_ptr = &CuII; MnUp_ptr = &MnUpII; MnDown_ptr = &MnDownII; Al_ptr = &AlII;
-                    }
-                } else {
-                    if (XY_sum_is_even) { // Sublattice III (Z odd, X+Y+Z/2 even)
-                        Cu_ptr = &CuIII; MnUp_ptr = &MnUpIII; MnDown_ptr = &MnDownIII; Al_ptr = &AlIII;
-                    } else { // Sublattice IV (Z odd, X+Y+Z/2 odd)
-                        Cu_ptr = &CuIV; MnUp_ptr = &MnUpIV; MnDown_ptr = &MnDownIV; Al_ptr = &AlIV;
-                    }
-                }
-                
-                // Increment counters based on species (red[i][j][k] = 1, 0, or -1)
-                if (red[i][j][k] == 1) { // Copper
-                    (*Cu_ptr)++;
-                } else if (red[i][j][k] == 0) { // Manganese
-                    if (magn[i][j][k] == 1) {
-                        (*MnUp_ptr)++;
-                    } else {
-                        (*MnDown_ptr)++;
-                    }
-                } else if (red[i][j][k] == -1) { // Aluminum
-                    (*Al_ptr)++;
-                }
+        int* Cu_ptr = nullptr;
+        int* MnUp_ptr = nullptr;
+        int* MnDown_ptr = nullptr;
+        int* Al_ptr = nullptr;
+        
+        // Simplified conditional logic using pointers
+        if (Z_is_even) {
+            if (XY_sum_is_even) { // Sublattice I (Z even, X+Y+Z/2 even)
+                Cu_ptr = &CuI; MnUp_ptr = &MnUpI; MnDown_ptr = &MnDownI; Al_ptr = &AlI;
+            } else { // Sublattice II (Z even, X+Y+Z/2 odd)
+                Cu_ptr = &CuII; MnUp_ptr = &MnUpII; MnDown_ptr = &MnDownII; Al_ptr = &AlII;
             }
+        } else {
+            if (XY_sum_is_even) { // Sublattice III (Z odd, X+Y+Z/2 even)
+                Cu_ptr = &CuIII; MnUp_ptr = &MnUpIII; MnDown_ptr = &MnDownIII; Al_ptr = &AlIII;
+            } else { // Sublattice IV (Z odd, X+Y+Z/2 odd)
+                Cu_ptr = &CuIV; MnUp_ptr = &MnUpIV; MnDown_ptr = &MnDownIV; Al_ptr = &AlIV;
+            }
+        }
+        
+        // Increment counters based on species (red[site] = 1, 0, or -1)
+        if (red_flat[site] == 1) { // Copper
+            (*Cu_ptr)++;
+        } else if (red_flat[site] == 0) { // Manganese
+            if (magn_flat[site] == 1) {
+                (*MnUp_ptr)++;
+            } else {
+                (*MnDown_ptr)++;
+            }
+        } else if (red_flat[site] == -1) { // Aluminum
+            (*Al_ptr)++;
         }
     }
     
@@ -233,15 +184,11 @@ void Lattice::saveFinalConfiguration(const char* nombrefile, float Hache, int co
     
     redout.seekp(0, std::ios::beg);
     float aux2, aux3;
-    for (int i = 0; i < LATTICE_SIDE; i++) {
-        for (int j = 0; j < LATTICE_SIDE; j++) {
-            for (int k = 0; k < LATTICE_DEPTH; k++) {
-                aux2 = red[i][j][k];
-                aux3 = magn[i][j][k];
-                // Transformation used in original code for output
-                redout << (0.5 * aux2 * aux2 + 1.5 * aux2 - 0.5 * aux3 * aux3 + 1.5 * aux3) << std::endl;
-            }
-        }
+    for (int site = 0; site < LATTICE_SIDE; site++) {
+        aux2 = red_flat[site];
+        aux3 = magn_flat[site];
+        // Transformation used in original code for output
+        redout << (0.5 * aux2 * aux2 + 1.5 * aux2 - 0.5 * aux3 * aux3 + 1.5 * aux3) << std::endl;        
     }
     redout.close();
 }
@@ -279,43 +226,39 @@ std::vector<float> createHSweepList(const SimulationParameters& params) {
 void MonteCarloStep(Lattice& lattice, 
                     float H, 
                     const SimulationParameters& params, 
-                    const BoltzmannTable& table,
+                    const FastBoltzmannTable& table,
                     float& DeltaEAcumM) {
+    
+    lattice.initializeNeighbors();
+    for (int site = 0; site < LATTICE_TOTAL_SITES; site++) {
+        float SpinAct = lattice.getSpin(site);
+        
+        // Calculate neighbor sums for 3rd and 6th NN (as Jm1=Jm2=0)
+        float Sum3N = lattice.calculateNeighborSpinSum(site, 3);
+        float Sum6N = lattice.calculateNeighborSpinSum(site, 6);
+        
+        // Magnetic Energy Difference Calculation
+        // Delta EM1: Spin-Spin Interactions
+        float deltaEM1 = 2 * params.Jm3 * SpinAct * Sum3N 
+                        + 2 * params.Jm6 * SpinAct * Sum6N;
+        
+        // Delta EM2: Field Interaction
+        float deltaEM2 = 2 * H * SpinAct;
+        float deltaEM = deltaEM1 + deltaEM2;
 
-    for (int XLoc = 0; XLoc < LATTICE_SIDE; XLoc++) {
-        for (int YLoc = 0; YLoc < LATTICE_SIDE; YLoc++) {
-            for (int ZLoc = 0; ZLoc < LATTICE_DEPTH; ZLoc++) {
-
-                float SpinAct = lattice.getSpin(XLoc, YLoc, ZLoc);
-                
-                // Calculate neighbor sums for 3rd and 6th NN (as Jm1=Jm2=0)
-                float Sum3N = lattice.calculateNeighborSpinSum(XLoc, YLoc, ZLoc, 3);
-                float Sum6N = lattice.calculateNeighborSpinSum(XLoc, YLoc, ZLoc, 6);
-                
-                // Magnetic Energy Difference Calculation
-                // Delta EM1: Spin-Spin Interactions
-                float deltaEM1 = 2 * params.Jm3 * SpinAct * Sum3N 
-                               + 2 * params.Jm6 * SpinAct * Sum6N;
-                
-                // Delta EM2: Field Interaction
-                float deltaEM2 = 2 * H * SpinAct;
-                float deltaEM = deltaEM1 + deltaEM2;
-
-                // Metropolis Algorithm
-                if (SpinAct != 0) {
-                    if (deltaEM <= 0) {
-                        // Accept: Flip spin
-                        lattice.flipSpin(XLoc, YLoc, ZLoc);
-                        DeltaEAcumM += deltaEM;
-                    } else {
-                        // Accept: Probabilistically
-                        double epsilonM = Ran0a1();
-                        float BoltzmannM = getBoltzmannFactor(deltaEM, table);
-                        if (BoltzmannM >= epsilonM) {
-                            lattice.flipSpin(XLoc, YLoc, ZLoc);
-                            DeltaEAcumM += deltaEM;
-                        }
-                    }
+        // Metropolis Algorithm
+        if (SpinAct != 0) {
+            if (deltaEM <= 0) {
+                // Accept: Flip spin
+                lattice.flipSpin(site);
+                DeltaEAcumM += deltaEM;
+            } else {
+                // Accept: Probabilistically
+                double epsilonM = Ran0a1();
+                float BoltzmannM = table.lookup(SpinAct, static_cast<int>(Sum3N), static_cast<int>(Sum6N));
+                if (BoltzmannM >= epsilonM) {
+                    lattice.flipSpin(site);
+                    DeltaEAcumM += deltaEM;
                 }
             }
         }
@@ -354,7 +297,7 @@ void SimulationLoop(const SimulationParameters& params, const char* nombrefile) 
             std::cout << std::endl << "Trabajando a T = " << TEMPERA << " y H = " << Hache << std::endl;
 
             float DeltaEAcumM = 0;
-            auto table = buildBoltzmannTable(TEMPERA, params.Jm3, params.Jm6, Hache);
+            auto table = FastBoltzmannTable(params.Jm3, params.Jm6, Hache, TEMPERA);
 
             for (int contador = 1; contador <= params.num_steps; contador++) {
                 
