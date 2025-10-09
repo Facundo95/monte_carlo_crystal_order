@@ -8,11 +8,9 @@
 #include <cmath>
 #include <array>
 #include <cstdint> // For int8_t
+#include "lattice.h"
 
-// Define system dimensions
-static constexpr int LATTICE_SIDE = 32;
-static constexpr int LATTICE_DEPTH = 64; // 2 * LATTICE_SIDE
-static constexpr int LATTICE_TOTAL_SITES = LATTICE_SIDE * LATTICE_SIDE * LATTICE_DEPTH;
+using namespace std;
 
 /**
  * @struct BoltzmannTable
@@ -25,7 +23,7 @@ static constexpr int LATTICE_TOTAL_SITES = LATTICE_SIDE * LATTICE_SIDE * LATTICE
  */
 struct FastBoltzmannTable {
     // The flat vector storing the pre-computed Boltzmann factors.
-    std::vector<float> table;
+    vector<float> table;
 
     // Dimensions for the 3D to 1D index mapping
     const int N_si = 2;   // s_i can be {-1, 1}
@@ -63,7 +61,7 @@ struct FastBoltzmannTable {
             double dE = -2.0 * s_i_val * (J3 * S3_val + J6 * S6_val + h);
 
             // 4. Store the pre-computed Boltzmann factor at the current index
-            table[index] = std::exp(-dE / temperature);
+            table[index] = exp(-dE / temperature);
         }
     }
 
@@ -119,7 +117,7 @@ struct SimulationParameters {
           H_upper(h_up), H_lower(h_low), step_H(dh), flag_save_config(flag_red) {}
 };
 
-inline std::ostream& operator<<(std::ostream& os, const SimulationParameters& p) {
+inline ostream& operator<<(ostream& os, const SimulationParameters& p) {
     os << "  NUM_STEPS: " << p.num_steps << '\n'
        << "  J_M3: " << p.Jm3 << '\n'
        << "  J_M6: " << p.Jm6 << '\n'
@@ -132,61 +130,6 @@ inline std::ostream& operator<<(std::ostream& os, const SimulationParameters& p)
        << "  FLAG_SAVE_CONFIG: " << (p.flag_save_config ? "true" : "false");
     return os;
 }
-
-/**
- * @brief Encapsulates the lattice data and complex coordinate/neighbor logic.
- */
-class Lattice {
-private:
-    int magn_flat[LATTICE_TOTAL_SITES]; // Flattened magnetic state for memory efficiency
-    int red_flat[LATTICE_TOTAL_SITES];  // Flattened species state for memory efficiency
-
-    std::vector<std::array<int, 12>> neighbors3;
-    std::vector<std::array<int, 6>>  neighbors6;
-
-    static inline int idx3D(int x, int y, int z, int side = LATTICE_SIDE, int depth = LATTICE_DEPTH) {
-        // index plano: (x * side + y) * depth + z
-        return (x * side + y) * depth + z;
-    }
-
-    static inline void idxToXYZ(int index, int side, int depth, int &x, int &y, int &z) {
-        const int planeSize = side * depth;
-
-        x = index / planeSize;
-        int tmp = index - x * planeSize;
-        y = tmp / depth;
-        z = tmp - y * depth;
-    }
-    
-    static inline int wrap(int v, int M) {
-        if (v < 0) return v + M;
-        if (v >= M) return v - M;
-        return v;
-    }
-
-public:
-    Lattice() {
-        const int N = LATTICE_SIDE * LATTICE_SIDE * LATTICE_DEPTH;
-        neighbors3.resize(N);
-        neighbors6.resize(N);
-    }
-    // Initialization
-    void loadInitialConfiguration(const std::string& filename);
-    void initializeNeighbors(); // Pre-compute neighbor indices for efficiency
-
-    // Core simulation utilities
-    int getSpin(int site) const { return magn_flat[site]; }
-    void flipSpin(int site) { magn_flat[site] = -magn_flat[site]; }
-    
-    // Calculates the required spin sum (used in delta E calculation)
-    float calculateNeighborSpinSum(int site, int shell_type) const; 
-    
-    // Output utility
-    void saveFinalConfiguration(const char* nombrefile, float Hache, int count);
-    
-    // Measurement utility (implemented in simulation.cpp)
-    void calculateAndWriteLRO(std::ofstream& parout, int step_count, float T, float H, float DeltaEAcumM) const;
-};
 
 // Main simulation flow functions
 std::vector<float> createHSweepList(const SimulationParameters& params);
