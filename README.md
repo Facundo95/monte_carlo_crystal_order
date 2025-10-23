@@ -13,9 +13,11 @@ The code is organized into modular C++ files for clarity, debugging, and maintai
 | **File** | **Description**|
 | :--- | :--- |
 | `main.cpp` | Program entry point. Handles command-line arguments, reads simulation parameters from input.txt, and initiates the SimulationLoop. |
-| `simulation.h` / `simulation.cpp` | Contains the core simulation logic, including the Lattice class (for managing the grid and neighbor lookups), the SimulationParameters struct, the SimulationLoop, and the MonteCarloStep (Metropolis algorithm).|
+| `simulation.h` / `simulation.cpp` | Contains the core simulation logic, the SimulationParameters struct, the SimulationLoop, and the MonteCarloStep (Metropolis algorithm).|
+|`lattice.h` / `lattice.cpp` | , Contais the Lattice class (for managing the grid and neighbor lookups) |
 | `rng.h` / `rng.cpp` | Implements the custom Linear Congruential Generator (LCG) used for generating pseudo-random numbers in the Metropolis acceptance test. |
 | `file_handler.h` / `file_handler.cpp` | Provides helper functions for managing file streams, including opening the output file and checking for errors.|
+| `input_parser.h` / `input_parser.cpp` | Provides helper functions for parsing the input file before passing to the SimulationParameters struct. |
 | `Makefile` | Script for automated compilation, linking, cleaning, and documentation generation.|
 | `input.txt` | Required input file for defining runtime parameters and file names (see Section 4). |
 
@@ -55,7 +57,7 @@ The simulation requires two types of input files: a configuration file for param
 
 **A. Parameter Input (`input.txt`)**
 
-You must create an `input.txt` file in the project directory using the format `KEY VALUE`. This file dictates the simulation run settings.
+You must create an `input.txt` file in the project directory using the format `KEY VALUE`. This file dictates the simulation run settings. It's not necessary to name the file as the example, you can use any name and extension you want.
 
 ```
 # Example content for input.txt
@@ -94,7 +96,7 @@ Ensure the `input.txt` and initial state file are ready.
 Execute the compiled program:
 
 ```
-./mc_simulation
+./mc_simulation -in input.txt
 ```
 
 **D. Output**
