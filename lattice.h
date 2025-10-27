@@ -58,7 +58,9 @@ public:
     void initializeNeighbors(); // Pre-compute neighbor indices for efficiency
 
     // Core simulation utilities
+    array<int, 8> getNeighbors1(int site) const { return neighbors1[site]; }
     int getSpin(int site) const { return magn_flat[site]; }
+    int getSpecies(int site) const { return red_flat[site]; }   
     void flipSpin(int site) { magn_flat[site] = -magn_flat[site]; }
     void exchangeSpecies(int site1, int site2) {
         int temp = red_flat[site1];

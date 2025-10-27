@@ -30,15 +30,14 @@ std::vector<float> createHSweepList(const SimulationParameters& params) {
     return list;
 }
 
-
 /**
- * @brief Executes one full Monte Carlo sweep (N spin flip attempts).
+ * @brief Executes one full Monte Carlo sweep only for spin with an external field(N spin flip attempts).
  */
-void MonteCarloStep(Lattice& lattice, 
-                    float H, 
-                    const SimulationParameters& params, 
-                    const FastBoltzmannTable& table,
-                    float& DeltaEAcumM) {
+void MonteCarloStepSpinExtH(Lattice& lattice, 
+                            float H, 
+                            const SimulationParameters& params, 
+                            const FastBoltzmannTable& table,
+                            float& DeltaEAcumM) {
     
     lattice.initializeNeighbors();
     for (int site = 0; site < LATTICE_TOTAL_SITES; site++) {
@@ -113,7 +112,7 @@ void SimulationLoop(const SimulationParameters& params, const char* nombrefile) 
             for (int contador = 1; contador <= params.num_steps; contador++) {
                 
                 // 3a. Single-Spin Update (Metropolis)
-                MonteCarloStep(lattice, Hache, params, table, DeltaEAcumM);
+                MonteCarloStepSpinExtH(lattice, Hache, params, table, DeltaEAcumM);
 
                 // 3b. Measurement and Output (Occurs only in the last 200 steps)
                 if (contador > (params.num_steps - 200)) {

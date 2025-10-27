@@ -133,11 +133,11 @@ inline ostream& operator<<(ostream& os, const SimulationParameters& p) {
 
 // Main simulation flow functions
 std::vector<float> createHSweepList(const SimulationParameters& params);
-void MonteCarloStep(Lattice& lattice, 
-                    float H, 
-                    const SimulationParameters& params, 
-                    const FastBoltzmannTable& table,
-                    float& DeltaEAcumM);
+void MonteCarloStepSpinExtH(Lattice& lattice, 
+                            float H, 
+                            const SimulationParameters& params, 
+                            const FastBoltzmannTable& table,
+                            float& DeltaEAcumM);
 void SimulationLoop(const SimulationParameters& params, const char* nombrefile);
 
 #endif // SIMULATION_H
