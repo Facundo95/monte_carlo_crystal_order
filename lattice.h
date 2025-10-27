@@ -64,6 +64,10 @@ public:
         int temp = red_flat[site1];
         red_flat[site1] = red_flat[site2];
         red_flat[site2] = temp;
+
+        int temp_magn = magn_flat[site1];
+        magn_flat[site1] = magn_flat[site2];
+        magn_flat[site2] = temp_magn;   
     }
 
     // Calculates the required spin sum (used in delta E calculation)
