@@ -37,8 +37,41 @@ void Lattice::initializeNeighbors() {
         int x, y, z;
         idxToXYZ(site, LATTICE_SIDE, LATTICE_DEPTH, x, y, z);
 
+        std::array<int, 8> n1;
+        std::array<int, 6> n2;
         std::array<int, 12> n3;
         std::array<int, 6> n6;
+
+        // 1st Neighbors (8 sites)
+        int p = 0;
+        n1[p++] = idx3D(x, y, wrap(z + 1, LATTICE_DEPTH));
+        n1[p++] = idx3D(x, y, wrap(z - 1, LATTICE_DEPTH));
+        if (z % 2 == 0) {
+            n1[p++] = idx3D(wrap(x + 1, LATTICE_SIDE), y, wrap(z + 1, LATTICE_DEPTH));
+            n1[p++] = idx3D(wrap(x + 1, LATTICE_SIDE), y, wrap(z - 1, LATTICE_DEPTH));
+            n1[p++] = idx3D(x, wrap(y + 1, LATTICE_SIDE), wrap(z + 1, LATTICE_DEPTH));
+            n1[p++] = idx3D(x, wrap(y + 1, LATTICE_SIDE), wrap(z - 1, LATTICE_DEPTH));
+            n1[p++] = idx3D(wrap(x + 1, LATTICE_SIDE), wrap(y + 1, LATTICE_SIDE), wrap(z + 1, LATTICE_DEPTH));
+            n1[p++] = idx3D(wrap(x + 1, LATTICE_SIDE), wrap(y + 1, LATTICE_SIDE), wrap(z - 1, LATTICE_DEPTH));
+        } else {
+            n1[p++] = idx3D(wrap(x - 1, LATTICE_SIDE), y, wrap(z + 1, LATTICE_DEPTH));
+            n1[p++] = idx3D(wrap(x - 1, LATTICE_SIDE), y, wrap(z - 1, LATTICE_DEPTH));
+            n1[p++] = idx3D(x, wrap(y - 1, LATTICE_SIDE), wrap(z + 1, LATTICE_DEPTH));
+            n1[p++] = idx3D(x, wrap(y - 1, LATTICE_SIDE), wrap(z - 1, LATTICE_DEPTH));
+            n1[p++] = idx3D(wrap(x - 1, LATTICE_SIDE), wrap(y - 1, LATTICE_SIDE), wrap(z + 1, LATTICE_DEPTH));
+            n1[p++] = idx3D(wrap(x - 1, LATTICE_SIDE), wrap(y - 1, LATTICE_SIDE), wrap(z - 1, LATTICE_DEPTH));
+        }
+        neighbors1[site] = n1;
+
+        // 2nd Neighbors (6 sites)
+        p = 0;
+        n2[p++] = idx3D(wrap(x + 1, LATTICE_SIDE), wrap(y, LATTICE_SIDE), z);
+        n2[p++] = idx3D(wrap(x - 1, LATTICE_SIDE), wrap(y, LATTICE_SIDE), z);
+        n2[p++] = idx3D(wrap(x, LATTICE_SIDE), wrap(y + 1, LATTICE_SIDE), z);
+        n2[p++] = idx3D(wrap(x, LATTICE_SIDE), wrap(y - 1, LATTICE_SIDE), z);
+        n2[p++] = idx3D(wrap(x, LATTICE_SIDE), wrap(y, LATTICE_SIDE), wrap(z + 2, LATTICE_DEPTH));
+        n2[p++] = idx3D(wrap(x, LATTICE_SIDE), wrap(y, LATTICE_SIDE), wrap(z - 2, LATTICE_DEPTH));
+        neighbors2[site] = n2;
 
         // 3rd Neighbors (12 sites)
         int p = 0;
@@ -75,17 +108,23 @@ void Lattice::initializeNeighbors() {
  * (Original Jm1 and Jm2 (1st and 2nd NN) were 0, so only 3 and 6 are implemented here).
  */
 float Lattice::calculateNeighborSpinSum(int site, int shell_type) const {
-    if (shell_type != 3 && shell_type != 6) {
-        throw std::invalid_argument("shell_type must be either 3 or 6.");
+    if (shell_type != 1 && shell_type != 2 && shell_type != 3 && shell_type != 6) {
+        throw std::invalid_argument("shell_type options: 1,2,3 or 6.");
     }
     float sum = 0;
-    if (shell_type == 3) {
+    if (shell_type == 1) {
+        const auto &n1 = neighbors1[site];
+        for (int i = 0; i < 8; ++i) sum += magn_flat[n1[i]];
+    } else if (shell_type == 2) {
+        const auto &n2 = neighbors2[site];
+        for (int i = 0; i < 6; ++i) sum += magn_flat[n2[i]];
+    } else if (shell_type == 3) {
         const auto &n3 = neighbors3[site];
         for (int i = 0; i < 12; ++i) sum += magn_flat[n3[i]];
     } else if (shell_type == 6) {
         const auto &n6 = neighbors6[site];
         for (int i = 0; i < 6; ++i) sum += magn_flat[n6[i]];
-    }
+    }   
     return sum;
 }
 

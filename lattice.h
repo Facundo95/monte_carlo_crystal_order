@@ -20,6 +20,8 @@ private:
     int magn_flat[LATTICE_TOTAL_SITES]; // Flattened magnetic state for memory efficiency
     int red_flat[LATTICE_TOTAL_SITES];  // Flattened species state for memory efficiency
 
+    vector<array<int, 8>>  neighbors1;
+    vector<array<int, 6>>  neighbors2;
     vector<array<int, 12>> neighbors3;
     vector<array<int, 6>>  neighbors6;
 
@@ -46,6 +48,8 @@ private:
 public:
     Lattice() {
         const int N = LATTICE_SIDE * LATTICE_SIDE * LATTICE_DEPTH;
+        neighbors1.resize(N);
+        neighbors2.resize(N);
         neighbors3.resize(N);
         neighbors6.resize(N);
     }
