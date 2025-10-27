@@ -60,7 +60,12 @@ public:
     // Core simulation utilities
     int getSpin(int site) const { return magn_flat[site]; }
     void flipSpin(int site) { magn_flat[site] = -magn_flat[site]; }
-    
+    void exchangeSpecies(int site1, int site2) {
+        int temp = red_flat[site1];
+        red_flat[site1] = red_flat[site2];
+        red_flat[site2] = temp;
+    }
+
     // Calculates the required spin sum (used in delta E calculation)
     float calculateNeighborSpinSum(int site, int shell_type) const; 
     
