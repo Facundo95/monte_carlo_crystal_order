@@ -30,6 +30,22 @@ std::vector<float> createHSweepList(const SimulationParameters& params) {
     return list;
 }
 
+void MonteCarloStepChemicalExchange(Lattice& lattice, 
+                                    const SimulationParameters& params, 
+                                    const FastBoltzmannTable& table,
+                                    float& DeltaEAcumM) {
+    lattice.initializeNeighbors();
+    for (int site = 0; site < LATTICE_TOTAL_SITES; site++) {
+        int SpecieAct = lattice.getSpecies(site);
+        int SpecieNeigh = lattice.getNeighbors1(site)[RanEnt1a8()];
+        if (SpecieAct != SpecieNeigh) {
+        // placeholder for chemical exchange logic
+        // Currently not implemented in the original code snippet
+        }
+
+    }
+}
+
 /**
  * @brief Executes one full Monte Carlo sweep only for spin with an external field(N spin flip attempts).
  */
