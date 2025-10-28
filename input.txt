@@ -11,8 +11,8 @@ Flag to save the final lattice configuration (true or false)
 FLAG_SAVE_CONFIG false
 
 --- Temperature Sweep Parameters ---
-T_UPPER 365.0
-T_LOWER 365.0
+T_START 365.0
+T_END 365.0
 STEP_T 10.0
 
 --- Magnetic Field Sweep Parameters (H) ---

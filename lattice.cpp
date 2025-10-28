@@ -129,6 +129,73 @@ float Lattice::calculateNeighborSpinSum(int site, int shell_type) const {
 }
 
 /**
+ * @brief Calculates the sum of species (red_flat) for a specific neighbor shell.
+ * @param shell_type Must be 1, 2, 3, or 6.
+ * @param order Must be 1 (linear) or 2 (quadratic).
+ */
+float Lattice::calculateNeighborSpeciesSum(int site, int shell_type, int order) const {
+    if (shell_type != 1 && shell_type != 2 && shell_type != 3 && shell_type != 6) {
+        throw std::invalid_argument("shell_type options: 1,2,3 or 6.");
+    }
+    if (order != 1 && order != 2) {
+        throw std::invalid_argument("order options: 1 (linear) or 2 (quadratic).");
+    }
+    float sum = 0;
+    if (shell_type == 1) {
+        const auto &n1 = neighbors1[site];
+        for (int i = 0; i < 8; ++i) {
+            float val = static_cast<float>(red_flat[n1[i]]);
+            sum += (order == 1) ? val : val * val;
+        }
+    } else if (shell_type == 2) {
+        const auto &n2 = neighbors2[site];
+        for (int i = 0; i < 6; ++i) {
+            float val = static_cast<float>(red_flat[n2[i]]);
+            sum += (order == 1) ? val : val * val;
+        }
+    } else if (shell_type == 3) {
+        const auto &n3 = neighbors3[site];
+        for (int i = 0; i < 12; ++i) {
+            float val = static_cast<float>(red_flat[n3[i]]);
+            sum += (order == 1) ? val : val * val;
+        }
+    } else if (shell_type == 6) {
+        const auto &n6 = neighbors6[site];
+        for (int i = 0; i < 6; ++i) {
+            float val = static_cast<float>(red_flat[n6[i]]);
+            sum += (order == 1) ? val : val * val;
+        }
+    }   
+    return sum;
+}
+
+float Lattice::calculateSiteChemicalEnergy(int type, 
+                                        float JOTA1, float JOTA2, 
+                                        float KA1, float KA2, 
+                                        float ELE1, float ELE2,
+                                        float sumLin1, float sumCuad1,
+                                        float sumLin2, float sumCuad2) const {
+        float typeSqr = type * type;
+
+        // NN contribution
+        float C1_NN = JOTA1 * type + ELE1 * typeSqr;
+        float C2_NN = KA1 * typeSqr + ELE1 * type;
+        float energyNN = C1_NN * sumLin1 + C2_NN * sumCuad1;
+
+        // NNN contribution
+        float C1_NNN = JOTA2 * type + ELE2 * typeSqr;
+        float C2_NNN = KA2 * typeSqr + ELE2 * type;
+        float energyNNN = C1_NNN * sumLin2 + C2_NNN * sumCuad2;
+
+        return energyNN + energyNNN;
+}
+
+float Lattice::calculateSiteMagneticEnergy(int Spin, float j3, float j6, float H, float sum3, float sum6) const {
+    float dEM = - Spin * (j3 * sum3 + j6 * sum6) - H * Spin;
+    return dEM;
+}
+
+/**
  * @brief Calculates and writes the LRO parameters and Magnetization to the output file.
  */
 void Lattice::calculateAndWriteLRO(std::ofstream& parout, int step_count, float T, float H, float DeltaEAcumM) const {
@@ -216,7 +283,7 @@ void Lattice::calculateAndWriteLRO(std::ofstream& parout, int step_count, float 
 /**
  * @brief Saves the final structural configuration to a text file.
  */
-void Lattice::saveFinalConfiguration(const char* nombrefile, float Hache, int count) {
+void Lattice::saveFinalConfiguration(const char* nombrefile, float Hache, float TEMPERA, int count) {
     std::ofstream redout;
     if (!OpenFinalRedFile(nombrefile, Hache, count, redout)) {
         return; // Error already reported by helper function

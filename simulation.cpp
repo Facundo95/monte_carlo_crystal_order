@@ -12,17 +12,27 @@ using namespace std;
  */
 std::vector<float> createHSweepList(const SimulationParameters& params) {
     std::vector<float> list;
-
+    
+    if (params.step_H <= 0) {
+        throw std::invalid_argument("Step_H must be positive.");
+    }
+    
+    if (params.H_upper == params.H_lower) {
+        list.push_back(0.0f);
+        return list;
+    }
+    
     // A. 0 to HUpper
     for (float h = 0.0; h <= params.H_upper; h += params.step_H) {
         list.push_back(h);
     }
+    
     // B. HUpper to HLower
     for (float h = params.H_upper; h >= params.H_lower; h -= params.step_H) {
         list.push_back(h);
     }
-    // C. HLower to 0 (or HUpper, original code was ambiguous, using HLower to HUpper)
-    // Adjusting to match the user's explicit original loop bounds:
+    
+    // C. HLower to 0
     for (float h = params.H_lower + params.step_H; h <= params.H_upper; h += params.step_H) {
         list.push_back(h);
     }
@@ -30,19 +40,138 @@ std::vector<float> createHSweepList(const SimulationParameters& params) {
     return list;
 }
 
-void MonteCarloStepChemicalExchange(Lattice& lattice, 
+
+/**
+ * @brief Creates the vector of magnetic field values for the H-sweep loop.
+ */
+std::vector<float> createTSweepList(const SimulationParameters& params) {
+    std::vector<float> list;
+    
+    if (params.step_T <= 0) {
+        throw std::invalid_argument("Step_T must be positive.");
+    }
+    
+    if (params.T_start == params.T_end) {
+        list.push_back(params.T_start);
+        return list;
+    }
+
+    if (params.T_start < params.T_end) {
+        for (float t = params.T_start; t <= params.T_end; t += params.step_T) {
+            list.push_back(t);
+        }
+        return list;
+    }
+
+    for (float t = params.T_start; t >= params.T_end; t -= params.step_T) {
+        list.push_back(t);
+    }
+
+    return list;
+}
+
+void MonteCarloStepChemicalExchange(Lattice& lattice,
+                                    float H, float T,
                                     const SimulationParameters& params, 
-                                    const FastBoltzmannTable& table,
+                                    const SiteEnergyTableBEG& tableBeg,
+                                    const FastBoltzmannTableSpin& tableSpin,
                                     float& DeltaEAcumM) {
     lattice.initializeNeighbors();
     for (int site = 0; site < LATTICE_TOTAL_SITES; site++) {
+        
         int SpecieAct = lattice.getSpecies(site);
-        int SpecieNeigh = lattice.getNeighbors1(site)[RanEnt1a8()];
-        if (SpecieAct != SpecieNeigh) {
-        // placeholder for chemical exchange logic
-        // Currently not implemented in the original code snippet
+        // selects a random neighbor
+        int siteNeighbor = lattice.getNeighbors1(site)[RanEnt1a8()-1];
+        int SpecieNeigh = lattice.getSpecies(siteNeighbor);
+        
+        if (SpecieAct == SpecieNeigh) {
+
+            continue; // Skip if species are the same
+        
+        }
+        
+        // Calculate neighbor sums for 3rd and 6th NN (as Jm1=Jm2=0)
+        int SumSpin3N_Act = lattice.calculateNeighborSpinSum(site, 3);
+        int SumSpin6N_Act = lattice.calculateNeighborSpinSum(site, 6);
+        int SumSpin3N_Neigh = lattice.calculateNeighborSpinSum(siteNeighbor, 3);
+        int SumSpin6N_Neigh = lattice.calculateNeighborSpinSum(siteNeighbor, 6);
+        
+        // Magnetic Energy Difference Calculation
+        // Delta EM1: Spin-Spin Interactions
+        int SpinAct = lattice.getSpin(site);
+        int SpinNeigh = lattice.getSpin(siteNeighbor);
+                    
+        float dEM = lattice.calculateSiteMagneticEnergy(SpinNeigh, params.Jm3, params.Jm6, H, SumSpin3N_Act, SumSpin6N_Act) +
+                    lattice.calculateSiteMagneticEnergy(SpinAct, params.Jm3, params.Jm6, H, SumSpin3N_Neigh, SumSpin6N_Neigh) -
+                    lattice.calculateSiteMagneticEnergy(SpinAct, params.Jm3, params.Jm6, H, SumSpin3N_Act, SumSpin6N_Act) -
+                    lattice.calculateSiteMagneticEnergy(SpinNeigh, params.Jm3, params.Jm6, H, SumSpin3N_Neigh, SumSpin6N_Neigh);
+        
+        int SumSpecie1N_Act_linear = lattice.calculateNeighborSpeciesSum(site, 1, 1) - lattice.getSpecies(siteNeighbor);
+        int SumSpecie1N_Neigh_linear = lattice.calculateNeighborSpeciesSum(siteNeighbor, 1, 1) - lattice.getSpecies(site);
+        int SumSpecie1N_Act_quadratic = lattice.calculateNeighborSpeciesSum(site, 1, 2) - lattice.getSpecies(siteNeighbor)*lattice.getSpecies(siteNeighbor);
+        int SumSpecie1N_Neigh_quadratic = lattice.calculateNeighborSpeciesSum(siteNeighbor, 1, 2) - lattice.getSpecies(site)*lattice.getSpecies(site);
+
+        int SumSpecie2N_Act_linear = lattice.calculateNeighborSpeciesSum(site, 2, 1);
+        int SumSpecie2N_Neigh_linear = lattice.calculateNeighborSpeciesSum(siteNeighbor, 2, 1);
+        int SumSpecie2N_Act_quadratic = lattice.calculateNeighborSpeciesSum(site, 2, 2);
+        int SumSpecie2N_Neigh_quadratic = lattice.calculateNeighborSpeciesSum(siteNeighbor, 2, 2);
+
+        float dEChem_i = lattice.calculateSiteChemicalEnergy(SpecieAct,
+                                                    0.0f, 0.0f,
+                                                    0.0f, 0.0f,
+                                                    0.0f, 0.0f,
+                                                    SumSpecie1N_Act_linear, SumSpecie1N_Act_quadratic,
+                                                    SumSpecie2N_Act_linear, SumSpecie2N_Act_quadratic)+
+                        lattice.calculateSiteChemicalEnergy(SpecieNeigh,
+                                                    0.0f, 0.0f,
+                                                    0.0f, 0.0f,
+                                                    0.0f, 0.0f,
+                                                    SumSpecie1N_Neigh_linear, SumSpecie1N_Neigh_quadratic,
+                                                    SumSpecie2N_Neigh_linear, SumSpecie2N_Neigh_quadratic);
+        
+        float dEChem_f = lattice.calculateSiteChemicalEnergy(SpecieNeigh,
+                                                    0.0f, 0.0f,
+                                                    0.0f, 0.0f,
+                                                    0.0f, 0.0f,
+                                                    SumSpecie1N_Act_linear, SumSpecie1N_Act_quadratic,
+                                                    SumSpecie2N_Act_linear, SumSpecie2N_Act_quadratic)+
+                        lattice.calculateSiteChemicalEnergy(SpecieAct,
+                                                    0.0f, 0.0f,
+                                                    0.0f, 0.0f,
+                                                    0.0f, 0.0f,
+                                                    SumSpecie1N_Neigh_linear, SumSpecie1N_Neigh_quadratic,
+                                                    SumSpecie2N_Neigh_linear, SumSpecie2N_Neigh_quadratic);
+
+        float dETotal = dEM + dEChem_f - dEChem_i;
+        
+        // Metropolis Algorithm
+        if (dETotal > 0) {
+            // Accept: Probabilistically
+            double epsilonM = Ran0a1();
+            
+            float BoltzmannM = tableSpin.lookup(SpinNeigh, SumSpin3N_Act, SumSpin6N_Act) * 
+                                tableSpin.lookup(SpinAct, SumSpin3N_Neigh, SumSpin6N_Neigh) /
+                                (tableSpin.lookup(SpinAct, SumSpin3N_Act, SumSpin6N_Act) * 
+                                tableSpin.lookup(SpinNeigh, SumSpin3N_Neigh, SumSpin6N_Neigh));
+            
+            float BoltzmannChem = tableBeg.lookup(SpecieAct, SumSpecie1N_Act_linear, SumSpecie1N_Act_quadratic, SumSpecie2N_Act_linear, SumSpecie2N_Act_quadratic)*
+                                    tableBeg.lookup(SpecieNeigh, SumSpecie1N_Neigh_linear, SumSpecie1N_Neigh_quadratic, SumSpecie2N_Neigh_linear, SumSpecie2N_Neigh_quadratic)/
+                                    (tableBeg.lookup(SpecieNeigh, SumSpecie1N_Act_linear, SumSpecie1N_Act_quadratic, SumSpecie2N_Act_linear, SumSpecie2N_Act_quadratic)*
+                                    tableBeg.lookup(SpecieAct, SumSpecie1N_Neigh_linear, SumSpecie1N_Neigh_quadratic, SumSpecie2N_Neigh_linear, SumSpecie2N_Neigh_quadratic));
+            
+            float Boltzmann = BoltzmannM * BoltzmannChem;
+            
+            if (Boltzmann >= epsilonM) {
+                lattice.exchangeSpecies(site, siteNeighbor);
+                DeltaEAcumM += dETotal;
+            }
+            continue;
         }
 
+        // Accept: Exchange species
+        lattice.exchangeSpecies(site, siteNeighbor);
+        DeltaEAcumM += dETotal;
+    
     }
 }
 
@@ -52,42 +181,47 @@ void MonteCarloStepChemicalExchange(Lattice& lattice,
 void MonteCarloStepSpinExtH(Lattice& lattice, 
                             float H, 
                             const SimulationParameters& params, 
-                            const FastBoltzmannTable& table,
+                            const FastBoltzmannTableSpin& table,
                             float& DeltaEAcumM) {
     
     lattice.initializeNeighbors();
     for (int site = 0; site < LATTICE_TOTAL_SITES; site++) {
+        
         int SpinAct = lattice.getSpin(site);
         
-        // Calculate neighbor sums for 3rd and 6th NN (as Jm1=Jm2=0)
+        if (SpinAct == 0) {
+        
+            continue; // Skip non-magnetic sites
+        
+        }
+
         int Sum3N = lattice.calculateNeighborSpinSum(site, 3);
         int Sum6N = lattice.calculateNeighborSpinSum(site, 6);
-        
-        // Magnetic Energy Difference Calculation
-        // Delta EM1: Spin-Spin Interactions
-        float deltaEM1 = 2 * params.Jm3 * SpinAct * Sum3N 
-                        + 2 * params.Jm6 * SpinAct * Sum6N;
-        
-        // Delta EM2: Field Interaction
-        float deltaEM2 = 2 * H * SpinAct;
-        float deltaEM = deltaEM1 + deltaEM2;
 
+        float deltaEM = lattice.calculateSiteMagneticEnergy(-SpinAct, params.Jm3, params.Jm6, H, Sum3N, Sum6N)\
+                    - lattice.calculateSiteMagneticEnergy(SpinAct, params.Jm3, params.Jm6, H, Sum3N, Sum6N);
+        
         // Metropolis Algorithm
-        if (SpinAct != 0) {
-            if (deltaEM <= 0) {
-                // Accept: Flip spin
+        if (deltaEM > 0) {
+        
+            // Accept: Probabilistically
+            double epsilonM = Ran0a1();
+            float BoltzmannM = table.lookup(SpinAct, Sum3N, Sum6N);
+        
+            if (BoltzmannM >= epsilonM) {
+        
                 lattice.flipSpin(site);
                 DeltaEAcumM += deltaEM;
-            } else {
-                // Accept: Probabilistically
-                double epsilonM = Ran0a1();
-                float BoltzmannM = table.lookup(SpinAct, Sum3N, Sum6N);
-                if (BoltzmannM >= epsilonM) {
-                    lattice.flipSpin(site);
-                    DeltaEAcumM += deltaEM;
-                }
+        
             }
+        
+            continue;
         }
+        
+        // Accept: Flip spin
+        lattice.flipSpin(site);
+        DeltaEAcumM += deltaEM;
+    
     }
 }
 
@@ -116,14 +250,15 @@ void SimulationLoop(const SimulationParameters& params, const char* nombrefile) 
     
     // 3. Monte Carlo Loop Setup
     vector<float> listaCampos = createHSweepList(params);
-    int H_count = 0; // Counter for final file naming
+    vector<float> listaTemperaturas = createTSweepList(params);
+    int output_count = 0; // Counter for final file naming
 
-    for (float TEMPERA = params.T_lower; TEMPERA <= params.T_upper; TEMPERA += params.step_T) {
+    for (float TEMPERA : listaTemperaturas) {
         for (float Hache : listaCampos) {
             cout << "Trabajando a T = " << TEMPERA << " y H = " << Hache << endl;
 
             float DeltaEAcumM = 0;
-            auto table = FastBoltzmannTable(params.Jm3, params.Jm6, Hache, TEMPERA);
+            auto table = FastBoltzmannTableSpin(params.Jm3, params.Jm6, Hache, TEMPERA);
 
             for (int contador = 1; contador <= params.num_steps; contador++) {
                 
@@ -138,9 +273,9 @@ void SimulationLoop(const SimulationParameters& params, const char* nombrefile) 
             
             // 3c. Final Configuration Save
             if (params.flag_save_config) {
-                lattice.saveFinalConfiguration(nombrefile, Hache, H_count);
+                lattice.saveFinalConfiguration(nombrefile, Hache, TEMPERA, output_count);
             }
-            H_count++;
+            output_count++;
         }
     }
 

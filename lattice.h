@@ -72,8 +72,25 @@ public:
         magn_flat[site2] = temp_magn;   
     }
 
+    // Calculates the required site energy (used in delta E calculation)
+    float calculateSiteChemicalEnergy(int type, 
+                                    float jota1, float jota2, 
+                                    float ka1, float ka2, 
+                                    float ele1, float ele2,
+                                    float sumLin1, float sumCuad1,
+                                    float sumLin2, float sumCuad2) const;
+
+    // Calculates the required site energy (used in delta E calculation)
+    float calculateSiteMagneticEnergy(int Spin, 
+                                    float j3, float j6, 
+                                    float H, 
+                                    float sum3, float sum6) const;
+
     // Calculates the required spin sum (used in delta E calculation)
     float calculateNeighborSpinSum(int site, int shell_type) const; 
+
+    // Calculates the required linear and cuadratic sum (used in delta E calculation)
+    float calculateNeighborSpeciesSum(int site, int shell_type, int order) const;
     
     // Output utility
     void saveFinalConfiguration(const char* nombrefile, float Hache, int count);
