@@ -24,8 +24,10 @@ bool readInputFile(const string& input_filename, SimulationParameters& params_ou
 
     // Temporary storage for required parameters before constructing SimulationParameters
     int num_steps = 0;
+    int simulation_method = 0;
+    float w1_12 = 0.0, w2_12 = 0.0, w1_13 = 0.0, w2_13 = 0.0, w1_23 = 0.0, w2_23 = 0.0 ;
     float Jm3 = 0.0, Jm6 = 0.0;
-    float T_upper = 0.0, T_lower = 0.0, step_T = 0.0;
+    float T_start = 0.0, T_end = 0.0, step_T = 0.0;
     float H_upper = 0.0, H_lower = 0.0, step_H = 0.0;
     bool flag_save_config = false;
     int found_count = 0; // Tracks critical parameters found
@@ -40,10 +42,17 @@ bool readInputFile(const string& input_filename, SimulationParameters& params_ou
         ss >> key;
 
         if (key == "NUM_STEPS" && ss >> num_steps) found_count++;
+        else if (key == "SIMULATION_METHOD" && ss >> simulation_method) found_count++;
+        else if (key == "W1_12" && ss >> w1_12) found_count++;
+        else if (key == "W1_13" && ss >> w1_13) found_count++;
+        else if (key == "W1_23" && ss >> w1_23) found_count++;
+        else if (key == "W2_12" && ss >> w2_12) found_count++;
+        else if (key == "W2_13" && ss >> w2_13) found_count++;
+        else if (key == "W2_23" && ss >> w2_23) found_count++;
         else if (key == "J_M3" && ss >> Jm3) found_count++;
         else if (key == "J_M6" && ss >> Jm6) found_count++;
-        else if (key == "T_UPPER" && ss >> T_upper) found_count++;
-        else if (key == "T_LOWER" && ss >> T_lower) found_count++;
+        else if (key == "T_START" && ss >> T_start) found_count++;
+        else if (key == "T_END" && ss >> T_end) found_count++;
         else if (key == "STEP_T" && ss >> step_T) found_count++;
         else if (key == "H_UPPER" && ss >> H_upper) found_count++;
         else if (key == "H_LOWER" && ss >> H_lower) found_count++;
@@ -66,7 +75,7 @@ bool readInputFile(const string& input_filename, SimulationParameters& params_ou
     input_file.close();
 
     // Check if all 10 critical parameters were found
-    if (found_count < 10) {
+    if (found_count < 16) {
         cerr << "ERROR: Parámetros críticos incompletos en el archivo de entrada. Encontrados: " << found_count << "/10." << endl;
         return false;
     }
@@ -77,8 +86,10 @@ bool readInputFile(const string& input_filename, SimulationParameters& params_ou
 
     // If successful, initialize the SimulationParameters struct
     params_out = SimulationParameters(
-        num_steps, Jm3, Jm6, 
-        T_upper, T_lower, step_T, 
+        num_steps, simulation_method,
+        w1_12, w2_12, w1_13, w2_13, w1_23, w2_23, 
+        Jm3, Jm6, 
+        T_start, T_end, step_T, 
         H_upper, H_lower, step_H, 
         flag_save_config
     );

@@ -74,7 +74,7 @@ void Lattice::initializeNeighbors() {
         neighbors2[site] = n2;
 
         // 3rd Neighbors (12 sites)
-        int p = 0;
+        p = 0;
         n3[p++] = idx3D(wrap(x + 1, LATTICE_SIDE), wrap(y + 1, LATTICE_SIDE), z);
         n3[p++] = idx3D(wrap(x + 1, LATTICE_SIDE), wrap(y - 1, LATTICE_SIDE), z);
         n3[p++] = idx3D(wrap(x - 1, LATTICE_SIDE), wrap(y + 1, LATTICE_SIDE), z);
@@ -285,7 +285,7 @@ void Lattice::calculateAndWriteLRO(std::ofstream& parout, int step_count, float 
  */
 void Lattice::saveFinalConfiguration(const char* nombrefile, float Hache, float TEMPERA, int count) {
     std::ofstream redout;
-    if (!OpenFinalRedFile(nombrefile, Hache, count, redout)) {
+    if (!OpenFinalRedFile(nombrefile, Hache, TEMPERA, count, redout)) {
         return; // Error already reported by helper function
     }
     

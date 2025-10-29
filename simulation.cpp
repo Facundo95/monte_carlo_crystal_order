@@ -71,12 +71,19 @@ std::vector<float> createTSweepList(const SimulationParameters& params) {
 }
 
 void MonteCarloStepChemicalExchange(Lattice& lattice,
-                                    float H, float T,
+                                    float H,
                                     const SimulationParameters& params, 
                                     const SiteEnergyTableBEG& tableBeg,
                                     const FastBoltzmannTableSpin& tableSpin,
                                     float& DeltaEAcumM) {
     lattice.initializeNeighbors();
+    float jota1 = 0.25*params.w1_12;
+    float jota2 = 0.25*params.w2_12;
+    float ka1 = 0.25*(2*params.w1_13 + 2*params.w1_23 - params.w1_12);
+    float ka2 = 0.25*(2*params.w2_13 + 2*params.w2_23 - params.w2_12);
+    float ele1 = 0.25*(params.w1_13 - params.w1_23);
+    float ele2 = 0.25*(params.w2_13 - params.w2_23);
+
     for (int site = 0; site < LATTICE_TOTAL_SITES; site++) {
         
         int SpecieAct = lattice.getSpecies(site);
@@ -117,28 +124,28 @@ void MonteCarloStepChemicalExchange(Lattice& lattice,
         int SumSpecie2N_Neigh_quadratic = lattice.calculateNeighborSpeciesSum(siteNeighbor, 2, 2);
 
         float dEChem_i = lattice.calculateSiteChemicalEnergy(SpecieAct,
-                                                    0.0f, 0.0f,
-                                                    0.0f, 0.0f,
-                                                    0.0f, 0.0f,
+                                                    jota1, jota2,
+                                                    ka1, ka2,
+                                                    ele1, ele2,
                                                     SumSpecie1N_Act_linear, SumSpecie1N_Act_quadratic,
                                                     SumSpecie2N_Act_linear, SumSpecie2N_Act_quadratic)+
                         lattice.calculateSiteChemicalEnergy(SpecieNeigh,
-                                                    0.0f, 0.0f,
-                                                    0.0f, 0.0f,
-                                                    0.0f, 0.0f,
+                                                    jota1, jota2,
+                                                    ka1, ka2,
+                                                    ele1, ele2,
                                                     SumSpecie1N_Neigh_linear, SumSpecie1N_Neigh_quadratic,
                                                     SumSpecie2N_Neigh_linear, SumSpecie2N_Neigh_quadratic);
         
         float dEChem_f = lattice.calculateSiteChemicalEnergy(SpecieNeigh,
-                                                    0.0f, 0.0f,
-                                                    0.0f, 0.0f,
-                                                    0.0f, 0.0f,
+                                                    jota1, jota2,
+                                                    ka1, ka2,
+                                                    ele1, ele2,
                                                     SumSpecie1N_Act_linear, SumSpecie1N_Act_quadratic,
                                                     SumSpecie2N_Act_linear, SumSpecie2N_Act_quadratic)+
                         lattice.calculateSiteChemicalEnergy(SpecieAct,
-                                                    0.0f, 0.0f,
-                                                    0.0f, 0.0f,
-                                                    0.0f, 0.0f,
+                                                    jota1, jota2,
+                                                    ka1, ka2,
+                                                    ele1, ele2,
                                                     SumSpecie1N_Neigh_linear, SumSpecie1N_Neigh_quadratic,
                                                     SumSpecie2N_Neigh_linear, SumSpecie2N_Neigh_quadratic);
 
@@ -179,7 +186,7 @@ void MonteCarloStepChemicalExchange(Lattice& lattice,
  * @brief Executes one full Monte Carlo sweep only for spin with an external field(N spin flip attempts).
  */
 void MonteCarloStepSpinExtH(Lattice& lattice, 
-                            float H, 
+                            float H,
                             const SimulationParameters& params, 
                             const FastBoltzmannTableSpin& table,
                             float& DeltaEAcumM) {

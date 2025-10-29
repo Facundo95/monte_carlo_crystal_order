@@ -249,6 +249,13 @@ public:
 */
 struct SimulationParameters {
     int num_steps;
+    int simulation_method;
+    float w1_12; // Interaction energy between species 1 and 2 at 1st NN
+    float w2_12; // Interaction energy between species 1 and 2 at 2nd NN
+    float w1_13; // Interaction energy between species 1 and 3 at 1st NN
+    float w2_13; // Interaction energy between species 1 and 3 at 2nd NN
+    float w1_23; // Interaction energy between species 2 and 3 at 1st NN
+    float w2_23; // Interaction energy between species 2 and 3 at 2nd NN
     float Jm3; // 3rd NN interaction energy
     float Jm6; // 6th NN interaction energy
     float T_start;
@@ -259,14 +266,24 @@ struct SimulationParameters {
     float step_H;
     bool flag_save_config;
 
-    SimulationParameters(int steps, float j3, float j6, float t_s, float t_e, float dt,
-                         float h_up, float h_low, float dh, bool flag_red)
-        : num_steps(steps), Jm3(j3), Jm6(j6), T_start(t_s), T_end(t_e), step_T(dt),
-          H_upper(h_up), H_lower(h_low), step_H(dh), flag_save_config(flag_red) {}
+    SimulationParameters(int steps, int sim, float w1_12, float w2_12, float w1_13, 
+                         float w2_13, float w1_23, float w2_23, float j3, float j6, 
+                         float t_s, float t_e, float dt, float h_up, float h_low, 
+                         float dh, bool flag_red)
+        : num_steps(steps), simulation_method(sim), w1_12(w1_12), w2_12(w2_12), w1_13(w1_13), 
+        w2_13(w2_13), w1_23(w1_23), w2_23(w2_23), Jm3(j3), Jm6(j6), T_start(t_s), T_end(t_e), 
+        step_T(dt),H_upper(h_up), H_lower(h_low), step_H(dh), flag_save_config(flag_red) {}
 };
 
 inline ostream& operator<<(ostream& os, const SimulationParameters& p) {
     os << "  NUM_STEPS: " << p.num_steps << '\n'
+       << "  SIMULATION_METHOD: " << p.simulation_method << '\n'
+       << "  W1_12: " << p.w1_12 << '\n'
+       << "  W2_12: " << p.w2_12 << '\n'
+       << "  W1_13: " << p.w1_13 << '\n'
+       << "  W2_13: " << p.w2_13 << '\n'
+       << "  W1_23: " << p.w1_23 << '\n'
+       << "  W2_23: " << p.w2_23 << '\n'
        << "  J_M3: " << p.Jm3 << '\n'
        << "  J_M6: " << p.Jm6 << '\n'
        << "  T_START: " << p.T_start << '\n'
@@ -284,14 +301,15 @@ std::vector<float> createHSweepList(const SimulationParameters& params);
 
 std::vector<float> createTSweepList(const SimulationParameters& params);
 
-void MonteCarloStepChemicalExchange(Lattice& lattice, 
+void MonteCarloStepChemicalExchange(Lattice& lattice,
+                                    float H,    
                                     const SimulationParameters& params, 
                                     const SiteEnergyTableBEG& tableBeg,
                                     const FastBoltzmannTableSpin& tableSpin,
                                     float& DeltaEAcumM);
 
 void MonteCarloStepSpinExtH(Lattice& lattice, 
-                            float H, float T,
+                            float H,
                             const SimulationParameters& params, 
                             const FastBoltzmannTableSpin& table,
                             float& DeltaEAcumM);

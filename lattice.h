@@ -93,7 +93,7 @@ public:
     float calculateNeighborSpeciesSum(int site, int shell_type, int order) const;
     
     // Output utility
-    void saveFinalConfiguration(const char* nombrefile, float Hache, int count);
+    void saveFinalConfiguration(const char* nombrefile, float Hache, float TEMPERA, int count);
     
     // Measurement utility (implemented in simulation.cpp)
     void calculateAndWriteLRO(ofstream& parout, 

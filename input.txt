@@ -3,11 +3,27 @@ Configuration File for Monte Carlo Simulation
 Total number of Monte Carlo steps per H/T point
 NUM_STEPS 100000
 
-Interaction Energies (3rd and 6th Nearest Neighbors)
+0 Canonic MC, BEG + Ising Hamiltonian
+1 Canonic MC, Ising Hamiltonian
+SIMULATION_METHOD 0
+
+--- Interacion Chemical Energies ---
+As example energies for a Cu-Al-Mn alloy (Cu=1, Al=2, Mn=3)
+Nearest Neighbors
+W1_12 1660 
+W1_13 600
+W1_23 700
+
+Next Nearest Neighbors
+W2_12 920
+W2_13 200
+W2_23 800
+
+--- Interaction Magnetic Energies (3rd and 6th Nearest Neighbors) ---
 J_M3 150.0
 J_M6 100.0
 
-Flag to save the final lattice configuration (true or false)
+--- Flag to save the final lattice configuration (true or false) ---
 FLAG_SAVE_CONFIG false
 
 --- Temperature Sweep Parameters ---
