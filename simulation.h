@@ -58,7 +58,7 @@ struct FastBoltzmannTableSpin {
             const int S6_val = (idx_S6 * 2) - 6;      // Maps {0, 1,..., 6} to {-6, -4,...}
 
             // 3. Calculate the energy change for this specific combination
-            double dE = -2.0 * s_i_val * (J3 * S3_val + J6 * S6_val + h);
+            double dE = - s_i_val * (J3 * S3_val + J6 * S6_val + h);
 
             // 4. Store the pre-computed Boltzmann factor at the current index
             table[index] = exp(-dE / temperature);

@@ -191,7 +191,7 @@ float Lattice::calculateSiteChemicalEnergy(int type,
 }
 
 float Lattice::calculateSiteMagneticEnergy(int Spin, float j3, float j6, float H, float sum3, float sum6) const {
-    float dEM = - Spin * (j3 * sum3 + j6 * sum6) - H * Spin;
+    float dEM = - Spin * (j3 * sum3 + j6 * sum6 + H);
     return dEM;
 }
 

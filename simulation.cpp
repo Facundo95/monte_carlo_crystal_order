@@ -76,7 +76,7 @@ void MonteCarloStepChemicalExchange(Lattice& lattice,
                                     const SiteEnergyTableBEG& tableBeg,
                                     const FastBoltzmannTableSpin& tableSpin,
                                     float& DeltaEAcumM) {
-    lattice.initializeNeighbors();
+
     float jota1 = 0.25*params.w1_12;
     float jota2 = 0.25*params.w2_12;
     float ka1 = 0.25*(2*params.w1_13 + 2*params.w1_23 - params.w1_12);
@@ -191,7 +191,6 @@ void MonteCarloStepSpinExtH(Lattice& lattice,
                             const FastBoltzmannTableSpin& table,
                             float& DeltaEAcumM) {
     
-    lattice.initializeNeighbors();
     for (int site = 0; site < LATTICE_TOTAL_SITES; site++) {
         
         int SpinAct = lattice.getSpin(site);
@@ -213,7 +212,7 @@ void MonteCarloStepSpinExtH(Lattice& lattice,
         
             // Accept: Probabilistically
             double epsilonM = Ran0a1();
-            float BoltzmannM = table.lookup(SpinAct, Sum3N, Sum6N);
+            float BoltzmannM = table.lookup(-SpinAct, Sum3N, Sum6N) / table.lookup(SpinAct, Sum3N, Sum6N);
         
             if (BoltzmannM >= epsilonM) {
         
@@ -256,6 +255,7 @@ void SimulationLoop(const SimulationParameters& params, const char* nombrefile) 
     }
     
     // 3. Monte Carlo Loop Setup
+    lattice.initializeNeighbors();
     vector<float> listaCampos = createHSweepList(params);
     vector<float> listaTemperaturas = createTSweepList(params);
     int output_count = 0; // Counter for final file naming
@@ -265,12 +265,21 @@ void SimulationLoop(const SimulationParameters& params, const char* nombrefile) 
             cout << "Trabajando a T = " << TEMPERA << " y H = " << Hache << endl;
 
             float DeltaEAcumM = 0;
-            auto table = FastBoltzmannTableSpin(params.Jm3, params.Jm6, Hache, TEMPERA);
+            
+            auto tableBeg = SiteEnergyTableBEG(params.w1_12, params.w2_12,
+                                                params.w1_13, params.w2_13,
+                                                params.w1_23, params.w2_23,
+                                                TEMPERA);
+            auto tableSpin = FastBoltzmannTableSpin(params.Jm3, params.Jm6, Hache, TEMPERA);
 
             for (int contador = 1; contador <= params.num_steps; contador++) {
                 
                 // 3a. Single-Spin Update (Metropolis)
-                MonteCarloStepSpinExtH(lattice, Hache, params, table, DeltaEAcumM);
+                if (params.simulation_method == 1)
+                    MonteCarloStepChemicalExchange(lattice, Hache, params, tableBeg, tableSpin, DeltaEAcumM);
+                else if(params.simulation_method == 0) {   
+                    MonteCarloStepSpinExtH(lattice, Hache, params, tableSpin, DeltaEAcumM);
+                }
 
                 // 3b. Measurement and Output (Occurs only in the last 200 steps)
                 if (contador > (params.num_steps - 200)) {
