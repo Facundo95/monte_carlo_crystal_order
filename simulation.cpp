@@ -18,7 +18,7 @@ std::vector<float> createHSweepList(const SimulationParameters& params) {
     }
     
     if (params.H_upper == params.H_lower) {
-        list.push_back(0.0f);
+        list.push_back(params.H_upper);
         return list;
     }
     
@@ -84,18 +84,14 @@ void MonteCarloStepChemicalExchange(Lattice& lattice,
     float ele1 = 0.25*(params.w1_13 - params.w1_23);
     float ele2 = 0.25*(params.w2_13 - params.w2_23);
 
-    for (int site = 0; site < LATTICE_TOTAL_SITES; site++) {
+    for (int site = 0; site < lattice.totalSites(); site++) {
         
         int SpecieAct = lattice.getSpecies(site);
         // selects a random neighbor
         int siteNeighbor = lattice.getNeighbors1(site)[RanEnt1a8()-1];
         int SpecieNeigh = lattice.getSpecies(siteNeighbor);
         
-        if (SpecieAct == SpecieNeigh) {
-
-            continue; // Skip if species are the same
-        
-        }
+        if (SpecieAct == SpecieNeigh) continue; // Skip if same species
         
         // Calculate neighbor sums for 3rd and 6th NN (as Jm1=Jm2=0)
         int SumSpin3N_Act = lattice.calculateNeighborSpinSum(site, 3);
@@ -149,7 +145,8 @@ void MonteCarloStepChemicalExchange(Lattice& lattice,
                                                     SumSpecie1N_Neigh_linear, SumSpecie1N_Neigh_quadratic,
                                                     SumSpecie2N_Neigh_linear, SumSpecie2N_Neigh_quadratic);
 
-        float dETotal = dEM + dEChem_f - dEChem_i;
+        float dEChem = dEChem_f - dEChem_i;
+        float dETotal = dEM + dEChem;
         
         // Metropolis Algorithm
         if (dETotal > 0) {
@@ -166,7 +163,7 @@ void MonteCarloStepChemicalExchange(Lattice& lattice,
                                     (tableBeg.lookup(SpecieNeigh, SumSpecie1N_Act_linear, SumSpecie1N_Act_quadratic, SumSpecie2N_Act_linear, SumSpecie2N_Act_quadratic)*
                                     tableBeg.lookup(SpecieAct, SumSpecie1N_Neigh_linear, SumSpecie1N_Neigh_quadratic, SumSpecie2N_Neigh_linear, SumSpecie2N_Neigh_quadratic));
             
-            float Boltzmann = BoltzmannM * BoltzmannChem;
+            float Boltzmann = std::min(1.0f, BoltzmannM * BoltzmannChem);
             
             if (Boltzmann >= epsilonM) {
                 lattice.exchangeSpecies(site, siteNeighbor);
@@ -191,15 +188,11 @@ void MonteCarloStepSpinExtH(Lattice& lattice,
                             const FastBoltzmannTableSpin& table,
                             float& DeltaEAcumM) {
     
-    for (int site = 0; site < LATTICE_TOTAL_SITES; site++) {
+    for (int site = 0; site < lattice.totalSites(); site++) {
         
         int SpinAct = lattice.getSpin(site);
         
-        if (SpinAct == 0) {
-        
-            continue; // Skip non-magnetic sites
-        
-        }
+        if (SpinAct == 0) continue; // Skip if spin is 0 (non-magnetic species)
 
         int Sum3N = lattice.calculateNeighborSpinSum(site, 3);
         int Sum6N = lattice.calculateNeighborSpinSum(site, 6);
@@ -212,9 +205,12 @@ void MonteCarloStepSpinExtH(Lattice& lattice,
         
             // Accept: Probabilistically
             double epsilonM = Ran0a1();
-            float BoltzmannM = table.lookup(-SpinAct, Sum3N, Sum6N) / table.lookup(SpinAct, Sum3N, Sum6N);
-        
-            if (BoltzmannM >= epsilonM) {
+            float BoltzmannMf = table.lookup(-SpinAct, Sum3N, Sum6N);
+            float BoltzmannMi = table.lookup(SpinAct, Sum3N, Sum6N);
+            
+            float Boltzmann = std::min(1.0f, BoltzmannMf / BoltzmannMi);
+
+            if (Boltzmann >= epsilonM) {
         
                 lattice.flipSpin(site);
                 DeltaEAcumM += deltaEM;
@@ -237,7 +233,7 @@ void MonteCarloStepSpinExtH(Lattice& lattice,
 */
 void SimulationLoop(const SimulationParameters& params, const char* nombrefile) {
     
-    Lattice lattice; 
+    Lattice lattice(params.lattice_side); 
     string init_file = string(nombrefile) + ".txt";
     
     // 1. Initialization
@@ -260,36 +256,38 @@ void SimulationLoop(const SimulationParameters& params, const char* nombrefile) 
     vector<float> listaTemperaturas = createTSweepList(params);
     int output_count = 0; // Counter for final file naming
 
-    for (float TEMPERA : listaTemperaturas) {
-        for (float Hache : listaCampos) {
-            cout << "Trabajando a T = " << TEMPERA << " y H = " << Hache << endl;
+    for (float T : listaTemperaturas) {
 
-            float DeltaEAcumM = 0;
+        auto tableBeg = SiteEnergyTableBEG(params.w1_12, params.w2_12,
+                                            params.w1_13, params.w2_13,
+                                            params.w1_23, params.w2_23,
+                                            T);
+
+        for (float H : listaCampos) {
+            cout << "Trabajando a T = " << T << " y H = " << H << endl;
+
+            float DeltaEAcumM = 0.0f;
             
-            auto tableBeg = SiteEnergyTableBEG(params.w1_12, params.w2_12,
-                                                params.w1_13, params.w2_13,
-                                                params.w1_23, params.w2_23,
-                                                TEMPERA);
-            auto tableSpin = FastBoltzmannTableSpin(params.Jm3, params.Jm6, Hache, TEMPERA);
+            auto tableSpin = FastBoltzmannTableSpin(params.Jm3, params.Jm6, H, T);
 
             for (int contador = 1; contador <= params.num_steps; contador++) {
                 
                 // 3a. Single-Spin Update (Metropolis)
                 if (params.simulation_method == 1)
-                    MonteCarloStepChemicalExchange(lattice, Hache, params, tableBeg, tableSpin, DeltaEAcumM);
+                    MonteCarloStepChemicalExchange(lattice, H, params, tableBeg, tableSpin, DeltaEAcumM);
                 else if(params.simulation_method == 0) {   
-                    MonteCarloStepSpinExtH(lattice, Hache, params, tableSpin, DeltaEAcumM);
+                    MonteCarloStepSpinExtH(lattice, H, params, tableSpin, DeltaEAcumM);
                 }
 
                 // 3b. Measurement and Output (Occurs only in the last 200 steps)
-                if (contador > (params.num_steps - 200)) {
-                    lattice.calculateAndWriteLRO(parout, contador, TEMPERA, Hache, DeltaEAcumM);
+                if (contador > (params.num_steps - params.steps_to_output)) {
+                    lattice.calculateAndWriteLRO(parout, contador, T, H, DeltaEAcumM);
                 }
             }
             
             // 3c. Final Configuration Save
             if (params.flag_save_config) {
-                lattice.saveFinalConfiguration(nombrefile, Hache, TEMPERA, output_count);
+                lattice.saveFinalConfiguration(nombrefile, H, T, output_count);
             }
             output_count++;
         }

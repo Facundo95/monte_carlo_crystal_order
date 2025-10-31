@@ -25,11 +25,13 @@ bool readInputFile(const string& input_filename, SimulationParameters& params_ou
     // Temporary storage for required parameters before constructing SimulationParameters
     int num_steps = 0;
     int simulation_method = 0;
+    int lattice_side = 0;
     float w1_12 = 0.0, w2_12 = 0.0, w1_13 = 0.0, w2_13 = 0.0, w1_23 = 0.0, w2_23 = 0.0 ;
     float Jm3 = 0.0, Jm6 = 0.0;
     float T_start = 0.0, T_end = 0.0, step_T = 0.0;
     float H_upper = 0.0, H_lower = 0.0, step_H = 0.0;
     bool flag_save_config = false;
+    int steps_to_output = 0;
     int found_count = 0; // Tracks critical parameters found
 
     string line;
@@ -43,6 +45,7 @@ bool readInputFile(const string& input_filename, SimulationParameters& params_ou
 
         if (key == "NUM_STEPS" && ss >> num_steps) found_count++;
         else if (key == "SIMULATION_METHOD" && ss >> simulation_method) found_count++;
+        else if (key == "LATTICE_SIDE" && ss >> lattice_side) found_count++;
         else if (key == "W1_12" && ss >> w1_12) found_count++;
         else if (key == "W1_13" && ss >> w1_13) found_count++;
         else if (key == "W1_23" && ss >> w1_23) found_count++;
@@ -57,6 +60,7 @@ bool readInputFile(const string& input_filename, SimulationParameters& params_ou
         else if (key == "H_UPPER" && ss >> H_upper) found_count++;
         else if (key == "H_LOWER" && ss >> H_lower) found_count++;
         else if (key == "STEP_H" && ss >> step_H) found_count++;
+        else if (key == "STEPS_TO_OUTPUT" && ss >> steps_to_output) found_count++;
         else if (key == "FLAG_SAVE_CONFIG") {
             string val;
             if (ss >> val) {
@@ -75,7 +79,7 @@ bool readInputFile(const string& input_filename, SimulationParameters& params_ou
     input_file.close();
 
     // Check if all 10 critical parameters were found
-    if (found_count < 16) {
+    if (found_count < 18) {
         cerr << "ERROR: Parámetros críticos incompletos en el archivo de entrada. Encontrados: " << found_count << "/10." << endl;
         return false;
     }
@@ -86,12 +90,12 @@ bool readInputFile(const string& input_filename, SimulationParameters& params_ou
 
     // If successful, initialize the SimulationParameters struct
     params_out = SimulationParameters(
-        num_steps, simulation_method,
+        num_steps, simulation_method, lattice_side,
         w1_12, w2_12, w1_13, w2_13, w1_23, w2_23, 
         Jm3, Jm6, 
         T_start, T_end, step_T, 
         H_upper, H_lower, step_H, 
-        flag_save_config
+        steps_to_output, flag_save_config
     );
 
     return true;

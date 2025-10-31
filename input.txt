@@ -2,6 +2,8 @@ Configuration File for Monte Carlo Simulation
 --- General Simulation Parameters ---
 Total number of Monte Carlo steps per H/T point
 NUM_STEPS 100000
+Lattice side, N_atoms =  2 * lattice_side ** 3
+LATTICE_SIDE 56
 
 0 Canonic MC, BEG + Ising Hamiltonian
 1 Canonic MC, Ising Hamiltonian
@@ -25,6 +27,7 @@ J_M6 100.0
 
 --- Flag to save the final lattice configuration (true or false) ---
 FLAG_SAVE_CONFIG false
+STEPS_TO_OUTPUT 100000 
 
 --- Temperature Sweep Parameters ---
 T_START 365.0

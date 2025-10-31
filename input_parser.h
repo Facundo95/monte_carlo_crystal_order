@@ -8,10 +8,8 @@
 #include <vector>
 #include "simulation.h"
 
-using namespace std;
-
-bool readInputFile(const string& input_filename, 
+bool readInputFile(const std::string& input_filename, 
                     SimulationParameters& params_out, 
-                    vector<string>& files_out);
+                    std::vector<std::string>& files_out);
 
 #endif // INPUT_PARSER_H

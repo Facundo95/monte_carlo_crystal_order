@@ -10,8 +10,6 @@
 #include <cstdint> // For int8_t
 #include "lattice.h"
 
-using namespace std;
-
 /**
  * @struct BoltzmannTable
  * @brief A structure to pre-calculate and store Boltzmann factors using direct indexing.
@@ -23,7 +21,7 @@ using namespace std;
  */
 struct FastBoltzmannTableSpin {
     // The flat vector storing the pre-computed Boltzmann factors.
-    vector<float> table;
+    std::vector<float> table;
 
     // Dimensions for the 3D to 1D index mapping
     const int N_si = 2;   // s_i can be {-1, 1}
@@ -110,7 +108,7 @@ struct SiteEnergyTableBEG {
     double T;
 
     // --- Table storing the pre-computed factors e^(-E/T) ---
-    vector<double> table;
+    std::vector<double> table;
 
     // --- State space dimensions for indexing ---
     static constexpr int N_sigma = 3; // sigma_i in {-1, 0, 1}
@@ -250,6 +248,7 @@ public:
 struct SimulationParameters {
     int num_steps;
     int simulation_method;
+    int lattice_side;
     float w1_12; // Interaction energy between species 1 and 2 at 1st NN
     float w2_12; // Interaction energy between species 1 and 2 at 2nd NN
     float w1_13; // Interaction energy between species 1 and 3 at 1st NN
@@ -264,20 +263,23 @@ struct SimulationParameters {
     float H_upper;
     float H_lower;
     float step_H;
+    int steps_to_output;
     bool flag_save_config;
 
-    SimulationParameters(int steps, int sim, float w1_12, float w2_12, float w1_13, 
+    SimulationParameters(int steps, int sim, int side, float w1_12, float w2_12, float w1_13, 
                          float w2_13, float w1_23, float w2_23, float j3, float j6, 
                          float t_s, float t_e, float dt, float h_up, float h_low, 
-                         float dh, bool flag_red)
-        : num_steps(steps), simulation_method(sim), w1_12(w1_12), w2_12(w2_12), w1_13(w1_13), 
-        w2_13(w2_13), w1_23(w1_23), w2_23(w2_23), Jm3(j3), Jm6(j6), T_start(t_s), T_end(t_e), 
-        step_T(dt),H_upper(h_up), H_lower(h_low), step_H(dh), flag_save_config(flag_red) {}
+                         float dh, int step_out, bool flag_red)
+        : num_steps(steps), simulation_method(sim), lattice_side(side), 
+        w1_12(w1_12), w2_12(w2_12), w1_13(w1_13), w2_13(w2_13), w1_23(w1_23), w2_23(w2_23), 
+        Jm3(j3), Jm6(j6), T_start(t_s), T_end(t_e), step_T(dt),H_upper(h_up), H_lower(h_low), 
+        step_H(dh), steps_to_output(step_out), flag_save_config(flag_red) {}
 };
 
-inline ostream& operator<<(ostream& os, const SimulationParameters& p) {
+inline std::ostream& operator<<(std::ostream& os, const SimulationParameters& p) {
     os << "  NUM_STEPS: " << p.num_steps << '\n'
        << "  SIMULATION_METHOD: " << p.simulation_method << '\n'
+       << "  LATTICE_SIDE: " << p.lattice_side << '\n'
        << "  W1_12: " << p.w1_12 << '\n'
        << "  W2_12: " << p.w2_12 << '\n'
        << "  W1_13: " << p.w1_13 << '\n'
@@ -292,6 +294,7 @@ inline ostream& operator<<(ostream& os, const SimulationParameters& p) {
        << "  H_UPPER: " << p.H_upper << '\n'
        << "  H_LOWER: " << p.H_lower << '\n'
        << "  STEP_H: " << p.step_H << '\n'
+       << "  STEPS_TO_OUTPUT: " << p.steps_to_output << '\n'
        << "  FLAG_SAVE_CONFIG: " << (p.flag_save_config ? "true" : "false");
     return os;
 }

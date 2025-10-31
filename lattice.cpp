@@ -19,7 +19,7 @@ void Lattice::loadInitialConfiguration(const std::string& filename) {
     int count=0;
     redin.seekg(0, std::ios::beg);
     while (redin >> aux) {
-        if (count >= LATTICE_TOTAL_SITES) {
+        if (count >= m_total_sites) {
             throw std::runtime_error("El archivo de entrada tiene más datos de los esperados.");
         }
         // Polynomial transformation from the original code
@@ -33,71 +33,67 @@ void Lattice::loadInitialConfiguration(const std::string& filename) {
 }
 
 void Lattice::initializeNeighbors() {
-    for (int site = 0; site < LATTICE_TOTAL_SITES; ++site) {
+    for (int site = 0; site < m_total_sites; ++site) {
         int x, y, z;
-        idxToXYZ(site, LATTICE_SIDE, LATTICE_DEPTH, x, y, z);
+        idxToXYZ(site, m_side, x, y, z);
 
-        std::array<int, 8> n1;
-        std::array<int, 6> n2;
-        std::array<int, 12> n3;
-        std::array<int, 6> n6;
+        auto& n1 = neighbors1[site];
+        auto& n2 = neighbors2[site];
+        auto& n3 = neighbors3[site];
+        auto& n6 = neighbors6[site];
 
         // 1st Neighbors (8 sites)
         int p = 0;
-        n1[p++] = idx3D(x, y, wrap(z + 1, LATTICE_DEPTH));
-        n1[p++] = idx3D(x, y, wrap(z - 1, LATTICE_DEPTH));
+        n1[p++] = idx3D(x, y, wrap(z + 1, m_depth));
+        n1[p++] = idx3D(x, y, wrap(z - 1, m_depth));
         if (z % 2 == 0) {
-            n1[p++] = idx3D(wrap(x + 1, LATTICE_SIDE), y, wrap(z + 1, LATTICE_DEPTH));
-            n1[p++] = idx3D(wrap(x + 1, LATTICE_SIDE), y, wrap(z - 1, LATTICE_DEPTH));
-            n1[p++] = idx3D(x, wrap(y + 1, LATTICE_SIDE), wrap(z + 1, LATTICE_DEPTH));
-            n1[p++] = idx3D(x, wrap(y + 1, LATTICE_SIDE), wrap(z - 1, LATTICE_DEPTH));
-            n1[p++] = idx3D(wrap(x + 1, LATTICE_SIDE), wrap(y + 1, LATTICE_SIDE), wrap(z + 1, LATTICE_DEPTH));
-            n1[p++] = idx3D(wrap(x + 1, LATTICE_SIDE), wrap(y + 1, LATTICE_SIDE), wrap(z - 1, LATTICE_DEPTH));
+            n1[p++] = idx3D(wrap(x + 1, m_side), y, wrap(z + 1, m_depth));
+            n1[p++] = idx3D(wrap(x + 1, m_side), y, wrap(z - 1, m_depth));
+            n1[p++] = idx3D(x, wrap(y + 1, m_side), wrap(z + 1, m_depth));
+            n1[p++] = idx3D(x, wrap(y + 1, m_side), wrap(z - 1, m_depth));
+            n1[p++] = idx3D(wrap(x + 1, m_side), wrap(y + 1, m_side), wrap(z + 1, m_depth));
+            n1[p++] = idx3D(wrap(x + 1, m_side), wrap(y + 1, m_side), wrap(z - 1, m_depth));
         } else {
-            n1[p++] = idx3D(wrap(x - 1, LATTICE_SIDE), y, wrap(z + 1, LATTICE_DEPTH));
-            n1[p++] = idx3D(wrap(x - 1, LATTICE_SIDE), y, wrap(z - 1, LATTICE_DEPTH));
-            n1[p++] = idx3D(x, wrap(y - 1, LATTICE_SIDE), wrap(z + 1, LATTICE_DEPTH));
-            n1[p++] = idx3D(x, wrap(y - 1, LATTICE_SIDE), wrap(z - 1, LATTICE_DEPTH));
-            n1[p++] = idx3D(wrap(x - 1, LATTICE_SIDE), wrap(y - 1, LATTICE_SIDE), wrap(z + 1, LATTICE_DEPTH));
-            n1[p++] = idx3D(wrap(x - 1, LATTICE_SIDE), wrap(y - 1, LATTICE_SIDE), wrap(z - 1, LATTICE_DEPTH));
+            n1[p++] = idx3D(wrap(x - 1, m_side), y, wrap(z + 1, m_depth));
+            n1[p++] = idx3D(wrap(x - 1, m_side), y, wrap(z - 1, m_depth));
+            n1[p++] = idx3D(x, wrap(y - 1, m_side), wrap(z + 1, m_depth));
+            n1[p++] = idx3D(x, wrap(y - 1, m_side), wrap(z - 1, m_depth));
+            n1[p++] = idx3D(wrap(x - 1, m_side), wrap(y - 1, m_side), wrap(z + 1, m_depth));
+            n1[p++] = idx3D(wrap(x - 1, m_side), wrap(y - 1, m_side), wrap(z - 1, m_depth));
         }
-        neighbors1[site] = n1;
 
         // 2nd Neighbors (6 sites)
         p = 0;
-        n2[p++] = idx3D(wrap(x + 1, LATTICE_SIDE), wrap(y, LATTICE_SIDE), z);
-        n2[p++] = idx3D(wrap(x - 1, LATTICE_SIDE), wrap(y, LATTICE_SIDE), z);
-        n2[p++] = idx3D(wrap(x, LATTICE_SIDE), wrap(y + 1, LATTICE_SIDE), z);
-        n2[p++] = idx3D(wrap(x, LATTICE_SIDE), wrap(y - 1, LATTICE_SIDE), z);
-        n2[p++] = idx3D(wrap(x, LATTICE_SIDE), wrap(y, LATTICE_SIDE), wrap(z + 2, LATTICE_DEPTH));
-        n2[p++] = idx3D(wrap(x, LATTICE_SIDE), wrap(y, LATTICE_SIDE), wrap(z - 2, LATTICE_DEPTH));
-        neighbors2[site] = n2;
+        n2[p++] = idx3D(wrap(x + 1, m_side), wrap(y, m_side), z);
+        n2[p++] = idx3D(wrap(x - 1, m_side), wrap(y, m_side), z);
+        n2[p++] = idx3D(x, wrap(y + 1, m_side), z);
+        n2[p++] = idx3D(x, wrap(y - 1, m_side), z);
+        n2[p++] = idx3D(x, wrap(y, m_side), wrap(z + 2, m_depth));
+        n2[p++] = idx3D(x, wrap(y, m_side), wrap(z - 2, m_depth));
 
         // 3rd Neighbors (12 sites)
         p = 0;
-        n3[p++] = idx3D(wrap(x + 1, LATTICE_SIDE), wrap(y + 1, LATTICE_SIDE), z);
-        n3[p++] = idx3D(wrap(x + 1, LATTICE_SIDE), wrap(y - 1, LATTICE_SIDE), z);
-        n3[p++] = idx3D(wrap(x - 1, LATTICE_SIDE), wrap(y + 1, LATTICE_SIDE), z);
-        n3[p++] = idx3D(wrap(x - 1, LATTICE_SIDE), wrap(y - 1, LATTICE_SIDE), z);
-        n3[p++] = idx3D(x, wrap(y + 1, LATTICE_SIDE), wrap(z + 2, LATTICE_DEPTH));
-        n3[p++] = idx3D(x, wrap(y - 1, LATTICE_SIDE), wrap(z + 2, LATTICE_DEPTH));
-        n3[p++] = idx3D(x, wrap(y + 1, LATTICE_SIDE), wrap(z - 2, LATTICE_DEPTH));
-        n3[p++] = idx3D(x, wrap(y - 1, LATTICE_SIDE), wrap(z - 2, LATTICE_DEPTH));
-        n3[p++] = idx3D(wrap(x + 1, LATTICE_SIDE), y, wrap(z + 2, LATTICE_DEPTH));
-        n3[p++] = idx3D(wrap(x - 1, LATTICE_SIDE), y, wrap(z + 2, LATTICE_DEPTH));
-        n3[p++] = idx3D(wrap(x + 1, LATTICE_SIDE), y, wrap(z - 2, LATTICE_DEPTH));
-        n3[p++] = idx3D(wrap(x - 1, LATTICE_SIDE), y, wrap(z - 2, LATTICE_DEPTH));
-        neighbors3[site] = n3;
+        n3[p++] = idx3D(wrap(x + 1, m_side), wrap(y + 1, m_side), z);
+        n3[p++] = idx3D(wrap(x + 1, m_side), wrap(y - 1, m_side), z);
+        n3[p++] = idx3D(wrap(x - 1, m_side), wrap(y + 1, m_side), z);
+        n3[p++] = idx3D(wrap(x - 1, m_side), wrap(y - 1, m_side), z);
+        n3[p++] = idx3D(x, wrap(y + 1, m_side), wrap(z + 2, m_depth));
+        n3[p++] = idx3D(x, wrap(y - 1, m_side), wrap(z + 2, m_depth));
+        n3[p++] = idx3D(x, wrap(y + 1, m_side), wrap(z - 2, m_depth));
+        n3[p++] = idx3D(x, wrap(y - 1, m_side), wrap(z - 2, m_depth));
+        n3[p++] = idx3D(wrap(x + 1, m_side), y, wrap(z + 2, m_depth));
+        n3[p++] = idx3D(wrap(x - 1, m_side), y, wrap(z + 2, m_depth));
+        n3[p++] = idx3D(wrap(x + 1, m_side), y, wrap(z - 2, m_depth));
+        n3[p++] = idx3D(wrap(x - 1, m_side), y, wrap(z - 2, m_depth));
 
         // 6th Neighbors (6 sites)
         p = 0;
-        n6[p++] = idx3D(wrap(x + 2, LATTICE_SIDE), y, z);
-        n6[p++] = idx3D(wrap(x - 2, LATTICE_SIDE), y, z);
-        n6[p++] = idx3D(x, wrap(y + 2, LATTICE_SIDE), z);
-        n6[p++] = idx3D(x, wrap(y - 2, LATTICE_SIDE), z);
-        n6[p++] = idx3D(x, y, wrap(z + 4, LATTICE_DEPTH));
-        n6[p++] = idx3D(x, y, wrap(z - 4, LATTICE_DEPTH));
-        neighbors6[site] = n6;
+        n6[p++] = idx3D(wrap(x + 2, m_side), y, z);
+        n6[p++] = idx3D(wrap(x - 2, m_side), y, z);
+        n6[p++] = idx3D(x, wrap(y + 2, m_side), z);
+        n6[p++] = idx3D(x, wrap(y - 2, m_side), z);
+        n6[p++] = idx3D(x, y, wrap(z + 4, m_depth));
+        n6[p++] = idx3D(x, y, wrap(z - 4, m_depth));
     }
 }
 
@@ -191,8 +187,7 @@ float Lattice::calculateSiteChemicalEnergy(int type,
 }
 
 float Lattice::calculateSiteMagneticEnergy(int Spin, float j3, float j6, float H, float sum3, float sum6) const {
-    float dEM = - Spin * (j3 * sum3 + j6 * sum6 + H);
-    return dEM;
+    return - Spin * (j3 * sum3 + j6 * sum6 + H);
 }
 
 /**
@@ -207,9 +202,9 @@ void Lattice::calculateAndWriteLRO(std::ofstream& parout, int step_count, float 
     float Magnetizacion = 0;
     
     // Traversal and counting for LRO parameters
-    for (int site = 0; site<LATTICE_TOTAL_SITES;site++){
+    for (int site = 0; site<m_total_sites;site++){
         int i, j, k;
-        idxToXYZ(site, LATTICE_SIDE, LATTICE_DEPTH, i, j, k);
+        idxToXYZ(site, m_side, i, j, k);
         Magnetizacion += magn_flat[site];
 
         // Determine sublattice (I, II, III, or IV)
@@ -251,25 +246,25 @@ void Lattice::calculateAndWriteLRO(std::ofstream& parout, int step_count, float 
     }
     
     // Calculate LRO Parameters (X, Y, Z) and normalized Magnetization
-    const float ENE = (float)LATTICE_TOTAL_SITES;
+    const float ENE = (float)m_total_sites;
     
     // X parameters (I+II vs III+IV)
-    float Xcu = (float)((CuI+CuII-CuIII-CuIV)/(ENE));
-    float Xmnup = (float)((MnUpI+MnUpII-MnUpIII-MnUpIV)/(ENE));
-    float Xmndown = (float)((MnDownI+MnDownII-MnDownIII-MnDownIV)/(ENE));
-    float Xal = (float)((AlI+AlII-AlIII-AlIV)/(ENE));
+    float Xcu = (CuI+CuII-CuIII-CuIV) / ENE;
+    float Xmnup = (MnUpI+MnUpII-MnUpIII-MnUpIV) / ENE;
+    float Xmndown = (MnDownI+MnDownII-MnDownIII-MnDownIV) / ENE;
+    float Xal = (AlI+AlII-AlIII-AlIV) / ENE;
     
     // Y parameters (I vs II)
-    float Ycu = (float)((CuI-CuII)*2/(ENE));
-    float Ymnup = (float)((MnUpI-MnUpII)*2/(ENE));
-    float Ymndown = (float)((MnDownI-MnDownII)*2/(ENE));
-    float Yal = (float)((AlI-AlII)*2/(ENE));
+    float Ycu = 2 * (CuI-CuII) / ENE;
+    float Ymnup = 2 * (MnUpI-MnUpII) / ENE;
+    float Ymndown = 2 * (MnDownI-MnDownII) / ENE;
+    float Yal = 2 * (AlI-AlII) / ENE;
     
     // Z parameters (III vs IV)
-    float Zcu = (float)((CuIII-CuIV)*2/(ENE));
-    float Zmnup = (float)((MnUpIII-MnUpIV)*2/(ENE));
-    float Zmndown = (float)((MnDownIII-MnDownIV)*2/(ENE));
-    float Zal = (float)((AlIII-AlIV)*2/(ENE));
+    float Zcu = 2 * (CuIII-CuIV) / ENE;
+    float Zmnup = 2 * (MnUpIII-MnUpIV) / ENE;
+    float Zmndown = 2 * (MnDownIII-MnDownIV) / ENE;
+    float Zal = 2 * (AlIII-AlIV) / ENE;
     
     // Write results to file
     parout << step_count << "\t" << H << "\t" << T << "\t"
@@ -291,7 +286,7 @@ void Lattice::saveFinalConfiguration(const char* nombrefile, float Hache, float 
     
     redout.seekp(0, std::ios::beg);
     float aux2, aux3;
-    for (int site = 0; site < LATTICE_SIDE; site++) {
+    for (int site = 0; site < m_total_sites; site++) {
         aux2 = red_flat[site];
         aux3 = magn_flat[site];
         // Transformation used in original code for output
