@@ -75,7 +75,8 @@ void MonteCarloStepChemicalExchange(Lattice& lattice,
                                     const SimulationParameters& params, 
                                     const SiteEnergyTableBEG& tableBeg,
                                     const FastBoltzmannTableSpin& tableSpin,
-                                    float& DeltaEAcumM) {
+                                    float& DeltaEAcumM,
+                                    int& changesAccepted) {
 
     float jota1 = 0.25*params.w1_12;
     float jota2 = 0.25*params.w2_12;
@@ -167,6 +168,7 @@ void MonteCarloStepChemicalExchange(Lattice& lattice,
             
             if (Boltzmann >= epsilonM) {
                 lattice.exchangeSpecies(site, siteNeighbor);
+                changesAccepted++;
                 DeltaEAcumM += dETotal;
             }
             continue;
@@ -174,6 +176,7 @@ void MonteCarloStepChemicalExchange(Lattice& lattice,
 
         // Accept: Exchange species
         lattice.exchangeSpecies(site, siteNeighbor);
+        changesAccepted++;
         DeltaEAcumM += dETotal;
     
     }
@@ -186,7 +189,8 @@ void MonteCarloStepSpinExtH(Lattice& lattice,
                             float H,
                             const SimulationParameters& params, 
                             const FastBoltzmannTableSpin& table,
-                            float& DeltaEAcumM) {
+                            float& DeltaEAcumM,
+                            int& changesAccepted) {
     
     for (int site = 0; site < lattice.totalSites(); site++) {
         
@@ -213,6 +217,7 @@ void MonteCarloStepSpinExtH(Lattice& lattice,
             if (Boltzmann >= epsilonM) {
         
                 lattice.flipSpin(site);
+                changesAccepted++;
                 DeltaEAcumM += deltaEM;
         
             }
@@ -222,6 +227,7 @@ void MonteCarloStepSpinExtH(Lattice& lattice,
         
         // Accept: Flip spin
         lattice.flipSpin(site);
+        changesAccepted++;
         DeltaEAcumM += deltaEM;
     
     }
@@ -266,6 +272,8 @@ void SimulationLoop(const SimulationParameters& params, const char* nombrefile) 
         for (float H : listaCampos) {
             cout << "Trabajando a T = " << T << " y H = " << H << endl;
 
+            int changesAccepted = 0;
+            
             float DeltaEAcumM = 0.0f;
             
             auto tableSpin = FastBoltzmannTableSpin(params.Jm3, params.Jm6, H, T);
@@ -274,9 +282,9 @@ void SimulationLoop(const SimulationParameters& params, const char* nombrefile) 
                 
                 // 3a. Single-Spin Update (Metropolis)
                 if (params.simulation_method == 1)
-                    MonteCarloStepChemicalExchange(lattice, H, params, tableBeg, tableSpin, DeltaEAcumM);
+                    MonteCarloStepChemicalExchange(lattice, H, params, tableBeg, tableSpin, DeltaEAcumM, changesAccepted);
                 else if(params.simulation_method == 0) {   
-                    MonteCarloStepSpinExtH(lattice, H, params, tableSpin, DeltaEAcumM);
+                    MonteCarloStepSpinExtH(lattice, H, params, tableSpin, DeltaEAcumM, changesAccepted);
                 }
 
                 // 3b. Measurement and Output (Occurs only in the last 200 steps)
@@ -289,6 +297,9 @@ void SimulationLoop(const SimulationParameters& params, const char* nombrefile) 
             if (params.flag_save_config) {
                 lattice.saveFinalConfiguration(nombrefile, H, T, output_count);
             }
+
+            std::cout << "Intercambios aceptados: " << changesAccepted << "/" << lattice.totalSites() << std::endl;
+
             output_count++;
         }
     }

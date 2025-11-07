@@ -309,13 +309,15 @@ void MonteCarloStepChemicalExchange(Lattice& lattice,
                                     const SimulationParameters& params, 
                                     const SiteEnergyTableBEG& tableBeg,
                                     const FastBoltzmannTableSpin& tableSpin,
-                                    float& DeltaEAcumM);
+                                    float& DeltaEAcumM,
+                                    int& changesAccepted);
 
 void MonteCarloStepSpinExtH(Lattice& lattice, 
                             float H,
                             const SimulationParameters& params, 
                             const FastBoltzmannTableSpin& table,
-                            float& DeltaEAcumM);
+                            float& DeltaEAcumM,
+                            int& changesAccepted);
 
 void SimulationLoop(const SimulationParameters& params, const char* nombrefile);
 
