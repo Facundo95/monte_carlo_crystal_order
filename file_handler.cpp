@@ -12,11 +12,11 @@
  */
 bool OpenLROParametersFile(const char* nombrefile, std::ofstream& output_stream) {
     // 1. Construct the full filename: e.g., "LRO_cu-al-mn_....txt"
-    std::string fileOUT = "LRO_" + std::string(nombrefile) + ".txt";
+    std::string fileOUT = "output_" + std::string(nombrefile) + ".txt";
     
     // 2. Attempt to open the file in output and append mode
     output_stream.open(fileOUT, std::ios::out | std::ios::app);
-    
+
     // 3. Check for errors
     if (!output_stream.is_open()) {
         std::cerr << "ERROR: No se pudo abrir el archivo de salida para parámetros LRO: " 
@@ -24,6 +24,14 @@ bool OpenLROParametersFile(const char* nombrefile, std::ofstream& output_stream)
         return false;
     }
     
+    // 4. If opened successfully, write header
+
+    output_stream << "# Step\tH\tT\t"
+                  << "X_Cu\tX_MnUp\tX_MnDown\tX_Al\t"
+                  << "Y_Cu\tY_MnUp\tY_MnDown\tY_Al\t"
+                  << "Z_Cu\tZ_MnUp\tZ_MnDown\tZ_Al\t"
+                  << "Magnetization\tDeltaEAcumM\n";
+
     return true;
 }
 
