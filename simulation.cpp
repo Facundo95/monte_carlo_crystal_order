@@ -83,12 +83,12 @@ void MonteCarloStepChemicalExchange(Lattice& lattice,
                                     float& DeltaEAcumM,
                                     int& changesAccepted) {
 
-    float jota1 = 0.25*params.w1_12;
-    float jota2 = 0.25*params.w2_12;
-    float ka1 = 0.25*(2*params.w1_13 + 2*params.w1_23 - params.w1_12);
-    float ka2 = 0.25*(2*params.w2_13 + 2*params.w2_23 - params.w2_12);
-    float ele1 = 0.25*(params.w1_13 - params.w1_23);
-    float ele2 = 0.25*(params.w2_13 - params.w2_23);
+    float jota1 = 0.25 * params.w1_13;
+    float jota2 = 0.25 * params.w2_13;
+    float ka1 = 0.25 * (2 * params.w1_12 + 2 * params.w1_23 - params.w1_13);
+    float ka2 = 0.25 * (2 * params.w2_12 + 2 * params.w2_23 - params.w2_13);
+    float ele1 = 0.25 * (params.w1_12 - params.w1_13);
+    float ele2 = 0.25 * (params.w2_12 - params.w2_13);
 
     for (int site = 0; site < lattice.totalSites(); site++) {
         
@@ -283,6 +283,7 @@ void SimulationLoop(const SimulationParameters& params, const char* nombrefile) 
                                             T);
 
         for (float H : listaCampos) {
+            std::cout << "----------------------------------------" << std::endl;
             std::cout << "Trabajando a T = " << T << " y H = " << H << std::endl;
 
             int changesAccepted = 0;
@@ -294,9 +295,9 @@ void SimulationLoop(const SimulationParameters& params, const char* nombrefile) 
             for (int contador = 1; contador <= params.num_steps; contador++) {
                 
                 // 3a. Single-Spin Update (Metropolis)
-                if (params.simulation_method == 1)
+                if (params.simulation_method == 0)
                     MonteCarloStepChemicalExchange(lattice, H, params, tableBeg, tableSpin, DeltaEAcumM, changesAccepted);
-                else if(params.simulation_method == 0) {   
+                else if(params.simulation_method == 1) {   
                     MonteCarloStepSpinExtH(lattice, H, params, tableSpin, DeltaEAcumM, changesAccepted);
                 }
 
@@ -311,7 +312,7 @@ void SimulationLoop(const SimulationParameters& params, const char* nombrefile) 
                 lattice.saveFinalConfiguration(nombrefile, H, T, output_count);
             }
 
-            std::cout << "Intercambios aceptados: " << changesAccepted << "/" << lattice.totalSites() << std::endl;
+            std::cout << "Intercambios aceptados / átomo: " << changesAccepted / lattice.totalSites() << "en " << params.num_steps << "pasos." << std::endl;
 
             output_count++;
         }

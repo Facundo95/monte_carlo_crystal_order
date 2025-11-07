@@ -27,9 +27,9 @@ bool OpenLROParametersFile(const char* nombrefile, std::ofstream& output_stream)
     // 4. If opened successfully, write header
 
     output_stream << "# Step\tH\tT\t"
-                  << "X_Cu\tX_MnUp\tX_MnDown\tX_Al\t"
-                  << "Y_Cu\tY_MnUp\tY_MnDown\tY_Al\t"
-                  << "Z_Cu\tZ_MnUp\tZ_MnDown\tZ_Al\t"
+                  << "X_A\tX_BUp\tX_BDown\tX_C\t"
+                  << "Y_A\tY_BUp\tY_BDown\tY_C\t"
+                  << "Z_A\tZ_BUp\tZ_BDown\tZ_C\t"
                   << "Magnetization\tDeltaEAcumM\n";
 
     return true;

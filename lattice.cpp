@@ -219,9 +219,9 @@ void Lattice::calculateAndWriteLRO(std::ofstream& parout,
                                 int step_count, float T, 
                                 float H, float DeltaEAcumM) const {
     
-    int CuI=0, CuII=0, CuIII=0, CuIV=0;
-    int MnUpI=0, MnUpII=0, MnUpIII=0, MnUpIV=0, MnDownI=0, MnDownII=0, MnDownIII=0, MnDownIV=0; 
-    int AlI=0, AlII=0, AlIII=0, AlIV=0;
+    int AI=0, AII=0, AIII=0, AIV=0;
+    int BUpI=0, BUpII=0, BUpIII=0, BUpIV=0, BDownI=0, BDownII=0, BDownIII=0, BDownIV=0; 
+    int CI=0, CII=0, CIII=0, CIV=0;
 
     float Magnetizacion = 0;
     
@@ -235,37 +235,37 @@ void Lattice::calculateAndWriteLRO(std::ofstream& parout,
         bool Z_is_even = (k % 2 == 0);
         bool XY_sum_is_even = ((i + j + (k/2)) % 2 == 0);
 
-        int* Cu_ptr = nullptr;
-        int* MnUp_ptr = nullptr;
-        int* MnDown_ptr = nullptr;
-        int* Al_ptr = nullptr;
+        int* A_ptr = nullptr;
+        int* BUp_ptr = nullptr;
+        int* BDown_ptr = nullptr;
+        int* C_ptr = nullptr;
         
         // Simplified conditional logic using pointers
         if (Z_is_even) {
             if (XY_sum_is_even) { // Sublattice I (Z even, X+Y+Z/2 even)
-                Cu_ptr = &CuI; MnUp_ptr = &MnUpI; MnDown_ptr = &MnDownI; Al_ptr = &AlI;
+                A_ptr = &AI; BUp_ptr = &BUpI; BDown_ptr = &BDownI; C_ptr = &CI;
             } else { // Sublattice II (Z even, X+Y+Z/2 odd)
-                Cu_ptr = &CuII; MnUp_ptr = &MnUpII; MnDown_ptr = &MnDownII; Al_ptr = &AlII;
+                A_ptr = &AII; BUp_ptr = &BUpII; BDown_ptr = &BDownII; C_ptr = &CII;
             }
         } else {
             if (XY_sum_is_even) { // Sublattice III (Z odd, X+Y+Z/2 even)
-                Cu_ptr = &CuIII; MnUp_ptr = &MnUpIII; MnDown_ptr = &MnDownIII; Al_ptr = &AlIII;
+                A_ptr = &AIII; BUp_ptr = &BUpIII; BDown_ptr = &BDownIII; C_ptr = &CIII;
             } else { // Sublattice IV (Z odd, X+Y+Z/2 odd)
-                Cu_ptr = &CuIV; MnUp_ptr = &MnUpIV; MnDown_ptr = &MnDownIV; Al_ptr = &AlIV;
+                A_ptr = &AIV; BUp_ptr = &BUpIV; BDown_ptr = &BDownIV; C_ptr = &CIV;
             }
         }
         
         // Increment counters based on species (red[site] = 1, 0, or -1)
         if (red_flat[site] == 1) { // Copper
-            (*Cu_ptr)++;
+            (*A_ptr)++;
         } else if (red_flat[site] == 0) { // Manganese
             if (magn_flat[site] == 1) {
-                (*MnUp_ptr)++;
+                (*BUp_ptr)++;
             } else {
-                (*MnDown_ptr)++;
+                (*BDown_ptr)++;
             }
         } else if (red_flat[site] == -1) { // Aluminum
-            (*Al_ptr)++;
+            (*C_ptr)++;
         }
     }
     
@@ -273,28 +273,28 @@ void Lattice::calculateAndWriteLRO(std::ofstream& parout,
     const float ENE = (float)m_total_sites;
     
     // X parameters (I+II vs III+IV)
-    float Xcu = (CuI+CuII-CuIII-CuIV) / ENE;
-    float Xmnup = (MnUpI+MnUpII-MnUpIII-MnUpIV) / ENE;
-    float Xmndown = (MnDownI+MnDownII-MnDownIII-MnDownIV) / ENE;
-    float Xal = (AlI+AlII-AlIII-AlIV) / ENE;
+    float X_A = (AI+AII-AIII-AIV) / ENE;
+    float X_Bup = (BUpI+BUpII-BUpIII-BUpIV) / ENE;
+    float X_Bdown = (BDownI+BDownII-BDownIII-BDownIV) / ENE;
+    float X_C = (CI+CII-CIII-CIV) / ENE;
     
     // Y parameters (I vs II)
-    float Ycu = 2 * (CuI-CuII) / ENE;
-    float Ymnup = 2 * (MnUpI-MnUpII) / ENE;
-    float Ymndown = 2 * (MnDownI-MnDownII) / ENE;
-    float Yal = 2 * (AlI-AlII) / ENE;
+    float Y_A = 2 * (AI-AII) / ENE;
+    float Y_Bup = 2 * (BUpI-BUpII) / ENE;
+    float Y_Bdown = 2 * (BDownI-BDownII) / ENE;
+    float Y_C = 2 * (CI-CII) / ENE;
     
     // Z parameters (III vs IV)
-    float Zcu = 2 * (CuIII-CuIV) / ENE;
-    float Zmnup = 2 * (MnUpIII-MnUpIV) / ENE;
-    float Zmndown = 2 * (MnDownIII-MnDownIV) / ENE;
-    float Zal = 2 * (AlIII-AlIV) / ENE;
+    float Z_A = 2 * (AIII-AIV) / ENE;
+    float Z_Bup = 2 * (BUpIII-BUpIV) / ENE;
+    float Z_Bdown = 2 * (BDownIII-BDownIV) / ENE;
+    float Z_C = 2 * (CIII-CIV) / ENE;
     
     // Write results to file
     parout << step_count << "\t" << H << "\t" << T << "\t"
-           << Xcu << "\t" << Xmnup << "\t" << Xmndown << "\t" << Xal << "\t"
-           << Ycu << "\t" << Ymnup << "\t" << Ymndown << "\t" << Yal << "\t"
-           << Zcu << "\t" << Zmnup << "\t" << Zmndown << "\t" << Zal << "\t"
+           << X_A << "\t" << X_Bup << "\t" << X_Bdown << "\t" << X_C << "\t"
+           << Y_A << "\t" << Y_Bup << "\t" << Y_Bdown << "\t" << Y_C << "\t"
+           << Z_A << "\t" << Z_Bup << "\t" << Z_Bdown << "\t" << Z_C << "\t"
            << Magnetizacion/ENE << "\t"
            << DeltaEAcumM << "\t" << std::endl;
 }
