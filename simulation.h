@@ -299,11 +299,21 @@ inline std::ostream& operator<<(std::ostream& os, const SimulationParameters& p)
     return os;
 }
 
-// Main simulation flow functions
+/** @brief Creates a list of magnetic field values for the sweep. */
 std::vector<float> createHSweepList(const SimulationParameters& params);
 
+/** @brief Creates a list of temperatures values for the sweep. */
 std::vector<float> createTSweepList(const SimulationParameters& params);
 
+/** @brief Performs a Monte Carlo step using chemical species exchange dynamics. 
+ * @param lattice The lattice object representing the system.
+ * @param H The external magnetic field.
+ * @param params The simulation parameters.
+ * @param tableBeg The pre-computed BEG site energy table.
+ * @param tableSpin The pre-computed spin Boltzmann table.
+ * @param DeltaEAcumM Accumulated energy change for magnetization.
+ * @param changesAccepted Counter for accepted changes.
+*/
 void MonteCarloStepChemicalExchange(Lattice& lattice,
                                     float H,    
                                     const SimulationParameters& params, 
@@ -312,6 +322,14 @@ void MonteCarloStepChemicalExchange(Lattice& lattice,
                                     float& DeltaEAcumM,
                                     int& changesAccepted);
 
+/** @brief Performs a Monte Carlo step using spin flip dynamics.
+ * @param lattice The lattice object representing the system.
+ * @param H The external magnetic field.
+ * @param params The simulation parameters.
+ * @param table The pre-computed spin Boltzmann table.
+ * @param DeltaEAcumM Accumulated energy change for magnetization.
+ * @param changesAccepted Counter for accepted changes.
+*/
 void MonteCarloStepSpinExtH(Lattice& lattice, 
                             float H,
                             const SimulationParameters& params, 
@@ -319,6 +337,10 @@ void MonteCarloStepSpinExtH(Lattice& lattice,
                             float& DeltaEAcumM,
                             int& changesAccepted);
 
+/** @brief Main simulation loop handling temperature and magnetic field sweeps.
+ * @param params The simulation parameters.
+ * @param nombrefile The base name for output files.
+*/
 void SimulationLoop(const SimulationParameters& params, const char* nombrefile);
 
 #endif // SIMULATION_H

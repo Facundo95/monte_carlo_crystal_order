@@ -5,8 +5,6 @@
 #include <vector>
 #include "simulation.h"
 
-using namespace std;
-
 /**
  * @brief Reads simulation parameters and a list of input filenames from a text file.
  * * @param input_filename The path to the input configuration file (e.g., "input.txt").
@@ -15,10 +13,10 @@ using namespace std;
  * @return true if the file was successfully read and all critical parameters were found.
  * @return false otherwise.
  */
-bool readInputFile(const string& input_filename, SimulationParameters& params_out, vector<string>& files_out) {
-    ifstream input_file(input_filename);
+bool readInputFile(const std::string& input_filename, SimulationParameters& params_out, std::vector<std::string>& files_out) {
+    std::ifstream input_file(input_filename);
     if (!input_file.is_open()) {
-        cerr << "ERROR: No se pudo abrir el archivo de entrada: " << input_filename << endl;
+        std::cerr << "ERROR: No se pudo abrir el archivo de entrada: " << input_filename << std::endl;
         return false;
     }
 
@@ -34,13 +32,13 @@ bool readInputFile(const string& input_filename, SimulationParameters& params_ou
     int steps_to_output = 0;
     int found_count = 0; // Tracks critical parameters found
 
-    string line;
+    std::string line;
     while (getline(input_file, line)) {
         // Skip comments and empty lines
         if (line.empty() || line[0] == '#') continue;
 
-        stringstream ss(line);
-        string key;
+        std::stringstream ss(line);
+        std::string key;
         ss >> key;
 
         if (key == "NUM_STEPS" && ss >> num_steps) found_count++;
@@ -62,14 +60,14 @@ bool readInputFile(const string& input_filename, SimulationParameters& params_ou
         else if (key == "STEP_H" && ss >> step_H) found_count++;
         else if (key == "STEPS_TO_OUTPUT" && ss >> steps_to_output) found_count++;
         else if (key == "FLAG_SAVE_CONFIG") {
-            string val;
+            std::string val;
             if (ss >> val) {
                 flag_save_config = (val == "true" || val == "TRUE" || val == "1");
                 found_count++;
             }
         }
         else if (key == "FILE_ENTRY") {
-            string filename;
+            std::string filename;
             if (ss >> filename) {
                 files_out.push_back(filename);
             }
@@ -80,11 +78,11 @@ bool readInputFile(const string& input_filename, SimulationParameters& params_ou
 
     // Check if all 10 critical parameters were found
     if (found_count < 18) {
-        cerr << "ERROR: Parámetros críticos incompletos en el archivo de entrada. Encontrados: " << found_count << "/10." << endl;
+        std::cerr << "ERROR: Parámetros críticos incompletos en el archivo de entrada. Encontrados: " << found_count << "/10." << std::endl;
         return false;
     }
     if (files_out.empty()) {
-        cerr << "ERROR: No se encontraron archivos de simulación (FILE_ENTRY) en el archivo de entrada." << endl;
+        std::cerr << "ERROR: No se encontraron archivos de simulación (FILE_ENTRY) en el archivo de entrada." << std::endl;
         return false;
     }
 

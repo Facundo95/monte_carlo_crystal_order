@@ -12,13 +12,14 @@ static union
     float fl;
 } xx;
 
-/*GENERADOR DE NúMEROS ALEATORIOS*/
+/** @brief Returns a random integer. */
 long RanEnt(){
     ALE32 = ALE32 * semilla;
     ALE32 = ALE32 & mascara48;
     return((long) ALE32);
 }
 
+/** @brief Returns a random float in [0, 1). */
 float Ran0a1(){
     xx.tmp = RanEnt();
     // Masking bits to ensure result is between 0 and 1 (standard LCG trick)
@@ -26,6 +27,7 @@ float Ran0a1(){
     return((double)(xx.fl - 1.0));
 }
 
+/** @brief Returns a random integer in [1, 8]. */
 int RanEnt1a8(){
     // Use the random float generation to map to an integer between 1 and 8
     xx.fl = RanEnt();

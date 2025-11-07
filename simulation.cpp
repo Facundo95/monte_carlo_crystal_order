@@ -3,10 +3,6 @@
 #include "file_handler.h"
 #include <stdexcept>
 
-using namespace std;
-
-// --- Main Simulation Flow Functions ---
-
 /**
  * @brief Creates the vector of magnetic field values for the H-sweep loop.
  */
@@ -42,7 +38,7 @@ std::vector<float> createHSweepList(const SimulationParameters& params) {
 
 
 /**
- * @brief Creates the vector of magnetic field values for the H-sweep loop.
+ * @brief Creates the vector of temperatures values for the T-sweep loop.
  */
 std::vector<float> createTSweepList(const SimulationParameters& params) {
     std::vector<float> list;
@@ -70,6 +66,15 @@ std::vector<float> createTSweepList(const SimulationParameters& params) {
     return list;
 }
 
+/** @brief Performs a Monte Carlo step using chemical species exchange dynamics. 
+ * @param lattice The lattice object representing the system.
+ * @param H The external magnetic field.
+ * @param params The simulation parameters.
+ * @param tableBeg The pre-computed BEG site energy table.
+ * @param tableSpin The pre-computed spin Boltzmann table.
+ * @param DeltaEAcumM Accumulated energy change for magnetization.
+ * @param changesAccepted Counter for accepted changes.
+*/
 void MonteCarloStepChemicalExchange(Lattice& lattice,
                                     float H,
                                     const SimulationParameters& params, 
@@ -184,6 +189,12 @@ void MonteCarloStepChemicalExchange(Lattice& lattice,
 
 /**
  * @brief Executes one full Monte Carlo sweep only for spin with an external field(N spin flip attempts).
+ * @param lattice The lattice object representing the system.
+ * @param H The external magnetic field.
+ * @param params The simulation parameters.
+ * @param table The pre-computed spin Boltzmann table.
+ * @param DeltaEAcumM Accumulated energy change for magnetization.
+ * @param changesAccepted Counter for accepted changes.
  */
 void MonteCarloStepSpinExtH(Lattice& lattice, 
                             float H,
@@ -236,30 +247,32 @@ void MonteCarloStepSpinExtH(Lattice& lattice,
 
 /**
  * @brief Main simulation loop, iterating over Temperature and Field.
+ * @param params The simulation parameters.
+ * @param nombrefile The base name for output files.
 */
 void SimulationLoop(const SimulationParameters& params, const char* nombrefile) {
     
     Lattice lattice(params.lattice_side); 
-    string init_file = string(nombrefile) + ".txt";
+    std::string init_file = std::string(nombrefile) + ".txt";
     
     // 1. Initialization
     try {
         lattice.loadInitialConfiguration(init_file);
-    } catch (const runtime_error& e) {
-        cerr << e.what() << endl;
+    } catch (const std::runtime_error& e) {
+        std::cerr << e.what() << std::endl;
         return;
     }
 
     // 2. Setup Output
-    ofstream parout;
+    std::ofstream parout;
     if (!OpenLROParametersFile(nombrefile, parout)) {
         return; 
     }
     
     // 3. Monte Carlo Loop Setup
     lattice.initializeNeighbors();
-    vector<float> listaCampos = createHSweepList(params);
-    vector<float> listaTemperaturas = createTSweepList(params);
+    std::vector<float> listaCampos = createHSweepList(params);
+    std::vector<float> listaTemperaturas = createTSweepList(params);
     int output_count = 0; // Counter for final file naming
 
     for (float T : listaTemperaturas) {
@@ -270,7 +283,7 @@ void SimulationLoop(const SimulationParameters& params, const char* nombrefile) 
                                             T);
 
         for (float H : listaCampos) {
-            cout << "Trabajando a T = " << T << " y H = " << H << endl;
+            std::cout << "Trabajando a T = " << T << " y H = " << H << std::endl;
 
             int changesAccepted = 0;
             

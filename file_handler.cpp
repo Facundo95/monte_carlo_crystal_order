@@ -45,7 +45,7 @@ bool OpenLROParametersFile(const char* nombrefile, std::ofstream& output_stream)
  */
 bool OpenFinalRedFile(const char* nombrefile, float Hache, float TEMPERA, int count, std::ofstream& output_stream) {
     // Construct the full filename: e.g., "DUMP_cu-al-mn_..._200.0_0.txt"
-    std::string filefinal_h = "DUMP_" + std::string(nombrefile) + "_" + std::to_string(Hache) + "H_" + std::to_string(TEMPERA) + "K_" + std::to_string(count) + ".txt";
+    std::string filefinal_h = "dump_" + std::string(nombrefile) + "_" + std::to_string(Hache) + "H_" + std::to_string(TEMPERA) + "K_" + std::to_string(count) + ".txt";
     
     // Attempt to open the file in output (default overwrite mode)
     output_stream.open(filefinal_h, std::ios::out);

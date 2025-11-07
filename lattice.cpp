@@ -4,10 +4,9 @@
 #include "file_handler.h"
 #include <stdexcept>
 
-// --- Utility Functions for Lattice ---
-
-/**
- * @brief Loads the initial configuration from a .txt file.
+/** @brief Loads the initial configuration from a specified file.
+ * The file should contain the species and spin states for each lattice site.
+ * @param filename The path to the input configuration file.
  */
 void Lattice::loadInitialConfiguration(const std::string& filename) {
     std::ifstream redin(filename, std::ios::in | std::ios::binary);
@@ -32,6 +31,7 @@ void Lattice::loadInitialConfiguration(const std::string& filename) {
     redin.close();
 }
 
+/** @brief Initializes the neighbor lists for each lattice site. */
 void Lattice::initializeNeighbors() {
     for (int site = 0; site < m_total_sites; ++site) {
         int x, y, z;
@@ -165,6 +165,14 @@ float Lattice::calculateNeighborSpeciesSum(int site, int shell_type, int order) 
     return sum;
 }
 
+/** @brief Calculates the chemical energy contribution for a given site. 
+ * @param type Species type at the site.
+ * @param JOTA1, JOTA2 Interaction parameters for 1st and 2nd NN.
+ * @param KA1, KA2 Interaction parameters for 1st and 2nd NN.
+ * @param ELE1, ELE2 Interaction parameters for 1st and 2nd NN.
+ * @param sumLin1, sumCuad1 Linear and quadratic sums over 1st NN species.
+ * @param sumLin2, sumCuad2 Linear and quadratic sums over 2nd NN species.
+ */
 float Lattice::calculateSiteChemicalEnergy(int type, 
                                         float JOTA1, float JOTA2, 
                                         float KA1, float KA2, 
@@ -186,14 +194,30 @@ float Lattice::calculateSiteChemicalEnergy(int type,
         return energyNN + energyNNN;
 }
 
-float Lattice::calculateSiteMagneticEnergy(int Spin, float j3, float j6, float H, float sum3, float sum6) const {
+/** @brief Calculates the magnetic energy contribution for a given site. 
+ * @param Spin Spin state at the site.
+ * @param j3, j6 Interaction parameters for 3rd and 6th NN.
+ * @param H External magnetic field.
+ * @param sum3, sum6 Sums over neighbor spins for 3rd and 6th NN.
+ */
+float Lattice::calculateSiteMagneticEnergy(int Spin, 
+                                        float j3, float j6, 
+                                        float H, 
+                                        float sum3, float sum6) const {
     return - Spin * (j3 * sum3 + j6 * sum6 + H);
 }
 
 /**
  * @brief Calculates and writes the LRO parameters and Magnetization to the output file.
+ * @param parout Output file stream.
+ * @param step_count Current simulation step count.
+ * @param T Current temperature.
+ * @param H Current magnetic field.
+ * @param DeltaEAcumM Accumulated energy change for magnetization.
  */
-void Lattice::calculateAndWriteLRO(std::ofstream& parout, int step_count, float T, float H, float DeltaEAcumM) const {
+void Lattice::calculateAndWriteLRO(std::ofstream& parout, 
+                                int step_count, float T, 
+                                float H, float DeltaEAcumM) const {
     
     int CuI=0, CuII=0, CuIII=0, CuIV=0;
     int MnUpI=0, MnUpII=0, MnUpIII=0, MnUpIV=0, MnDownI=0, MnDownII=0, MnDownIII=0, MnDownIV=0; 
@@ -277,8 +301,13 @@ void Lattice::calculateAndWriteLRO(std::ofstream& parout, int step_count, float 
 
 /**
  * @brief Saves the final structural configuration to a text file.
+ * @param nombrefile Name of the output file.
+ * @param Hache Current magnetic field.
+ * @param TEMPERA Current temperature.
+ * @param count Current simulation step count.
  */
-void Lattice::saveFinalConfiguration(const char* nombrefile, float Hache, float TEMPERA, int count) {
+void Lattice::saveFinalConfiguration(const char* nombrefile, 
+                                    float Hache, float TEMPERA, int count) {
     std::ofstream redout;
     if (!OpenFinalRedFile(nombrefile, Hache, TEMPERA, count, redout)) {
         return; // Error already reported by helper function
