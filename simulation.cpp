@@ -302,6 +302,10 @@ void SimulationLoop(const SimulationParameters& params, const char* nombrefile) 
                 }
 
                 // 3b. Measurement and Output (Occurs only in the last 200 steps)
+                if (params.num_steps < params.steps_to_output) {
+                    std::cout << "WARNING: Number of steps is less than steps to output. LRO parameters for all the steps will be calculated." << std::endl;
+                }
+
                 if (contador > (params.num_steps - params.steps_to_output)) {
                     lattice.calculateAndWriteLRO(parout, contador, T, H, DeltaEAcumM);
                 }
