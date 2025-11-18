@@ -250,10 +250,10 @@ void MonteCarloStepSpinExtH(Lattice& lattice,
  * @param params The simulation parameters.
  * @param nombrefile The base name for output files.
 */
-void SimulationLoop(const SimulationParameters& params, const char* nombrefile) {
+void SimulationLoop(const SimulationParameters& params, const char* file_in, const char* file_out) {
     
     Lattice lattice(params.lattice_side); 
-    std::string init_file = std::string(nombrefile) + ".txt";
+    std::string init_file = std::string(file_in) + ".txt";
     
     // 1. Initialization
     try {
@@ -265,7 +265,7 @@ void SimulationLoop(const SimulationParameters& params, const char* nombrefile) 
 
     // 2. Setup Output
     std::ofstream parout;
-    if (!OpenLROParametersFile(nombrefile, parout)) {
+    if (!OpenLROParametersFile(file_out, parout)) {
         return; 
     }
     
@@ -313,7 +313,7 @@ void SimulationLoop(const SimulationParameters& params, const char* nombrefile) 
             
             // 3c. Final Configuration Save
             if (params.flag_save_config) {
-                lattice.saveFinalConfiguration(nombrefile, H, T, output_count);
+                lattice.saveFinalConfiguration(file_out, H, T, output_count);
             }
 
             std::cout << "Intercambios aceptados / átomo: " << changesAccepted / lattice.totalSites() << "en " << params.num_steps << "pasos." << std::endl;

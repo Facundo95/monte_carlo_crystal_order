@@ -1,6 +1,8 @@
 #include <iostream>
 #include <fstream>
 #include <string>
+#include <sstream>
+#include <iomanip>
 
 /**
  * @brief Constructs the output filename and attempts to open the ofstream.
@@ -13,7 +15,16 @@
 bool OpenLROParametersFile(const char* nombrefile, std::ofstream& output_stream) {
     // 1. Construct the full filename: e.g., "LRO_cu-al-mn_....txt"
     std::string fileOUT = "output_" + std::string(nombrefile) + ".txt";
-    
+    std::ifstream in(fileOUT);
+    if (in.good()) {
+        in.close();
+        fileOUT = "output_" + std::string(nombrefile) + "_new.txt";
+        std::cerr << "WARNING: El archivo de salida para parámetros LRO ya existe, cambiando el nombre a: " 
+                  << fileOUT << std::endl;
+    } else {
+        in.close();
+    }
+
     // 2. Attempt to open the file in output and append mode
     output_stream.open(fileOUT, std::ios::out | std::ios::app);
 
@@ -43,9 +54,19 @@ bool OpenLROParametersFile(const char* nombrefile, std::ofstream& output_stream)
  * @param output_stream The std::ofstream object to be initialized and opened.
  * @return bool True if the file was successfully opened, false otherwise.
  */
-bool OpenFinalRedFile(const char* nombrefile, float Hache, float TEMPERA, int count, std::ofstream& output_stream) {
+bool OpenFinalRedFile(const char* nombrefile, float Hache, float TEMPERA, 
+                    int count, std::ofstream& output_stream) {
     // Construct the full filename: e.g., "DUMP_cu-al-mn_..._200.0_0.txt"
-    std::string filefinal_h = "dump_" + std::string(nombrefile) + "_" + std::to_string(Hache) + "H_" + std::to_string(TEMPERA) + "K_" + std::to_string(count) + ".txt";
+    // Format Hache with a single significant decimal (one digit after the decimal point)
+    std::ostringstream hs;
+    hs << std::fixed << std::setprecision(1) << Hache;
+    std::string Hstr = hs.str();
+
+    std::ostringstream ts;
+    ts << std::fixed << std::setprecision(1) << TEMPERA;
+    std::string TEMPERAstr = ts.str();
+
+    std::string filefinal_h = "dump_" + std::string(nombrefile) + "_" + Hstr + "H_" + TEMPERAstr + "K_" + std::to_string(count) + ".txt";
     
     // Attempt to open the file in output (default overwrite mode)
     output_stream.open(filefinal_h, std::ios::out);

@@ -9,11 +9,14 @@
  * @brief Reads simulation parameters and a list of input filenames from a text file.
  * * @param input_filename The path to the input configuration file (e.g., "input.txt").
  * @param params_out Reference to store the constructed SimulationParameters struct.
- * @param files_out Reference to store the list of base filenames for simulation runs.
+ * @param file_in Reference to filename for simulation run.
+ * @param file_out Reference to filename for output.
  * @return true if the file was successfully read and all critical parameters were found.
  * @return false otherwise.
  */
-bool readInputFile(const std::string& input_filename, SimulationParameters& params_out, std::vector<std::string>& files_out) {
+bool readInputFile(const std::string& input_filename, SimulationParameters& params_out, 
+                    std::string& file_in, std::string& file_out) {
+
     std::ifstream input_file(input_filename);
     if (!input_file.is_open()) {
         std::cerr << "ERROR: No se pudo abrir el archivo de entrada: " << input_filename << std::endl;
@@ -69,7 +72,13 @@ bool readInputFile(const std::string& input_filename, SimulationParameters& para
         else if (key == "FILE_ENTRY") {
             std::string filename;
             if (ss >> filename) {
-                files_out.push_back(filename);
+                file_in = filename;
+            }
+        }
+        else if (key == "FILE_OUTPUT") {
+            std::string filename;
+            if (ss >> filename) {
+                file_out = filename;
             }
         }
     }
@@ -77,11 +86,11 @@ bool readInputFile(const std::string& input_filename, SimulationParameters& para
     input_file.close();
 
     // Check if all 10 critical parameters were found
-    if (found_count < 18) {
+    if (found_count < 19) {
         std::cerr << "ERROR: Parámetros críticos incompletos en el archivo de entrada. Encontrados: " << found_count << "/10." << std::endl;
         return false;
     }
-    if (files_out.empty()) {
+    if (file_in.empty()) {
         std::cerr << "ERROR: No se encontraron archivos de simulación (FILE_ENTRY) en el archivo de entrada." << std::endl;
         return false;
     }
