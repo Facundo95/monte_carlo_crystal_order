@@ -4,39 +4,48 @@
 #include <stdexcept>
 
 /**
- * @brief Creates the vector of magnetic field values for the H-sweep loop.
+ * @brief Creates the vector of values for the sweep list.
  */
-std::vector<float> createHSweepList(const SimulationParameters& params) {
+std::vector<float> createSweepList(float start, float end, float step, bool loop) {
     std::vector<float> list;
     
-    if (params.step_H <= 0) {
-        throw std::invalid_argument("Step_H must be positive.");
+    if (step <= 0) {
+        throw std::invalid_argument("Step must be positive.");
     }
     
-    if (params.H_upper < params.H_lower) {
-        throw std::invalid_argument("H_upper must be greater than or equal to H_lower.");   
-    }
-
-    if (params.H_upper == params.H_lower) {
-        list.push_back(params.H_upper);
+    if (start == end) {
+        list.push_back(start);
         return list;
     }
 
-    // A. 0 to HUpper
-    for (float h = 0.0; h <= params.H_upper; h += params.step_H) {
-        list.push_back(h);
+    if (!loop) {
+        if (start < end) {
+            for (float val = start; val <= end; val += step) {
+                list.push_back(val);
+            }
+        } else {
+            for (float val = start; val >= end; val -= step) {
+                list.push_back(val);
+            }
+        }
+        return list;
     }
-    
-    // B. HUpper to HLower
-    for (float h = params.H_upper; h >= params.H_lower; h -= params.step_H) {
-        list.push_back(h);
+    // Looping case
+    if (start < end) {
+        for (float val = start; val <= end; val += step) {
+            list.push_back(val);
+        }
+        for (float val = end - step; val >= start; val -= step) {
+            list.push_back(val);
+        }
+    } else {
+        for (float val = start; val >= end; val -= step) {
+            list.push_back(val);
+        }
+        for (float val = end + step; val <= start; val += step) {
+            list.push_back(val);
+        }
     }
-    
-    // C. HLower to 0
-    for (float h = params.H_lower + params.step_H; h <= params.H_upper; h += params.step_H) {
-        list.push_back(h);
-    }
-
     return list;
 }
 
@@ -277,8 +286,8 @@ void SimulationLoop(const SimulationParameters& params,
     
     // 3. Monte Carlo Loop Setup
     lattice.initializeNeighbors();
-    std::vector<float> listaCampos = createHSweepList(params);
-    std::vector<float> listaTemperaturas = createTSweepList(params);
+    std::vector<float> listaCampos = createSweepList(params.H_start, params.H_end, params.step_H, params.flag_loop);
+    std::vector<float> listaTemperaturas = createSweepList(params.T_start, params.T_end, params.step_T, false);
     int output_count = 0; // Counter for final file naming
 
     for (float T : listaTemperaturas) {
@@ -322,7 +331,7 @@ void SimulationLoop(const SimulationParameters& params,
                 lattice.saveFinalConfiguration(file_out, H, T, output_count);
             }
 
-            std::cout << "Intercambios aceptados / átomo: " << changesAccepted / lattice.totalSites() << "en " << params.num_steps << "pasos." << std::endl;
+            std::cout << "Intercambios aceptados / átomo: " << changesAccepted << "/" << lattice.totalSites() << " en " << params.num_steps << " pasos." << std::endl;
 
             output_count++;
         }

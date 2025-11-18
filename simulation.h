@@ -260,20 +260,21 @@ struct SimulationParameters {
     float T_start;
     float T_end;
     float step_T;
-    float H_upper;
-    float H_lower;
+    float H_start;
+    float H_end;
     float step_H;
     int steps_to_output;
     bool flag_save_config;
+    bool flag_loop;
 
     SimulationParameters(int steps, int sim, int side, float w1_12, float w2_12, float w1_13, 
                          float w2_13, float w1_23, float w2_23, float j3, float j6, 
-                         float t_s, float t_e, float dt, float h_up, float h_low, 
-                         float dh, int step_out, bool flag_red)
+                         float t_s, float t_e, float dt, float h_start, float h_end, 
+                         float dh, int step_out, bool flag_red, bool loop)
         : num_steps(steps), simulation_method(sim), lattice_side(side), 
         w1_12(w1_12), w2_12(w2_12), w1_13(w1_13), w2_13(w2_13), w1_23(w1_23), w2_23(w2_23), 
-        Jm3(j3), Jm6(j6), T_start(t_s), T_end(t_e), step_T(dt),H_upper(h_up), H_lower(h_low), 
-        step_H(dh), steps_to_output(step_out), flag_save_config(flag_red) {}
+        Jm3(j3), Jm6(j6), T_start(t_s), T_end(t_e), step_T(dt),H_start(h_start), H_end(h_end), 
+        step_H(dh), steps_to_output(step_out), flag_save_config(flag_red), flag_loop(loop) {}
 };
 
 inline std::ostream& operator<<(std::ostream& os, const SimulationParameters& p) {
@@ -291,19 +292,17 @@ inline std::ostream& operator<<(std::ostream& os, const SimulationParameters& p)
        << "  T_START: " << p.T_start << '\n'
        << "  T_END: " << p.T_end << '\n'
        << "  STEP_T: " << p.step_T << '\n'
-       << "  H_UPPER: " << p.H_upper << '\n'
-       << "  H_LOWER: " << p.H_lower << '\n'
+       << "  H_UPPER: " << p.H_start << '\n'
+       << "  H_LOWER: " << p.H_end << '\n'
        << "  STEP_H: " << p.step_H << '\n'
+       << "  LOOP_FLAG: " << (p.flag_loop ? "true" : "false") << '\n'
        << "  STEPS_TO_OUTPUT: " << p.steps_to_output << '\n'
        << "  FLAG_SAVE_CONFIG: " << (p.flag_save_config ? "true" : "false");
     return os;
 }
 
 /** @brief Creates a list of magnetic field values for the sweep. */
-std::vector<float> createHSweepList(const SimulationParameters& params);
-
-/** @brief Creates a list of temperatures values for the sweep. */
-std::vector<float> createTSweepList(const SimulationParameters& params);
+std::vector<float> createSweepList(float start, float end, float step, bool loop);
 
 /** @brief Performs a Monte Carlo step using chemical species exchange dynamics. 
  * @param lattice The lattice object representing the system.

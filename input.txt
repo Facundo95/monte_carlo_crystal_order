@@ -35,9 +35,10 @@ T_END 365.0
 STEP_T 10.0
 
 --- Magnetic Field Sweep Parameters (H) ---
-H_UPPER 1.0
-H_LOWER 1.0
+H_START 1.0
+H_END 1.0
 STEP_H 10.0
+LOOP false
 
 --- File List ---
 List of base filenames to simulate without the .txt extension (must match the initial configuration file name, e.g., 'BASE_NAME_365')

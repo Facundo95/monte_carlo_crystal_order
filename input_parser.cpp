@@ -30,8 +30,9 @@ bool readInputFile(const std::string& input_filename, SimulationParameters& para
     float w1_12 = 0.0, w2_12 = 0.0, w1_13 = 0.0, w2_13 = 0.0, w1_23 = 0.0, w2_23 = 0.0 ;
     float Jm3 = 0.0, Jm6 = 0.0;
     float T_start = 0.0, T_end = 0.0, step_T = 0.0;
-    float H_upper = 0.0, H_lower = 0.0, step_H = 0.0;
+    float H_start = 0.0, H_end = 0.0, step_H = 0.0;
     bool flag_save_config = false;
+    bool flag_loop = false;
     int steps_to_output = 0;
     int found_count = 0; // Tracks critical parameters found
 
@@ -58,8 +59,8 @@ bool readInputFile(const std::string& input_filename, SimulationParameters& para
         else if (key == "T_START" && ss >> T_start) found_count++;
         else if (key == "T_END" && ss >> T_end) found_count++;
         else if (key == "STEP_T" && ss >> step_T) found_count++;
-        else if (key == "H_UPPER" && ss >> H_upper) found_count++;
-        else if (key == "H_LOWER" && ss >> H_lower) found_count++;
+        else if (key == "H_START" && ss >> H_start) found_count++;
+        else if (key == "H_END" && ss >> H_end) found_count++;
         else if (key == "STEP_H" && ss >> step_H) found_count++;
         else if (key == "STEPS_TO_OUTPUT" && ss >> steps_to_output) found_count++;
         else if (key == "FLAG_SAVE_CONFIG") {
@@ -67,6 +68,12 @@ bool readInputFile(const std::string& input_filename, SimulationParameters& para
             if (ss >> val) {
                 flag_save_config = (val == "true" || val == "TRUE" || val == "1");
                 found_count++;
+            }
+        }
+        else if (key == "LOOP") {
+            std::string val;
+            if (ss >> val) {
+                flag_loop = (val == "true" || val == "TRUE" || val == "1");
             }
         }
         else if (key == "FILE_ENTRY") {
@@ -85,11 +92,6 @@ bool readInputFile(const std::string& input_filename, SimulationParameters& para
 
     input_file.close();
 
-    // Check if all 10 critical parameters were found
-    if (found_count < 19) {
-        std::cerr << "ERROR: Parámetros críticos incompletos en el archivo de entrada. Encontrados: " << found_count << "/10." << std::endl;
-        return false;
-    }
     if (file_in.empty()) {
         std::cerr << "ERROR: No se encontraron archivos de simulación (FILE_ENTRY) en el archivo de entrada." << std::endl;
         return false;
@@ -101,8 +103,8 @@ bool readInputFile(const std::string& input_filename, SimulationParameters& para
         w1_12, w2_12, w1_13, w2_13, w1_23, w2_23, 
         Jm3, Jm6, 
         T_start, T_end, step_T, 
-        H_upper, H_lower, step_H, 
-        steps_to_output, flag_save_config
+        H_start, H_end, step_H, 
+        steps_to_output, flag_save_config, flag_loop
     );
 
     return true;
