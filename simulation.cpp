@@ -250,7 +250,9 @@ void MonteCarloStepSpinExtH(Lattice& lattice,
  * @param params The simulation parameters.
  * @param nombrefile The base name for output files.
 */
-void SimulationLoop(const SimulationParameters& params, const char* file_in, const char* file_out) {
+void SimulationLoop(const SimulationParameters& params, 
+                    const char* file_in, 
+                    const char* file_out) {
     
     Lattice lattice(params.lattice_side); 
     std::string init_file = std::string(file_in) + ".txt";

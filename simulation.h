@@ -341,6 +341,8 @@ void MonteCarloStepSpinExtH(Lattice& lattice,
  * @param params The simulation parameters.
  * @param nombrefile The base name for output files.
 */
-void SimulationLoop(const SimulationParameters& params, const char* nombrefile);
+void SimulationLoop(const SimulationParameters& params, 
+                    const char* file_in, 
+                    const char* file_out);
 
 #endif // SIMULATION_H
