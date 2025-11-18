@@ -13,11 +13,15 @@ std::vector<float> createHSweepList(const SimulationParameters& params) {
         throw std::invalid_argument("Step_H must be positive.");
     }
     
+    if (params.H_upper < params.H_lower) {
+        throw std::invalid_argument("H_upper must be greater than or equal to H_lower.");   
+    }
+
     if (params.H_upper == params.H_lower) {
         list.push_back(params.H_upper);
         return list;
     }
-    
+
     // A. 0 to HUpper
     for (float h = 0.0; h <= params.H_upper; h += params.step_H) {
         list.push_back(h);

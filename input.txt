@@ -3,11 +3,11 @@ Configuration File for Monte Carlo Simulation
 Total number of Monte Carlo steps per H/T point
 NUM_STEPS 100000
 Lattice side, N_atoms =  2 * lattice_side ** 3
-LATTICE_SIDE 56
+LATTICE_SIDE 32
 
 0 Canonic MC, BEG + Ising Hamiltonian
 1 Canonic MC, Ising Hamiltonian
-SIMULATION_METHOD 0
+SIMULATION_METHOD 1
 
 --- Interacion Chemical Energies ---
 As example energies for a Cu-Al-Mn alloy (Cu=1, Al=2, Mn=3)
