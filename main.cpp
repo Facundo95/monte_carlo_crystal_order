@@ -35,11 +35,11 @@ int main(int argc, char* argv[]){
     }
 
     // 3. Start the simulation loop using the read data
-    std::cout << "Estructura inicial tomada de: " << file_out << std::endl;
-    std::cout << "Archivo de salida de la simulacion: " << file_in << std::endl;
+    std::cout << "Estructura inicial tomada de: " << file_in << std::endl;
+    std::cout << "Archivo de salida de la simulacion: " << file_out << std::endl;
         
     // Pass the parameters to the main simulation loop
-    SimulationLoop(params, file_in.c_str());
+    SimulationLoop(params, file_in.c_str(), file_out.c_str());
     
 
     clock_t end = clock(); // Cortamos el reloj
