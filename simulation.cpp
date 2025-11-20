@@ -172,11 +172,13 @@ void MonteCarloStepChemicalExchange(Lattice& lattice,
             // Accept: Probabilistically
             double epsilonM = Ran0a1();
             
-            float BoltzmannM = tableSpin.lookup(SpinNeigh, SumSpin3N_Act, SumSpin6N_Act) * 
+            float BoltzmannM = 0.0;
+            /*
+            tableSpin.lookup(SpinNeigh, SumSpin3N_Act, SumSpin6N_Act) * 
                                 tableSpin.lookup(SpinAct, SumSpin3N_Neigh, SumSpin6N_Neigh) /
                                 (tableSpin.lookup(SpinAct, SumSpin3N_Act, SumSpin6N_Act) * 
                                 tableSpin.lookup(SpinNeigh, SumSpin3N_Neigh, SumSpin6N_Neigh));
-            
+            */
             float BoltzmannChem = tableBeg.lookup(SpecieAct, SumSpecie1N_Act_linear, SumSpecie1N_Act_quadratic, SumSpecie2N_Act_linear, SumSpecie2N_Act_quadratic)*
                                     tableBeg.lookup(SpecieNeigh, SumSpecie1N_Neigh_linear, SumSpecie1N_Neigh_quadratic, SumSpecie2N_Neigh_linear, SumSpecie2N_Neigh_quadratic)/
                                     (tableBeg.lookup(SpecieNeigh, SumSpecie1N_Act_linear, SumSpecie1N_Act_quadratic, SumSpecie2N_Act_linear, SumSpecie2N_Act_quadratic)*
@@ -214,7 +216,8 @@ void MonteCarloStepSpinExtH(Lattice& lattice,
                             const SimulationParameters& params, 
                             const FastBoltzmannTableSpin& table,
                             float& DeltaEAcumM,
-                            int& changesAccepted) {
+                            int& changesAccepted,
+                            int& changesAttempted) {
     
     for (int site = 0; site < lattice.totalSites(); site++) {
         
@@ -222,22 +225,19 @@ void MonteCarloStepSpinExtH(Lattice& lattice,
         
         if (SpinAct == 0) continue; // Skip if spin is 0 (non-magnetic species)
 
+        changesAttempted++;
+
         int Sum3N = lattice.calculateNeighborSpinSum(site, 3);
         int Sum6N = lattice.calculateNeighborSpinSum(site, 6);
 
-        float deltaEM = lattice.calculateSiteMagneticEnergy(-SpinAct, params.Jm3, params.Jm6, H, Sum3N, Sum6N)\
-                    - lattice.calculateSiteMagneticEnergy(SpinAct, params.Jm3, params.Jm6, H, Sum3N, Sum6N);
+        float deltaEM = 2 * SpinAct * (params.Jm3 * Sum3N + params.Jm6 * Sum6N + H);
         
         // Metropolis Algorithm
         if (deltaEM > 0) {
         
             // Accept: Probabilistically
             double epsilonM = Ran0a1();
-            float BoltzmannMf = table.lookup(-SpinAct, Sum3N, Sum6N);
-            float BoltzmannMi = table.lookup(SpinAct, Sum3N, Sum6N);
-            
-            float Boltzmann = std::min(1.0f, BoltzmannMf / BoltzmannMi);
-
+            float Boltzmann = table.lookup_from_dE(deltaEM);
             if (Boltzmann >= epsilonM) {
         
                 lattice.flipSpin(site);
@@ -302,7 +302,7 @@ void SimulationLoop(const SimulationParameters& params,
             std::cout << "Trabajando a T = " << T << " y H = " << H << std::endl;
 
             int changesAccepted = 0;
-            
+            int changesAttempted = 0;
             float DeltaEAcumM = 0.0f;
             
             auto tableSpin = FastBoltzmannTableSpin(params.Jm3, params.Jm6, H, T);
@@ -313,7 +313,7 @@ void SimulationLoop(const SimulationParameters& params,
                 if (params.simulation_method == 0)
                     MonteCarloStepChemicalExchange(lattice, H, params, tableBeg, tableSpin, DeltaEAcumM, changesAccepted);
                 else if(params.simulation_method == 1) {   
-                    MonteCarloStepSpinExtH(lattice, H, params, tableSpin, DeltaEAcumM, changesAccepted);
+                    MonteCarloStepSpinExtH(lattice, H, params, tableSpin, DeltaEAcumM, changesAccepted, changesAttempted);
                 }
 
                 // 3b. Measurement and Output (Occurs only in the last 200 steps)
@@ -331,7 +331,7 @@ void SimulationLoop(const SimulationParameters& params,
                 lattice.saveFinalConfiguration(file_out, H, T, output_count);
             }
 
-            std::cout << "Intercambios aceptados / átomo: " << changesAccepted << "/" << lattice.totalSites() << " en " << params.num_steps << " pasos." << std::endl;
+            std::cout << "Intercambios aceptados / intentado: " << changesAccepted << "/" << changesAttempted << " en " << params.num_steps << " pasos." << std::endl;
 
             output_count++;
         }

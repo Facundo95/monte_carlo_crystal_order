@@ -9,89 +9,71 @@
 #include <array>
 #include <cstdint> // For int8_t
 #include "lattice.h"
+#include <algorithm>
 
-/**
- * @struct BoltzmannTable
- * @brief A structure to pre-calculate and store Boltzmann factors using direct indexing.
- *
- * This table uses a flat std::vector where each possible state change (defined
- * by the spin being flipped and the state of its neighbors) maps to a unique index.
- * This is highly efficient for systems with a discrete and finite number of
- * possible energy changes.
- */
 struct FastBoltzmannTableSpin {
-    // The flat vector storing the pre-computed Boltzmann factors.
     std::vector<float> table;
 
-    // Dimensions for the 3D to 1D index mapping
-    const int N_si = 2;   // s_i can be {-1, 1}
-    const int N_S3 = 13;  // Sum of 12 neighbors can be {-12, -10, ..., 12}
-    const int N_S6 = 7;   // Sum of 6 neighbors can be {-6, -4, ..., 6}
+    double dE_min, dE_max, dE_step;
+    int size;
 
-    /**
-     * @brief Constructs and populates the BoltzmannTable for the specific BCC model.
-     * @param J3 Coupling constant for 3rd neighbors.
-     * @param J6 Coupling constant for 6th neighbors.
-     * @param h External magnetic field.
-     * @param temperature The temperature T (or kT) of the system.
-     */
-    FastBoltzmannTableSpin(double J3, double J6, double h, double temperature) {
-        // Resize the table to hold all possible combinations
-        const int table_size = N_si * N_S3 * N_S6; // 2 * 13 * 7 = 182
-        table.resize(table_size);
+    double J3_, J6_, h_, T_;
 
-        for (int index = 0; index < table_size; ++index) {
-            // Perform the inverse mapping from the flat index back to the physical state (s_i, S3, S6)
-            
-            // 1. Deconstruct the index
-            const int term_S3_S6 = N_S3 * N_S6;
-            const int idx_si = index / term_S3_S6;
-            const int temp_index = index - idx_si * term_S3_S6;
-            const int idx_S3 = temp_index / N_S6;
-            const int idx_S6 = temp_index - idx_S3 * N_S6;
+    static constexpr int N_si = 2;
+    static constexpr int N_S3 = 13;
+    static constexpr int N_S6 = 7;
 
-            // 2. Convert zero-based indices back to physical spin values
-            const int s_i_val = (idx_si * 2) - 1;      // Maps {0, 1} to {-1, 1}
-            const int S3_val = (idx_S3 * 2) - 12;     // Maps {0, 1,..., 12} to {-12, -10,...}
-            const int S6_val = (idx_S6 * 2) - 6;      // Maps {0, 1,..., 6} to {-6, -4,...}
+    FastBoltzmannTableSpin(double J3, double J6, double h, double temperature)
+        : J3_(J3), J6_(J6), h_(h), T_(temperature)
+    {
+        std::vector<double> dEs;
+        dEs.reserve(N_si * N_S3 * N_S6);
 
-            // 3. Calculate the energy change for this specific combination
-            double dE = - s_i_val * (J3 * S3_val + J6 * S6_val + h);
+        int s_vals[2] = {-1, 1};
 
-            // 4. Store the pre-computed Boltzmann factor at the current index
-            table[index] = exp(-dE / temperature);
+        int S3_vals[N_S3];
+        for (int i=0; i<N_S3; i++) S3_vals[i] = -12 + 2*i;
+
+        int S6_vals[N_S6];
+        for (int i=0; i<N_S6; i++) S6_vals[i] = -6 + 2*i;
+
+        for (int si : s_vals) {
+            for (int S3 : S3_vals) {
+                for (int S6 : S6_vals) {
+                    double dE = 2.0 * si * (J3*S3 + J6*S6 + h);
+                    dEs.push_back(dE);
+                }
+            }
+        }
+
+        std::sort(dEs.begin(), dEs.end());
+        dEs.erase(std::unique(dEs.begin(), dEs.end()), dEs.end());
+
+        dE_min = dEs.front();
+        dE_max = dEs.back();
+
+        dE_step = dEs[1] - dEs[0];
+        for (size_t i=2; i<dEs.size(); i++) {
+            double step = dEs[i] - dEs[i-1];
+            if (step < dE_step - 1e-12) dE_step = step;
+        }
+
+        size = int((dE_max - dE_min) / dE_step + 0.5) + 1;
+
+        table.resize(size);
+
+        for (double dE : dEs) {
+            int idx = int((dE - dE_min) / dE_step + 0.5);
+            table[idx] = std::exp(-dE / temperature);
         }
     }
 
-    /**
-     * @brief Calculates the flat array index from the physical parameters.
-     * This function maps a 3D state (s_i, S3, S6) to a 1D index.
-     * @param s_i The spin being flipped (-1 or +1).
-     * @param S3 The sum of the 12 3rd-nearest neighbors.
-     * @param S6 The sum of the 6 6th-nearest neighbors.
-     * @return The corresponding index in the flat lookup table.
-     */
-    inline int get_index(int s_i, int S3, int S6) const {
-        // Map physical values to zero-based indices
-        const int idx_si = (s_i + 1) / 2;    // Maps {-1, 1} to {0, 1}
-        const int idx_S3 = (S3 + 12) / 2;   // Maps {-12, -10,...} to {0, 1,..., 12}
-        const int idx_S6 = (S6 + 6) / 2;    // Maps {-6, -4,...} to {0, 1,..., 6}
-        
-        // Calculate the flat index using row-major order logic
-        return idx_si * (N_S3 * N_S6) + idx_S3 * N_S6 + idx_S6;
-    }
-
-    /**
-     * @brief Looks up the Boltzmann factor for a given state change.
-     * @param s_i The spin being flipped (-1 or +1).
-     * @param S3 The sum of the 12 3rd-nearest neighbors.
-     * @param S6 The sum of the 6 6th-nearest neighbors.
-     * @return The pre-computed Boltzmann factor.
-     */
-    double lookup(int s_i, int S3, int S6) const {
-        return table[get_index(s_i, S3, S6)];
+    inline double lookup_from_dE(double dE) const {
+        int idx = int((dE - dE_min) / dE_step + 0.5);
+        return table[idx];
     }
 };
+
 
 /**
  * @struct SiteEnergyTableBEG
@@ -334,7 +316,8 @@ void MonteCarloStepSpinExtH(Lattice& lattice,
                             const SimulationParameters& params, 
                             const FastBoltzmannTableSpin& table,
                             float& DeltaEAcumM,
-                            int& changesAccepted);
+                            int& changesAccepted,
+                            int& changesAttempted);
 
 /** @brief Main simulation loop handling temperature and magnetic field sweeps.
  * @param params The simulation parameters.

@@ -1,7 +1,7 @@
 Configuration File for Monte Carlo Simulation
 --- General Simulation Parameters ---
 Total number of Monte Carlo steps per H/T point
-NUM_STEPS 100000
+NUM_STEPS 1000
 Lattice side, N_atoms =  2 * lattice_side ** 3
 LATTICE_SIDE 32
 
@@ -27,20 +27,20 @@ J_M6 100.0
 
 --- Flag to save the final lattice configuration (true or false) ---
 FLAG_SAVE_CONFIG false
-STEPS_TO_OUTPUT 100000 
+STEPS_TO_OUTPUT 200 
 
 --- Temperature Sweep Parameters ---
-T_START 365.0
-T_END 365.0
+T_START 400.0
+T_END 400.0
 STEP_T 10.0
 
 --- Magnetic Field Sweep Parameters (H) ---
-H_START 1.0
-H_END 1.0
-STEP_H 10.0
-LOOP false
+H_START 1000.0
+H_END -1000.0
+STEP_H 50.0
+LOOP true
 
 --- File List ---
 List of base filenames to simulate without the .txt extension (must match the initial configuration file name, e.g., 'BASE_NAME_365')
-FILE_ENTRY cu-al-mn_0.67-0.25-0.08_365
-FILE_OUTPUT 8mn_100kMCsteps_1H
+FILE_ENTRY 1_cluster_l21_out
+FILE_OUTPUT test
