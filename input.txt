@@ -41,6 +41,6 @@ STEP_H 50.0
 LOOP true
 
 --- File List ---
-List of base filenames to simulate without the .txt extension (must match the initial configuration file name, e.g., 'BASE_NAME_365')
-FILE_ENTRY 1_cluster_l21_out
-FILE_OUTPUT test
+Filename to simulate it supports ".txt" and ".xyz" extensions
+FILE_ENTRY 1_cluster_l21_out.txt
+FILE_OUTPUT test.xyz

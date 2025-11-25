@@ -14,11 +14,13 @@
  */
 bool OpenLROParametersFile(const char* nombrefile, std::ofstream& output_stream) {
     // 1. Construct the full filename: e.g., "LRO_cu-al-mn_....txt"
-    std::string fileOUT = "output_" + std::string(nombrefile) + ".txt";
+    std::string filename(nombrefile);
+    auto pos = filename.find_last_of('.');
+    std::string fileOUT = filename.substr(0, pos) + ".out";
     std::ifstream in(fileOUT);
     if (in.good()) {
         in.close();
-        fileOUT = "output_" + std::string(nombrefile) + "_new.txt";
+        fileOUT = fileOUT + "_new.out";
         std::cerr << "WARNING: El archivo de salida para parámetros LRO ya existe, cambiando el nombre a: " 
                   << fileOUT << std::endl;
     } else {
@@ -66,7 +68,7 @@ bool OpenFinalRedFile(const char* nombrefile, float Hache, float TEMPERA,
     ts << std::fixed << std::setprecision(1) << TEMPERA;
     std::string TEMPERAstr = ts.str();
 
-    std::string filefinal_h = "dump_" + std::string(nombrefile) + "_" + Hstr + "H_" + TEMPERAstr + "K_" + std::to_string(count) + ".txt";
+    std::string filefinal_h = "dump_" + Hstr + "H_" + TEMPERAstr + "K_" + std::to_string(count) + std::string(nombrefile);
     
     // Attempt to open the file in output (default overwrite mode)
     output_stream.open(filefinal_h, std::ios::out);

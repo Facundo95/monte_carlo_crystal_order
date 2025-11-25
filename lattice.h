@@ -77,8 +77,15 @@ public:
     /** @brief Calculates the sum of neighbor species for a given shell type and order. */
     float calculateNeighborSpeciesSum(int site, int shell_type, int order) const;
     
-    /** @brief Saves the final configuration to a file. */
-    void saveFinalConfiguration(const char* nombrefile, float Hache, float TEMPERA, int count);
+    /** @brief Saves the final configuration to a file and returns the opened ofstream.
+     * The output is written in an extended .xyz-like format: first line is the
+     * number of atoms, second line is a comment containing H/T/count, and each
+     * following line contains: Element x y z species spin
+     * The returned std::ofstream is moved to the caller and remains open.
+     */
+    bool saveFinalConfiguration(const char* nombrefile, 
+                                float Hache, float TEMPERA, 
+                                int count);
     
     /** @brief Calculates and writes LRO parameters to the output file. */
     void calculateAndWriteLRO(std::ofstream& parout, 

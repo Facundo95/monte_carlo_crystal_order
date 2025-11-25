@@ -3,32 +3,120 @@
 #include "rng.h"
 #include "file_handler.h"
 #include <stdexcept>
+#include <algorithm>
+#include <cctype>
+#include <sstream>
+#include <cmath>
 
 /** @brief Loads the initial configuration from a specified file.
  * The file should contain the species and spin states for each lattice site.
  * @param filename The path to the input configuration file.
  */
 void Lattice::loadInitialConfiguration(const std::string& filename) {
-    std::ifstream redin(filename, std::ios::in | std::ios::binary);
-    if (!redin.is_open()) {
-        throw std::runtime_error("No se pudo abrir el archivo de entrada inicial: " + filename);
-    }
-
-    int aux;
-    int count=0;
-    redin.seekg(0, std::ios::beg);
-    while (redin >> aux) {
-        if (count >= m_total_sites) {
-            throw std::runtime_error("El archivo de entrada tiene más datos de los esperados.");
+    // Ensure the filename has a .txt extension (case-insensitive)
+    auto pos = filename.find_last_of('.');
+    std::string ext;
+    if (pos == std::string::npos) ext = "";
+    else ext = filename.substr(pos);
+    // lower-case ext for case-insensitive compare
+    std::transform(ext.begin(), ext.end(), ext.begin(), [](unsigned char c){ return static_cast<char>(std::tolower(c)); });
+    if (ext == ".txt") {
+        std::ifstream redin(filename, std::ios::in | std::ios::binary);
+        if (!redin.is_open()) {
+            throw std::runtime_error("No se pudo abrir el archivo de entrada inicial: " + filename);
         }
-        // Polynomial transformation from the original code
-        float temp_magn = (-1./12)*aux*aux*aux-(1./3)*aux*aux+(7./12)*aux+(5./6);
-        float temp_red = (-1./12)*aux*aux*aux+(1./3)*aux*aux+(7./12)*aux-(5./6);
-        magn_flat[count] = static_cast<int>(temp_magn);
-        red_flat[count] = static_cast<int>(temp_red);
-        count++;
+
+        int aux;
+        int count=0;
+        redin.seekg(0, std::ios::beg);
+        while (redin >> aux) {
+            if (count >= m_total_sites) {
+                throw std::runtime_error("El archivo de entrada tiene más datos de los esperados.");
+            }
+            // Polynomial transformation from the original code
+            float temp_magn = (-1./12)*aux*aux*aux-(1./3)*aux*aux+(7./12)*aux+(5./6);
+            float temp_red = (-1./12)*aux*aux*aux+(1./3)*aux*aux+(7./12)*aux-(5./6);
+            magn_flat[count] = static_cast<int>(temp_magn);
+            red_flat[count] = static_cast<int>(temp_red);
+            count++;
+        }
+        if (count != m_total_sites) {
+            throw std::runtime_error("El archivo de entrada no tiene el numero esperado de sitios.");
+        }
+        redin.close();
+    } else if (ext == ".xyz") {
+        std::ifstream redin(filename);
+        if (!redin.is_open()) {
+            throw std::runtime_error("No se pudo abrir el archivo de entrada inicial: " + filename);
+        }
+
+        std::string line;
+        // 1) read number of atoms (first line)
+        if (!std::getline(redin, line)) {
+            throw std::runtime_error("Archivo .xyz vacio: " + filename);
+        }
+        // optionally parse and check the number
+        int natoms = 0;
+        try {
+            natoms = std::stoi(line);
+        } catch (...) {
+            // ignore parse errors, we'll validate by counting lines
+            natoms = -1;
+        }
+
+        // 2) read comment/header line
+        if (!std::getline(redin, line)) {
+            throw std::runtime_error("Archivo .xyz mal formado (sin linea de comentario): " + filename);
+        }
+
+        int filled = 0;
+        while (std::getline(redin, line)) {
+            if (line.empty()) continue;
+            std::istringstream ss(line);
+            std::string atomToken;
+            double x,y,z;
+            int spin;
+            if (!(ss >> atomToken >> x >> y >> z >> spin)) {
+                throw std::runtime_error("Linea .xyz mal formada (se esperaba: atom x y z spin): " + line);
+            }
+
+            // atomToken must be an element symbol (no atomic number token allowed)
+            std::string tok = atomToken;
+            std::transform(tok.begin(), tok.end(), tok.begin(), [](unsigned char c){ return static_cast<char>(std::tolower(c)); });
+            int specie = 0;
+            if (tok == "cu") specie = 1;
+            else if (tok == "mn") specie = 0;
+            else if (tok == "al") specie = -1;
+            else {
+                throw std::runtime_error("Tipo de atomo no reconocido en .xyz (solo símbolos permitidos): " + atomToken);
+            }
+
+            // Map coordinates back to integer lattice indices
+            int ix = static_cast<int>(std::round(x));
+            int iy = static_cast<int>(std::round(y));
+            int kz = static_cast<int>(std::round(z / 0.5));
+
+            if (ix < 0 || ix >= m_side || iy < 0 || iy >= m_side || kz < 0 || kz >= m_depth) {
+                throw std::runtime_error("Coordenadas fuera de rango en .xyz: " + line);
+            }
+
+            int idx = idx3D(ix, iy, kz);
+            red_flat[idx] = specie;
+            magn_flat[idx] = spin;
+            ++filled;
+        }
+
+        if (natoms != -1 && natoms != filled) {
+            throw std::runtime_error("El numero de atomos en cabecera no coincide con las lineas leidas en: " + filename);
+        }
+        if (filled != m_total_sites) {
+            throw std::runtime_error("El archivo .xyz no contiene el numero esperado de sitios.");
+        }
+
+        redin.close();
+    } else {
+        throw std::runtime_error("Formato de archivo no soportado para el archivo de entrada inicial: " + filename);
     }
-    redin.close();
 }
 
 /** @brief Initializes the neighbor lists for each lattice site. */
@@ -306,20 +394,55 @@ void Lattice::calculateAndWriteLRO(std::ofstream& parout,
  * @param TEMPERA Current temperature.
  * @param count Current simulation step count.
  */
-void Lattice::saveFinalConfiguration(const char* nombrefile, 
+bool Lattice::saveFinalConfiguration(const char* nombrefile, 
                                     float Hache, float TEMPERA, int count) {
     std::ofstream redout;
     if (!OpenFinalRedFile(nombrefile, Hache, TEMPERA, count, redout)) {
-        return; // Error already reported by helper function
+        return false;
     }
-    
-    redout.seekp(0, std::ios::beg);
-    float aux2, aux3;
-    for (int site = 0; site < m_total_sites; site++) {
-        aux2 = red_flat[site];
-        aux3 = magn_flat[site];
-        // Transformation used in original code for output
-        redout << (0.5 * aux2 * aux2 + 1.5 * aux2 - 0.5 * aux3 * aux3 + 1.5 * aux3) << std::endl;        
+
+    std::string filename(nombrefile);
+    auto pos = filename.find_last_of('.');
+    std::string ext;
+    if (pos == std::string::npos) ext = "";
+    else ext = filename.substr(pos);
+    // lower-case ext for case-insensitive compare
+    std::transform(ext.begin(), ext.end(), ext.begin(), [](unsigned char c){ return static_cast<char>(std::tolower(c)); });
+
+    if (ext == ".xyz") {
+        // Write extended .xyz header
+        redout << m_total_sites << "\n";
+        redout << "Lattice=\"" << m_side << " 0.0 0.0 0.0 " << m_side << " 0.0 0.0 0.0" << m_depth << "\"\n";
+        redout << "Properties=\"species:S:1:pos:R:3:spin:I:1\"" << "\n";
+
+        // For each site, write: Element x y z species spin
+        for (int site = 0; site < m_total_sites; ++site) {
+            int i, j, k;
+            idxToXYZ(site, m_side, i, j, k);
+            // Simple geometric mapping: unit spacing in x,y and 0.5 in z to reflect depth
+            float x = static_cast<float>(i);
+            float y = static_cast<float>(j);
+            float z = static_cast<float>(k) * 0.5f;
+
+            int specie = red_flat[site];
+            int spin = magn_flat[site];
+            const char* elem = (specie == 1) ? "Cu" : (specie == 0 ? "Mn" : "Al");
+
+            // Write: ElementSymbol x y z specie spin
+            redout << elem << " " << x << " " << y << " " << z << spin << "\n";
+        }
+
+        redout.close();
+        return true;
+    } else if (ext == ".txt") {    
+        float aux2, aux3;
+        for (int site = 0; site < m_total_sites; site++) {
+            aux2 = red_flat[site];
+            aux3 = magn_flat[site];
+            // Transformation used in original code for output
+            redout << (0.5 * aux2 * aux2 + 1.5 * aux2 - 0.5 * aux3 * aux3 + 1.5 * aux3) << std::endl;        
+        }
+        redout.close();
+        return true;
     }
-    redout.close();
 }
