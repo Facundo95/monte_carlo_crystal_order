@@ -7,43 +7,45 @@
 #include <string>
 #include <cmath>
 #include <array>
-#include <cstdint> // For int8_t
-#include "lattice.h"
 #include <algorithm>
+#include <cstring>
+#include <cstdint> // For int8_t
+
+#include "lattice.h"
+
+#include <unordered_map>
+#include <vector>
+#include <cmath>
+#include <cstring>
 
 struct BoltzmannDeltaETable {
-    double dE_min, dE_max, dE_step;
-    int size;
-    std::vector<double> table;
+    std::unordered_map<std::uint64_t, double> table;
+
+    // --- codificar un double como entero de 64 bits (bitwise exact) ---
+    static inline std::uint64_t encode(double x) {
+        std::uint64_t bits;
+        static_assert(sizeof(double) == sizeof(std::uint64_t),
+                      "double must be 64-bit");
+        std::memcpy(&bits, &x, sizeof(double));
+        return bits;
+    }
 
     BoltzmannDeltaETable(const std::vector<double>& all_dEs, double T) {
-        if (T == 0) T = 1e-12;
+        if (T == 0.0) T = 1e-12;
 
-        // --- ordenar y sacar duplicados ----
-        std::vector<double> dEs = all_dEs;
-        std::sort(dEs.begin(), dEs.end());
-        dEs.erase(std::unique(dEs.begin(), dEs.end()), dEs.end());
-
-        dE_min = dEs.front();
-        dE_max = dEs.back();
-
-        // step mínimo entre energías consecutivas
-        dE_step = dEs[1] - dEs[0];
-        for (size_t i = 2; i < dEs.size(); i++)
-            dE_step = std::min(dE_step, dEs[i] - dEs[i-1]);
-
-        size = int((dE_max - dE_min) / dE_step + 0.5) + 1;
-        table.assign(size, 0.0);
-
-        for (double dE : dEs) {
-            int idx = int((dE - dE_min) / dE_step + 0.5);
-            table[idx] = std::exp(-dE / T);
+        for (double dE : all_dEs) {
+            std::uint64_t key = encode(dE);
+            table[key] = std::exp(-dE / T);
         }
     }
 
-    inline double lookup_from_dE(double dE) const {
-        int idx = int((dE - dE_min) / dE_step + 0.5);
-        return table[idx];
+    inline double lookup(double dE) const {
+        std::uint64_t key = encode(dE);
+        auto it = table.find(key);
+        if (it != table.end()) return it->second;
+
+        // --- si no se encontró: robust fallback ---
+        return 0.0;  // o 1.0 dependiendo del criterio que prefieras
     }
 };
 
@@ -54,15 +56,14 @@ struct FastBoltzmannTableSpin {
     double J3_, J6_, h_, T_;
 
     FastBoltzmannTableSpin(double J3, double J6, double h, double T)
-        : J3_(J3), J6_(J6), h_(h), T_(T),
-          table( compute_dEs(J3, J6, h), T )
+        : table(compute_dEs(J3, J6, h), T), J3_(J3), J6_(J6), h_(h), T_(T)
     {}
 
     static std::vector<double> compute_dEs(double J3, double J6, double h) {
 
         static constexpr int N_si = 2;
-        static constexpr int N_S3 = 13;
-        static constexpr int N_S6 = 7;
+        static constexpr int N_S3 = 26;
+        static constexpr int N_S6 = 14;
 
         std::vector<double> dEs;
         dEs.reserve(N_si * N_S3 * N_S6);
@@ -71,11 +72,11 @@ struct FastBoltzmannTableSpin {
 
         int S3_vals[N_S3];
         for (int i = 0; i < N_S3; i++)
-            S3_vals[i] = -12 + 2*i;
+            S3_vals[i] = -12 + i;
 
         int S6_vals[N_S6];
         for (int i = 0; i < N_S6; i++)
-            S6_vals[i] = -6 + 2*i;
+            S6_vals[i] = -6 + i;
 
         for (int si : s_vals)
             for (int S3 : S3_vals)
@@ -86,178 +87,9 @@ struct FastBoltzmannTableSpin {
     }
 
     inline double lookup_from_dE(double dE) const {
-        return table.lookup_from_dE(dE);
+        return table.lookup(dE);
     }
 };
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/**
- * @struct SiteEnergyTableBEG
- * @brief Pre-calculates the partial Boltzmann factor e^(-E/T) for a single
- * site in a BEG model. Designed for efficient Kawasaki dynamics.
- *
- * This table maps a 5D state (sigma_i, S_Lin_NN, S_Cuad_NN, S_Lin_NNN, S_Cuad_NNN)
- * to a 1D index. The sums *must* exclude the site being swapped with.
- */
-struct SiteEnergyTableBEG {
-    
-    // --- Store Hamiltonian constants ---
-    double J1, K1, E1, J2, K2, E2;
-    double T;
-
-    // --- Table storing the pre-computed factors e^(-E/T) ---
-    std::vector<double> table;
-
-    // --- State space dimensions for indexing ---
-    static constexpr int N_sigma = 3; // sigma_i in {-1, 0, 1}
-
-    // NN sum ranges (over 7 neighbors)
-    static constexpr int N_S_Lin_NN = 15;  // {-7, ..., 7}
-    static constexpr int N_S_Cuad_NN = 8;   // {0, ..., 7}
-
-    // NNN sum ranges (over 6 neighbors)
-    static constexpr int N_S_Lin_NNN = 13; // {-6, ..., 6}
-    static constexpr int N_S_Cuad_NNN = 7;  // {0, ..., 6}
-
-    // --- Offsets to map physical values to indices {0, ...} ---
-    static constexpr int OFFSET_sigma = 1;     // Maps {-1, 0, 1} to {0, 1, 2}
-    static constexpr int OFFSET_S_Lin_NN = 7;  // Maps {-7, ..., 7} to {0, ..., 14}
-    static constexpr int OFFSET_S_Cuad_NN = 0; // Maps {0, ..., 7} to {0, ..., 7}
-    static constexpr int OFFSET_S_Lin_NNN = 6; // Maps {-6, ..., 6} to {0, ..., 12}
-    static constexpr int OFFSET_S_Cuad_NNN = 0; // Maps {0, ..., 6} to {0, ..., 6}
-
-    // --- Pre-calculate multipliers for flat index calculation ---
-    // M_SCNN = N_S_Lin_NNN * N_S_Cuad_NNN
-    static constexpr size_t M_SCNN = 13 * 7; // 91
-    // M_SLNN = N_S_Cuad_NN * M_SCNN
-    static constexpr size_t M_SLNN = 8 * M_SCNN; // 728
-    // M_SIGMA = N_S_Lin_NN * M_SLNN
-    static constexpr size_t M_SIGMA = 15 * M_SLNN; // 10920
-
-private:
-    /**
-     * @brief Internal helper to calculate site energy.
-     */
-    double calculateSiteEnergy(double tipo,
-                               double sumaLinNN, double sumaCuadNN,
-                               double sumaLinNNN, double sumaCuadNNN) {
-        
-        double tipoSqr = tipo * tipo;
-
-        // NN contribution
-        double C1_NN = J1 * tipo + E1 * tipoSqr;
-        double C2_NN = K1 * tipoSqr + E1 * tipo;
-        double energyNN = C1_NN * sumaLinNN + C2_NN * sumaCuadNN;
-
-        // NNN contribution
-        double C1_NNN = J2 * tipo + E2 * tipoSqr;
-        double C2_NNN = K2 * tipoSqr + E2 * tipo;
-        double energyNNN = C1_NNN * sumaLinNNN + C2_NNN * sumaCuadNNN;
-
-        return energyNN + energyNNN;
-    }
-
-public:
-    /**
-     * @brief Constructs and populates the BEG site energy table.
-     */
-    SiteEnergyTableBEG(double jota1, double ka1, double ele1,
-                       double jota2, double ka2, double ele2,
-                       double temperature) 
-    {
-        // Store parameters
-        J1 = jota1; K1 = ka1; E1 = ele1;
-        J2 = jota2; K2 = ka2; E2 = ele2;
-        T = temperature;
-        if (T == 0) T = 1e-9; // Avoid division by zero
-
-        // Resize the table to hold all possible state combinations
-        const size_t table_size = N_sigma * N_S_Lin_NN * N_S_Cuad_NN * N_S_Lin_NNN * N_S_Cuad_NNN;
-        table.resize(table_size);
-
-        for (size_t index = 0; index < table_size; ++index) {
-            
-            // --- 1. Deconstruct the flat index back to 5D state indices ---
-            const int idx_sigma = index / M_SIGMA;
-            size_t temp_idx = index % M_SIGMA;
-
-            const int idx_slnn = temp_idx / M_SLNN;
-            temp_idx = temp_idx % M_SLNN;
-
-            const int idx_scnn = temp_idx / M_SCNN;
-            temp_idx = temp_idx % M_SCNN;
-
-            const int idx_slnnn = temp_idx / N_S_Cuad_NNN; // or % M_SLNNN
-            const int idx_scnnn = temp_idx % N_S_Cuad_NNN;
-
-            // --- 2. Convert zero-based indices back to physical spin/sum values ---
-            const int sigma_i = idx_sigma - OFFSET_sigma;
-            const int S_Lin_NN = idx_slnn - OFFSET_S_Lin_NN;
-            const int S_Cuad_NN = idx_scnn - OFFSET_S_Cuad_NN;
-            const int S_Lin_NNN = idx_slnnn - OFFSET_S_Lin_NNN;
-            const int S_Cuad_NNN = idx_scnnn - OFFSET_S_Cuad_NNN;
-
-            // --- 3. Calculate energy for this state ---
-            double E = calculateSiteEnergy(sigma_i, S_Lin_NN, S_Cuad_NN, S_Lin_NNN, S_Cuad_NNN);
-
-            // --- 4. Store the partial Boltzmann factor ---
-            table[index] = exp(-E / T);
-        }
-    }
-
-    /**
-     * @brief Calculates the flat array index from the 5D physical parameters.
-     * @return The corresponding index in the flat lookup table.
-     */
-    inline size_t get_index(int sigma_i, int S_Lin_NN, int S_Cuad_NN, 
-                            int S_Lin_NNN, int S_Cuad_NNN) const 
-    {
-        // 1. Map physical values to zero-based indices
-        const size_t idx_sigma = sigma_i + OFFSET_sigma;
-        const size_t idx_slnn = S_Lin_NN + OFFSET_S_Lin_NN;
-        const size_t idx_scnn = S_Cuad_NN + OFFSET_S_Cuad_NN;
-        const size_t idx_slnnn = S_Lin_NNN + OFFSET_S_Lin_NNN;
-        const size_t idx_scnnn = S_Cuad_NNN + OFFSET_S_Cuad_NNN;
-
-        // 2. Calculate the flat index (row-major order)
-        // (Pre-calculated multipliers are faster than 4 `double` multiplications)
-        return (idx_sigma * M_SIGMA) +
-               (idx_slnn  * M_SLNN) +
-               (idx_scnn  * M_SCNN) +
-               (idx_slnnn * N_S_Cuad_NNN) +
-               idx_scnnn;
-    }
-
-    /**
-     * @brief Looks up the partial Boltzmann factor e^(-E/T) for a given state.
-     * @return The pre-computed factor.
-     */
-    inline double lookup(int sigma_i, int S_Lin_NN, int S_Cuad_NN, 
-                         int S_Lin_NNN, int S_Cuad_NNN) const 
-    {
-        return table[get_index(sigma_i, S_Lin_NN, S_Cuad_NN, S_Lin_NNN, S_Cuad_NNN)];
-    }
-};
-
-
-
-
 
 /**
 * @struct SimulationParameters
@@ -331,7 +163,6 @@ std::vector<float> createSweepList(float start, float end, float step, bool loop
 */
 void MonteCarloStepChemicalExchange(Lattice& lattice,
                                     const SimulationParameters& params,
-                                    const SiteEnergyTableBEG& tableBeg,
                                     float& DeltaEAcumM,
                                     int& changesAccepted);
 

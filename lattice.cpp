@@ -445,4 +445,5 @@ bool Lattice::saveFinalConfiguration(const char* nombrefile,
         redout.close();
         return true;
     }
+    return false;
 }

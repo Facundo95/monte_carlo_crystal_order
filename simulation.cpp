@@ -88,7 +88,6 @@ std::vector<float> createTSweepList(const SimulationParameters& params) {
 */
 void MonteCarloStepChemicalExchange(Lattice& lattice,
                                     const SimulationParameters& params, 
-                                    const SiteEnergyTableBEG& tableBeg,
                                     float& DeltaEAcumM,
                                     int& changesAccepted) {
 
@@ -149,20 +148,11 @@ void MonteCarloStepChemicalExchange(Lattice& lattice,
         // Metropolis Algorithm
         if (dETotal > 0) {
             // Accept: Probabilistically
-            double epsilonC = Ran0a1();
+            double epsilon = Ran0a1();
             
-            float BoltzmannC = 0.0;
-            
-            float BoltzmannChem = exp(-dETotal/1.0);//tableBeg.lookup(dETotal);
-            /*
-            tableBeg.lookup(SpecieAct, SumSpecie1N_Act_linear, SumSpecie1N_Act_quadratic, SumSpecie2N_Act_linear, SumSpecie2N_Act_quadratic)*
-                                    tableBeg.lookup(SpecieNeigh, SumSpecie1N_Neigh_linear, SumSpecie1N_Neigh_quadratic, SumSpecie2N_Neigh_linear, SumSpecie2N_Neigh_quadratic)/
-                                    (tableBeg.lookup(SpecieNeigh, SumSpecie1N_Act_linear, SumSpecie1N_Act_quadratic, SumSpecie2N_Act_linear, SumSpecie2N_Act_quadratic)*
-                                    tableBeg.lookup(SpecieAct, SumSpecie1N_Neigh_linear, SumSpecie1N_Neigh_quadratic, SumSpecie2N_Neigh_linear, SumSpecie2N_Neigh_quadratic));
-            */
-            float Boltzmann = std::min(1.0f, BoltzmannChem);
-            
-            if (Boltzmann >= epsilonC) {
+            float BoltzmannChem = exp(-dETotal/1.0);
+           
+            if (BoltzmannChem >= epsilon) {
                 lattice.exchangeSpecies(site, siteNeighbor);
                 changesAccepted++;
                 DeltaEAcumM += dETotal;
@@ -212,9 +202,9 @@ void MonteCarloStepSpinExtH(Lattice& lattice,
         if (deltaEM > 0) {
         
             // Accept: Probabilistically
-            double epsilonM = Ran0a1();
+            double epsilon = Ran0a1();
             float Boltzmann = table.lookup_from_dE(deltaEM);
-            if (Boltzmann >= epsilonM) {
+            if (Boltzmann >= epsilon) {
         
                 lattice.flipSpin(site);
                 changesAccepted++;
@@ -243,6 +233,7 @@ void SimulationLoop(const SimulationParameters& params,
                     const char* file_in, 
                     const char* file_out) {
     
+    bool verbose = false;
     Lattice lattice(params.lattice_side);
     // 1. Initialization
     try {
@@ -271,12 +262,6 @@ void SimulationLoop(const SimulationParameters& params,
         int output_count = 0; // Counter for final file naming
 
         for (float T : listaTemperaturas) {
-
-            auto tableBeg = SiteEnergyTableBEG(params.w1_12, params.w2_12,
-                                                params.w1_13, params.w2_13,
-                                                params.w1_23, params.w2_23,
-                                                T);
-
             std::cout << "----------------------------------------" << std::endl;
             std::cout << "Trabajando a T = " << T << std::endl;
 
@@ -286,7 +271,7 @@ void SimulationLoop(const SimulationParameters& params,
             for (int contador = 1; contador <= params.num_steps; contador++) {
                 
                 // 3a. Single-Spin Update (Metropolis)
-                MonteCarloStepChemicalExchange(lattice, params, tableBeg, DeltaEAcumM, changesAccepted);
+                MonteCarloStepChemicalExchange(lattice, params, DeltaEAcumM, changesAccepted);
 
                 // 3b. Measurement and Output (Occurs only in the last 200 steps)
                 if (params.num_steps < params.steps_to_output) {
@@ -343,8 +328,9 @@ void SimulationLoop(const SimulationParameters& params,
                     }
                 }
 
-                std::cout << "Intercambios aceptados / intentado: " << changesAccepted << "/" << changesAttempted << " en " << params.num_steps << " pasos." << std::endl;
-
+                if (verbose) {
+                    std::cout << "Intercambios aceptados / intentado: " << changesAccepted << "/" << changesAttempted << " en " << params.num_steps << " pasos." << std::endl;
+                }
                 output_count++;
             }
         }
