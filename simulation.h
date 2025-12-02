@@ -91,6 +91,78 @@ struct FastBoltzmannTableSpin {
     }
 };
 
+struct FastBoltzmannTableBEG {
+
+    BoltzmannDeltaETable table;
+
+    float w1_12, w1_13, w1_23;
+    float w2_12, w2_13, w2_23;
+    float T;
+
+    FastBoltzmannTableBEG(float w1_12_, float w1_13_, float w1_23_,
+                         float w2_12_, float w2_13_, float w2_23_,
+                         float T_)
+        : table(compute_dEs(w1_12_, w1_13_, w1_23_,
+                            w2_12_, w2_13_, w2_23_), T_), 
+          w1_12(w1_12_), w1_13(w1_13_), w1_23(w1_23_),
+          w2_12(w2_12_), w2_13(w2_13_), w2_23(w2_23_), T(T_)
+    {}
+
+    static std::vector<double> compute_dEs(float w1_12, float w1_13, float w1_23,
+                                           float w2_12, float w2_13, float w2_23) {
+        
+        float jota1 = 0.25 * w1_13;
+        float jota2 = 0.25 * w2_13;
+        float ka1 = 0.25 * (2 * w1_12 + 2 * w1_23 - w1_13);
+        float ka2 = 0.25 * (2 * w2_12 + 2 * w2_23 - w2_13);
+        float ele1 = 0.25 * (w1_12 - w1_13);
+        float ele2 = 0.25 * (w2_12 - w2_13);
+
+        std::vector<double> dEs;
+        
+        int diffLinNN[33] = {};
+        int diffCuadNN[16] = {};
+        int diffLinNNN[25] = {};
+        int diffCuadNNN[13] = {};
+        int diffTipo[4] = {-2, -1, 1, 2};
+        int sumTipo[3] = {-1, 0, 1};
+        for (int i = 0; i < 33; ++i) diffLinNN[i] = i - 16;
+        for (int i = 0; i < 16; ++i) diffCuadNN[i] = i;
+        for (int i = 0; i < 25; ++i) diffLinNNN[i] = i - 12;
+        for (int i = 0; i < 13; ++i) diffCuadNNN[i] = i;
+
+        for (int diff_tipo : diffTipo) {
+            for (int sum_tipo : sumTipo) {
+                for (int dLinNN : diffLinNN) {
+                    for (int dCuadNN : diffCuadNN) {
+                        for (int dLinNNN : diffLinNNN) {
+                            for (int dCuadNNN : diffCuadNNN) {
+                                double dE = diff_tipo * (
+                                    // Nearest Neighbors (NN)
+                                    jota1 * dLinNN +
+                                    ka1   * dCuadNN * sum_tipo +
+                                    ele1  * (dLinNN * sum_tipo + dCuadNN) + 
+                                    // Next Nearest Neighbors (NNN)
+                                    jota2 * dLinNNN +
+                                    ka2   * dCuadNNN * sum_tipo +
+                                    ele2  * (dLinNNN * sum_tipo + dCuadNNN)
+                                );
+                                
+                                dEs.push_back(dE);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return dEs;
+    }
+
+    inline double look_from_dE(double dE) const {
+        return table.lookup(dE);
+    }
+};
+
 /**
 * @struct SimulationParameters
 * @brief Groups all constant simulation parameters for cleaner function calls.
@@ -163,8 +235,10 @@ std::vector<float> createSweepList(float start, float end, float step, bool loop
 */
 void MonteCarloStepChemicalExchange(Lattice& lattice,
                                     const SimulationParameters& params,
+                                    const FastBoltzmannTableBEG& table, 
                                     float& DeltaEAcumM,
-                                    int& changesAccepted);
+                                    int& changesAccepted,
+                                    int& changesAttempted);
 
 /** @brief Performs a Monte Carlo step using spin flip dynamics.
  * @param lattice The lattice object representing the system.

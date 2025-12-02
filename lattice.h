@@ -58,12 +58,14 @@ public:
     }
 
     /** @brief Calculates the chemical energy contribution for a given site. */
-    float calculateSiteChemicalEnergy(int type, 
-                                      float jota1, float jota2, 
-                                      float ka1, float ka2, 
-                                      float ele1, float ele2,
-                                      float sumLin1, float sumCuad1,
-                                      float sumLin2, float sumCuad2) const;
+    float calculateDeltaChemicalEnergy(int type_A, int type_N, 
+                                    float JOTA1, float JOTA2, 
+                                    float KA1, float KA2, 
+                                    float ELE1, float ELE2,
+                                    int sumLinNN_A, int sumLinNNN_A,
+                                    int sumCuadNN_A, int sumCuadNNN_A,
+                                    int sumLinNN_N, int sumLinNNN_N,
+                                    int sumCuadNN_N, int sumCuadNNN_N) const;
     
     /** @brief Calculates the magnetic energy contribution for a given site. */
     float calculateSiteMagneticEnergy(int Spin, 

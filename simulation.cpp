@@ -87,9 +87,11 @@ std::vector<float> createTSweepList(const SimulationParameters& params) {
  * @param changesAccepted Counter for accepted changes.
 */
 void MonteCarloStepChemicalExchange(Lattice& lattice,
-                                    const SimulationParameters& params, 
+                                    const SimulationParameters& params,
+                                    const FastBoltzmannTableBEG& table, 
                                     float& DeltaEAcumM,
-                                    int& changesAccepted) {
+                                    int& changesAccepted,
+                                    int& changesAttempted) {
 
     float jota1 = 0.25 * params.w1_13;
     float jota2 = 0.25 * params.w2_13;
@@ -106,52 +108,40 @@ void MonteCarloStepChemicalExchange(Lattice& lattice,
         int SpecieNeigh = lattice.getSpecies(siteNeighbor);
         
         if (SpecieAct == SpecieNeigh) continue; // Skip if same species
+
+        changesAttempted++;
         
-        int SumSpecie1N_Act_linear = lattice.calculateNeighborSpeciesSum(site, 1, 1) - lattice.getSpecies(siteNeighbor);
-        int SumSpecie1N_Neigh_linear = lattice.calculateNeighborSpeciesSum(siteNeighbor, 1, 1) - lattice.getSpecies(site);
-        int SumSpecie1N_Act_quadratic = lattice.calculateNeighborSpeciesSum(site, 1, 2) - lattice.getSpecies(siteNeighbor)*lattice.getSpecies(siteNeighbor);
-        int SumSpecie1N_Neigh_quadratic = lattice.calculateNeighborSpeciesSum(siteNeighbor, 1, 2) - lattice.getSpecies(site)*lattice.getSpecies(site);
+        int SumLinNN_A = lattice.calculateNeighborSpeciesSum(site, 1, 1) - lattice.getSpecies(siteNeighbor);
+        int SumLinNN_N = lattice.calculateNeighborSpeciesSum(siteNeighbor, 1, 1) - lattice.getSpecies(site);
+        int SumCuadNN_A = lattice.calculateNeighborSpeciesSum(site, 1, 2) - lattice.getSpecies(siteNeighbor)*lattice.getSpecies(siteNeighbor);
+        int SumCuadNN_N = lattice.calculateNeighborSpeciesSum(siteNeighbor, 1, 2) - lattice.getSpecies(site)*lattice.getSpecies(site);
 
-        int SumSpecie2N_Act_linear = lattice.calculateNeighborSpeciesSum(site, 2, 1);
-        int SumSpecie2N_Neigh_linear = lattice.calculateNeighborSpeciesSum(siteNeighbor, 2, 1);
-        int SumSpecie2N_Act_quadratic = lattice.calculateNeighborSpeciesSum(site, 2, 2);
-        int SumSpecie2N_Neigh_quadratic = lattice.calculateNeighborSpeciesSum(siteNeighbor, 2, 2);
+        int SumLinNNN_A = lattice.calculateNeighborSpeciesSum(site, 2, 1);
+        int SumLinNNN_N = lattice.calculateNeighborSpeciesSum(siteNeighbor, 2, 1);
+        int SumCuadNNN_A = lattice.calculateNeighborSpeciesSum(site, 2, 2);
+        int SumCuadNNN_N = lattice.calculateNeighborSpeciesSum(siteNeighbor, 2, 2);
 
-        float dEChem_i = lattice.calculateSiteChemicalEnergy(SpecieAct,
-                                                    jota1, jota2,
-                                                    ka1, ka2,
-                                                    ele1, ele2,
-                                                    SumSpecie1N_Act_linear, SumSpecie1N_Act_quadratic,
-                                                    SumSpecie2N_Act_linear, SumSpecie2N_Act_quadratic)+
-                        lattice.calculateSiteChemicalEnergy(SpecieNeigh,
-                                                    jota1, jota2,
-                                                    ka1, ka2,
-                                                    ele1, ele2,
-                                                    SumSpecie1N_Neigh_linear, SumSpecie1N_Neigh_quadratic,
-                                                    SumSpecie2N_Neigh_linear, SumSpecie2N_Neigh_quadratic);
-        
-        float dEChem_f = lattice.calculateSiteChemicalEnergy(SpecieNeigh,
-                                                    jota1, jota2,
-                                                    ka1, ka2,
-                                                    ele1, ele2,
-                                                    SumSpecie1N_Act_linear, SumSpecie1N_Act_quadratic,
-                                                    SumSpecie2N_Act_linear, SumSpecie2N_Act_quadratic)+
-                        lattice.calculateSiteChemicalEnergy(SpecieAct,
-                                                    jota1, jota2,
-                                                    ka1, ka2,
-                                                    ele1, ele2,
-                                                    SumSpecie1N_Neigh_linear, SumSpecie1N_Neigh_quadratic,
-                                                    SumSpecie2N_Neigh_linear, SumSpecie2N_Neigh_quadratic);
-
-        float dETotal = dEChem_f - dEChem_i;
+        float dETotal = lattice.calculateDeltaChemicalEnergy(SpecieAct, SpecieNeigh,
+                                                            jota1, jota2,
+                                                            ka1, ka2,
+                                                            ele1, ele2,
+                                                            SumLinNN_A, SumLinNNN_A,
+                                                            SumCuadNN_A, SumCuadNNN_A,
+                                                            SumLinNN_N, SumLinNNN_N,
+                                                            SumCuadNN_N, SumCuadNNN_N);
         
         // Metropolis Algorithm
         if (dETotal > 0) {
             // Accept: Probabilistically
             double epsilon = Ran0a1();
             
-            float BoltzmannChem = exp(-dETotal/1.0);
-           
+            float BoltzmannChem = table.look_from_dE(dETotal);
+            
+            if (BoltzmannChem == 0.0f) {
+                std::cout << "Warning: dE not found in Boltzmann table: dE = " << dETotal << std::endl;
+                BoltzmannChem = std::exp(-dETotal / params.T_start); // Fallback calculation
+            }
+
             if (BoltzmannChem >= epsilon) {
                 lattice.exchangeSpecies(site, siteNeighbor);
                 changesAccepted++;
@@ -196,19 +186,25 @@ void MonteCarloStepSpinExtH(Lattice& lattice,
         int Sum3N = lattice.calculateNeighborSpinSum(site, 3);
         int Sum6N = lattice.calculateNeighborSpinSum(site, 6);
 
-        float deltaEM = 2 * SpinAct * (params.Jm3 * Sum3N + params.Jm6 * Sum6N + H);
+        float dETotal = 2 * SpinAct * (params.Jm3 * Sum3N + params.Jm6 * Sum6N + H);
         
         // Metropolis Algorithm
-        if (deltaEM > 0) {
+        if (dETotal > 0) {
         
             // Accept: Probabilistically
             double epsilon = Ran0a1();
-            float Boltzmann = table.lookup_from_dE(deltaEM);
+            float Boltzmann = table.lookup_from_dE(dETotal);
+
+            if (Boltzmann == 0.0f) {
+                std::cout << "Warning: dE not found in Boltzmann table: dE = " << dETotal << std::endl;
+                Boltzmann = std::exp(-dETotal / params.T_start); // Fallback calculation
+            }
+
             if (Boltzmann >= epsilon) {
         
                 lattice.flipSpin(site);
                 changesAccepted++;
-                DeltaEAcumM += deltaEM;
+                DeltaEAcumM += dETotal;
         
             }
         
@@ -218,7 +214,7 @@ void MonteCarloStepSpinExtH(Lattice& lattice,
         // Accept: Flip spin
         lattice.flipSpin(site);
         changesAccepted++;
-        DeltaEAcumM += deltaEM;
+        DeltaEAcumM += dETotal;
     
     }
 }
@@ -234,6 +230,7 @@ void SimulationLoop(const SimulationParameters& params,
                     const char* file_out) {
     
     bool verbose = false;
+
     Lattice lattice(params.lattice_side);
     // 1. Initialization
     try {
@@ -257,83 +254,70 @@ void SimulationLoop(const SimulationParameters& params,
         return;
     }
 
-    if (params.simulation_method == 0) {
-        std::vector<float> listaTemperaturas = createSweepList(params.T_start, params.T_end, params.step_T, false);
-        int output_count = 0; // Counter for final file naming
+    
+    std::vector<float> listaCampos = createSweepList(params.H_start, params.H_end, params.step_H, params.flag_loop);
+    std::vector<float> listaTemperaturas = createSweepList(params.T_start, params.T_end, params.step_T, false);
+    int output_count = 0; // Counter for final file naming
 
-        for (float T : listaTemperaturas) {
-            std::cout << "----------------------------------------" << std::endl;
-            std::cout << "Trabajando a T = " << T << std::endl;
+    for (float T : listaTemperaturas) {
+         for (float H: listaCampos) {
+            
+            if (verbose) {
+                std::cout << "----------------------------------------" << std::endl;
+                std::cout << "Trabajando a T = " << T << " y H = " << H << std::endl;
+            }
 
             int changesAccepted = 0;
+            int changesAttempted = 0;
             float DeltaEAcumM = 0.0f;
 
-            for (int contador = 1; contador <= params.num_steps; contador++) {
+            if (params.simulation_method == 0) {
                 
-                // 3a. Single-Spin Update (Metropolis)
-                MonteCarloStepChemicalExchange(lattice, params, DeltaEAcumM, changesAccepted);
+                auto tableBEG = FastBoltzmannTableBEG(params.w1_12, params.w1_13, params.w1_23,
+                                                    params.w2_12, params.w2_13, params.w2_23, T);
+                
+                for (int contador = 1; contador <= params.num_steps; contador++) {
+                
+                    // 3a. Single-Spin Update (Metropolis)
+                    MonteCarloStepChemicalExchange(lattice, params, tableBEG, DeltaEAcumM, changesAccepted, changesAttempted);
 
-                // 3b. Measurement and Output (Occurs only in the last 200 steps)
-                if (params.num_steps < params.steps_to_output) {
-                    std::cout << "WARNING: Number of steps is less than steps to output. LRO parameters for all the steps will be calculated." << std::endl;
+                    // 3b. Measurement and Output
+                    if (contador > (params.num_steps - params.steps_to_output)) {
+                        lattice.calculateAndWriteLRO(parout, contador, T, 0.0f, DeltaEAcumM);
+                    }
                 }
 
-                if (contador > (params.num_steps - params.steps_to_output)) {
-                    lattice.calculateAndWriteLRO(parout, contador, T, 0.0f, DeltaEAcumM);
+            } else if (params.simulation_method == 1) {
+                
+                auto tableSpin = FastBoltzmannTableSpin(params.Jm3, params.Jm6, H, T);
+                
+                for (int contador = 1; contador <= params.num_steps; contador++) {
+                
+                    // 3a. Single-Spin Update (Metropolis)
+                    MonteCarloStepSpinExtH(lattice, H, params, tableSpin, DeltaEAcumM, changesAccepted, changesAttempted);
+
+                    // 3b. Measurement and Output
+                    if (contador > (params.num_steps - params.steps_to_output)) {
+                        lattice.calculateAndWriteLRO(parout, contador, T, H, DeltaEAcumM);
+                    }
                 }
             }
-            
+
             // 3c. Final Configuration Save
             if (params.flag_save_config) {
                 bool ok = lattice.saveFinalConfiguration(file_out, 0.0f, T, output_count);
                 if (!ok) std::cerr << "WARNING: could not save final configuration for output_count=" << output_count << std::endl;
             }
 
-            std::cout << "Intercambios aceptados / intentado: " << changesAccepted << "/" << params.num_steps << " en " << params.num_steps << " pasos." << std::endl;
+            if (verbose) {
+                std::cout << "Intercambios aceptados / intentado: " << changesAccepted << "/" << params.num_steps << " en " << params.num_steps << " pasos." << std::endl;
+            }
 
             output_count++;
-        }
-    } else if (params.simulation_method == 1) {
-        std::vector<float> listaCampos = createSweepList(params.H_start, params.H_end, params.step_H, params.flag_loop);
-        std::vector<float> listaTemperaturas = createSweepList(params.T_start, params.T_end, params.step_T, false);
-        int output_count = 0; // Counter for final file naming
 
-        for (float T: listaTemperaturas) {
-            for (float H: listaCampos) {
-                std::cout << "----------------------------------------" << std::endl;
-                std::cout << "Trabajando a T = " << T << " y H = " << H << std::endl;
-
-                int changesAccepted = 0;
-                int changesAttempted = 0;
-                float DeltaEAcumM = 0.0f;
-                
-                auto tableSpin = FastBoltzmannTableSpin(params.Jm3, params.Jm6, H, T);
-
-                for (int contador = 1; contador <= params.num_steps; contador++) {
-                    MonteCarloStepSpinExtH(lattice, H, params, tableSpin, DeltaEAcumM, changesAccepted, changesAttempted);
-
-                    // 3b. Measurement and Output (Occurs only in the last 200 steps)
-                    if (params.num_steps < params.steps_to_output) {
-                        std::cout << "WARNING: Number of steps is less than steps to output. LRO parameters for all the steps will be calculated." << std::endl;
-                    }
-
-                    if (contador > (params.num_steps - params.steps_to_output)) {
-                        lattice.calculateAndWriteLRO(parout, contador, T, H, DeltaEAcumM);
-                    }
-            
-                    // 3c. Final Configuration Save
-                    if (params.flag_save_config) {
-                        bool ok = lattice.saveFinalConfiguration(file_out, H, T, output_count);
-                        if (!ok) std::cerr << "WARNING: could not save final configuration for output_count=" << output_count << std::endl;
-                    }
-                }
-
-                if (verbose) {
-                    std::cout << "Intercambios aceptados / intentado: " << changesAccepted << "/" << changesAttempted << " en " << params.num_steps << " pasos." << std::endl;
-                }
-                output_count++;
-            }
         }
     }
+
     parout.close();
+
 }
