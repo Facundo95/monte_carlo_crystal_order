@@ -10,20 +10,20 @@ LATTICE_SIDE 32
 SIMULATION_METHOD 1
 
 --- Interacion Chemical Energies ---
-As example energies for a Cu-Al-Mn alloy (Cu=1, Al=2, Mn=3)
+As example energies for a Co-Ni-Al alloy (Co=1, Ni=2, Al=3)
 Nearest Neighbors
-W1_12 1660 
-W1_13 600
-W1_23 700
+W1_12 -419.65 
+W1_13 5352.08
+W1_23 5256.49
 
 Next Nearest Neighbors
-W2_12 920
-W2_13 200
-W2_23 800
+W2_12 554.26
+W2_13 -761.6
+W2_23 1803.79
 
 --- Interaction Magnetic Energies (3rd and 6th Nearest Neighbors) ---
-J_M3 150.0
-J_M6 100.0
+J_M3 0.0
+J_M6 0.0
 
 --- Flag to save the final lattice configuration (true or false) ---
 FLAG_SAVE_CONFIG false

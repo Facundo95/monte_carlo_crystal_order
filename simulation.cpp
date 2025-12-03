@@ -97,8 +97,8 @@ void MonteCarloStepChemicalExchange(Lattice& lattice,
     float jota2 = 0.25 * params.w2_13;
     float ka1 = 0.25 * (2 * params.w1_12 + 2 * params.w1_23 - params.w1_13);
     float ka2 = 0.25 * (2 * params.w2_12 + 2 * params.w2_23 - params.w2_13);
-    float ele1 = 0.25 * (params.w1_12 - params.w1_13);
-    float ele2 = 0.25 * (params.w2_12 - params.w2_13);
+    float ele1 = 0.25 * (params.w1_12 - params.w1_23);
+    float ele2 = 0.25 * (params.w2_12 - params.w2_23);
 
     for (int site = 0; site < lattice.totalSites(); site++) {
         

@@ -115,8 +115,8 @@ struct FastBoltzmannTableBEG {
         float jota2 = 0.25 * w2_13;
         float ka1 = 0.25 * (2 * w1_12 + 2 * w1_23 - w1_13);
         float ka2 = 0.25 * (2 * w2_12 + 2 * w2_23 - w2_13);
-        float ele1 = 0.25 * (w1_12 - w1_13);
-        float ele2 = 0.25 * (w2_12 - w2_13);
+        float ele1 = 0.25 * (w1_12 - w1_23);
+        float ele2 = 0.25 * (w2_12 - w2_23);
 
         std::vector<double> dEs;
         
