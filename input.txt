@@ -1,13 +1,13 @@
 Configuration File for Monte Carlo Simulation
 --- General Simulation Parameters ---
 Total number of Monte Carlo steps per H/T point
-NUM_STEPS 1000
+NUM_STEPS 1
 Lattice side, N_atoms =  2 * lattice_side ** 3
-LATTICE_SIDE 32
+LATTICE_SIDE 56
 
-0 Canonic MC, BEG + Ising Hamiltonian
+0 Canonic MC, BEG Hamiltonian
 1 Canonic MC, Ising Hamiltonian
-SIMULATION_METHOD 1
+SIMULATION_METHOD 0
 
 --- Interacion Chemical Energies ---
 As example energies for a Co-Ni-Al alloy (Co=1, Ni=2, Al=3)
@@ -27,7 +27,7 @@ J_M6 0.0
 
 --- Flag to save the final lattice configuration (true or false) ---
 FLAG_SAVE_CONFIG false
-STEPS_TO_OUTPUT 200 
+STEPS_TO_OUTPUT 0 
 
 --- Temperature Sweep Parameters ---
 T_START 400.0
@@ -35,12 +35,12 @@ T_END 400.0
 STEP_T 10.0
 
 --- Magnetic Field Sweep Parameters (H) ---
-H_START 1000.0
-H_END -1000.0
+H_START 0.0
+H_END 0.0
 STEP_H 50.0
-LOOP true
+LOOP false
 
 --- File List ---
 Filename to simulate it supports ".txt" and ".xyz" extensions
-FILE_ENTRY 1_cluster_l21_out.txt
+FILE_ENTRY Co364Ni348Al288.txt
 FILE_OUTPUT test.xyz

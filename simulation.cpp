@@ -2,6 +2,8 @@
 #include "rng.h"
 #include "file_handler.h"
 #include <stdexcept>
+#include <cstring>
+#include <cstdint>
 
 /**
  * @brief Creates the vector of values for the sweep list.
@@ -88,7 +90,7 @@ std::vector<float> createTSweepList(const SimulationParameters& params) {
 */
 void MonteCarloStepChemicalExchange(Lattice& lattice,
                                     const SimulationParameters& params,
-                                    const FastBoltzmannTableBEG& table, 
+                                    BoltzmannDeltaETable& table,  
                                     float& DeltaEAcumM,
                                     int& changesAccepted,
                                     int& changesAttempted) {
@@ -121,7 +123,7 @@ void MonteCarloStepChemicalExchange(Lattice& lattice,
         int SumCuadNNN_A = lattice.calculateNeighborSpeciesSum(site, 2, 2);
         int SumCuadNNN_N = lattice.calculateNeighborSpeciesSum(siteNeighbor, 2, 2);
 
-        float dETotal = lattice.calculateDeltaChemicalEnergy(SpecieAct, SpecieNeigh,
+        double dETotal = lattice.calculateDeltaChemicalEnergy(SpecieAct, SpecieNeigh,
                                                             jota1, jota2,
                                                             ka1, ka2,
                                                             ele1, ele2,
@@ -135,11 +137,16 @@ void MonteCarloStepChemicalExchange(Lattice& lattice,
             // Accept: Probabilistically
             double epsilon = Ran0a1();
             
-            float BoltzmannChem = table.look_from_dE(dETotal);
+            float BoltzmannChem = table.lookup(dETotal);
             
             if (BoltzmannChem == 0.0f) {
                 std::cout << "Warning: dE not found in Boltzmann table: dE = " << dETotal << std::endl;
-                BoltzmannChem = std::exp(-dETotal / params.T_start); // Fallback calculation
+                std::cout << "Species on site: " << SpecieAct << ", Species at neighbor " << siteNeighbor << ": " << SpecieNeigh << std::endl;
+                std::cout << "SumLinNN_A: " << SumLinNN_A << ", SumLinNNN_A: " << SumLinNNN_A
+                          << ", SumCuadNN_A: " << SumCuadNN_A << ", SumCuadNNN_A: " << SumCuadNNN_A << std::endl;
+                std::cout << "SumLinNN_N: " << SumLinNN_N << ", SumLinNNN_N: " << SumLinNNN_N
+                          << ", SumCuadNN_N: " << SumCuadNN_N << ", SumCuadNNN_N: " << SumCuadNNN_N << std::endl;
+                std::cout << "----------------------------------------" << std::endl;
             }
 
             if (BoltzmannChem >= epsilon) {
@@ -170,7 +177,7 @@ void MonteCarloStepChemicalExchange(Lattice& lattice,
 void MonteCarloStepSpinExtH(Lattice& lattice, 
                             float H,
                             const SimulationParameters& params, 
-                            const FastBoltzmannTableSpin& table,
+                            BoltzmannDeltaETable& table,
                             float& DeltaEAcumM,
                             int& changesAccepted,
                             int& changesAttempted) {
@@ -193,11 +200,10 @@ void MonteCarloStepSpinExtH(Lattice& lattice,
         
             // Accept: Probabilistically
             double epsilon = Ran0a1();
-            float Boltzmann = table.lookup_from_dE(dETotal);
+            float Boltzmann = table.lookup(dETotal);
 
             if (Boltzmann == 0.0f) {
                 std::cout << "Warning: dE not found in Boltzmann table: dE = " << dETotal << std::endl;
-                Boltzmann = std::exp(-dETotal / params.T_start); // Fallback calculation
             }
 
             if (Boltzmann >= epsilon) {
@@ -260,7 +266,11 @@ void SimulationLoop(const SimulationParameters& params,
     int output_count = 0; // Counter for final file naming
 
     for (float T : listaTemperaturas) {
-         for (float H: listaCampos) {
+
+        std::vector<double> dEs = {};
+        auto table = BoltzmannDeltaETable(dEs, T);
+        
+        for (float H: listaCampos) {
             
             if (verbose) {
                 std::cout << "----------------------------------------" << std::endl;
@@ -271,41 +281,22 @@ void SimulationLoop(const SimulationParameters& params,
             int changesAttempted = 0;
             float DeltaEAcumM = 0.0f;
 
-            if (params.simulation_method == 0) {
+            for (int contador = 1; contador <= params.num_steps; contador++) {
                 
-                auto tableBEG = FastBoltzmannTableBEG(params.w1_12, params.w1_13, params.w1_23,
-                                                    params.w2_12, params.w2_13, params.w2_23, T);
-                
-                for (int contador = 1; contador <= params.num_steps; contador++) {
-                
-                    // 3a. Single-Spin Update (Metropolis)
-                    MonteCarloStepChemicalExchange(lattice, params, tableBEG, DeltaEAcumM, changesAccepted, changesAttempted);
-
-                    // 3b. Measurement and Output
-                    if (contador > (params.num_steps - params.steps_to_output)) {
-                        lattice.calculateAndWriteLRO(parout, contador, T, 0.0f, DeltaEAcumM);
-                    }
+                if (params.simulation_method == 0) {
+                    MonteCarloStepChemicalExchange(lattice, params, table, DeltaEAcumM, changesAccepted, changesAttempted);
+                } else if (params.simulation_method == 1) {
+                    MonteCarloStepSpinExtH(lattice, H, params, table, DeltaEAcumM, changesAccepted, changesAttempted);
                 }
-
-            } else if (params.simulation_method == 1) {
-                
-                auto tableSpin = FastBoltzmannTableSpin(params.Jm3, params.Jm6, H, T);
-                
-                for (int contador = 1; contador <= params.num_steps; contador++) {
-                
-                    // 3a. Single-Spin Update (Metropolis)
-                    MonteCarloStepSpinExtH(lattice, H, params, tableSpin, DeltaEAcumM, changesAccepted, changesAttempted);
-
                     // 3b. Measurement and Output
-                    if (contador > (params.num_steps - params.steps_to_output)) {
-                        lattice.calculateAndWriteLRO(parout, contador, T, H, DeltaEAcumM);
-                    }
+                if (contador > (params.num_steps - params.steps_to_output)) {
+                    lattice.calculateAndWriteLRO(parout, contador, T, H, DeltaEAcumM);
                 }
             }
 
             // 3c. Final Configuration Save
             if (params.flag_save_config) {
-                bool ok = lattice.saveFinalConfiguration(file_out, 0.0f, T, output_count);
+                bool ok = lattice.saveFinalConfiguration(file_out, H, T, output_count);
                 if (!ok) std::cerr << "WARNING: could not save final configuration for output_count=" << output_count << std::endl;
             }
 

@@ -261,7 +261,7 @@ float Lattice::calculateNeighborSpeciesSum(int site, int shell_type, int order) 
  * @param sumLin1, sumCuad1 Linear and quadratic sums over 1st NN species.
  * @param sumLin2, sumCuad2 Linear and quadratic sums over 2nd NN species.
  */
-float Lattice::calculateDeltaChemicalEnergy(int type_A, int type_N, 
+double Lattice::calculateDeltaChemicalEnergy(int type_A, int type_N, 
                                             float JOTA1, float JOTA2, 
                                             float KA1, float KA2, 
                                             float ELE1, float ELE2,
@@ -449,7 +449,7 @@ bool Lattice::saveFinalConfiguration(const char* nombrefile,
 
         redout.close();
         return true;
-    } else if (ext == ".txt") {    
+    } else {    
         float aux2, aux3;
         for (int site = 0; site < m_total_sites; site++) {
             aux2 = red_flat[site];

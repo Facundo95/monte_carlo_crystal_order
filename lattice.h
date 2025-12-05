@@ -58,7 +58,7 @@ public:
     }
 
     /** @brief Calculates the chemical energy contribution for a given site. */
-    float calculateDeltaChemicalEnergy(int type_A, int type_N, 
+    double calculateDeltaChemicalEnergy(int type_A, int type_N, 
                                     float JOTA1, float JOTA2, 
                                     float KA1, float KA2, 
                                     float ELE1, float ELE2,

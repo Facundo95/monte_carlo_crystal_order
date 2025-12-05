@@ -19,147 +19,37 @@
 #include <cstring>
 
 struct BoltzmannDeltaETable {
-    std::unordered_map<std::uint64_t, double> table;
+    // Use quantized integer keys to avoid exact-bit mismatches caused by
+    // floating point rounding differences between the precompute and runtime.
+    std::unordered_map<long long, double> table;
+    double eps; // quantization resolution used to generate keys
+    double T;   // temperature used to compute Boltzmann factors (for fallback)
 
-    // --- codificar un double como entero de 64 bits (bitwise exact) ---
-    static inline std::uint64_t encode(double x) {
-        std::uint64_t bits;
-        static_assert(sizeof(double) == sizeof(std::uint64_t),
-                      "double must be 64-bit");
-        std::memcpy(&bits, &x, sizeof(double));
-        return bits;
+    static inline long long key_of(double x, double eps) {
+        return static_cast<long long>(std::llround(x / eps));
     }
 
-    BoltzmannDeltaETable(const std::vector<double>& all_dEs, double T) {
+    BoltzmannDeltaETable(const std::vector<double>& all_dEs, double T_, double eps_ = 1e-7)
+        : eps(eps_), T(T_)
+    {
         if (T == 0.0) T = 1e-12;
-
         for (double dE : all_dEs) {
-            std::uint64_t key = encode(dE);
+            long long key = key_of(dE, eps);
             table[key] = std::exp(-dE / T);
         }
     }
 
-    inline double lookup(double dE) const {
-        std::uint64_t key = encode(dE);
+    inline double lookup(double dE) {
+        long long key = key_of(dE, eps);
         auto it = table.find(key);
         if (it != table.end()) return it->second;
 
-        // --- si no se encontró: robust fallback ---
-        return 0.0;  // o 1.0 dependiendo del criterio que prefieras
-    }
-};
-
-struct FastBoltzmannTableSpin {
-
-    BoltzmannDeltaETable table;
-
-    double J3_, J6_, h_, T_;
-
-    FastBoltzmannTableSpin(double J3, double J6, double h, double T)
-        : table(compute_dEs(J3, J6, h), T), J3_(J3), J6_(J6), h_(h), T_(T)
-    {}
-
-    static std::vector<double> compute_dEs(double J3, double J6, double h) {
-
-        static constexpr int N_si = 2;
-        static constexpr int N_S3 = 26;
-        static constexpr int N_S6 = 14;
-
-        std::vector<double> dEs;
-        dEs.reserve(N_si * N_S3 * N_S6);
-
-        int s_vals[2] = {-1, 1};
-
-        int S3_vals[N_S3];
-        for (int i = 0; i < N_S3; i++)
-            S3_vals[i] = -12 + i;
-
-        int S6_vals[N_S6];
-        for (int i = 0; i < N_S6; i++)
-            S6_vals[i] = -6 + i;
-
-        for (int si : s_vals)
-            for (int S3 : S3_vals)
-                for (int S6 : S6_vals)
-                    dEs.push_back( 2.0 * si * (J3*S3 + J6*S6 + h) );
-
-        return dEs;
-    }
-
-    inline double lookup_from_dE(double dE) const {
-        return table.lookup(dE);
-    }
-};
-
-struct FastBoltzmannTableBEG {
-
-    BoltzmannDeltaETable table;
-
-    float w1_12, w1_13, w1_23;
-    float w2_12, w2_13, w2_23;
-    float T;
-
-    FastBoltzmannTableBEG(float w1_12_, float w1_13_, float w1_23_,
-                         float w2_12_, float w2_13_, float w2_23_,
-                         float T_)
-        : table(compute_dEs(w1_12_, w1_13_, w1_23_,
-                            w2_12_, w2_13_, w2_23_), T_), 
-          w1_12(w1_12_), w1_13(w1_13_), w1_23(w1_23_),
-          w2_12(w2_12_), w2_13(w2_13_), w2_23(w2_23_), T(T_)
-    {}
-
-    static std::vector<double> compute_dEs(float w1_12, float w1_13, float w1_23,
-                                           float w2_12, float w2_13, float w2_23) {
-        
-        float jota1 = 0.25 * w1_13;
-        float jota2 = 0.25 * w2_13;
-        float ka1 = 0.25 * (2 * w1_12 + 2 * w1_23 - w1_13);
-        float ka2 = 0.25 * (2 * w2_12 + 2 * w2_23 - w2_13);
-        float ele1 = 0.25 * (w1_12 - w1_23);
-        float ele2 = 0.25 * (w2_12 - w2_23);
-
-        std::vector<double> dEs;
-        
-        int diffLinNN[33] = {};
-        int diffCuadNN[16] = {};
-        int diffLinNNN[25] = {};
-        int diffCuadNNN[13] = {};
-        int diffTipo[4] = {-2, -1, 1, 2};
-        int sumTipo[3] = {-1, 0, 1};
-        for (int i = 0; i < 33; ++i) diffLinNN[i] = i - 16;
-        for (int i = 0; i < 16; ++i) diffCuadNN[i] = i;
-        for (int i = 0; i < 25; ++i) diffLinNNN[i] = i - 12;
-        for (int i = 0; i < 13; ++i) diffCuadNNN[i] = i;
-
-        for (int diff_tipo : diffTipo) {
-            for (int sum_tipo : sumTipo) {
-                for (int dLinNN : diffLinNN) {
-                    for (int dCuadNN : diffCuadNN) {
-                        for (int dLinNNN : diffLinNNN) {
-                            for (int dCuadNNN : diffCuadNNN) {
-                                double dE = diff_tipo * (
-                                    // Nearest Neighbors (NN)
-                                    jota1 * dLinNN +
-                                    ka1   * dCuadNN * sum_tipo +
-                                    ele1  * (dLinNN * sum_tipo + dCuadNN) + 
-                                    // Next Nearest Neighbors (NNN)
-                                    jota2 * dLinNNN +
-                                    ka2   * dCuadNNN * sum_tipo +
-                                    ele2  * (dLinNNN * sum_tipo + dCuadNNN)
-                                );
-                                
-                                dEs.push_back(dE);
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        return dEs;
-    }
-
-    inline double look_from_dE(double dE) const {
-        return table.lookup(dE);
+        // Fallback: compute Boltzmann factor on the fly and insert it
+        double Tloc = T;
+        if (Tloc == 0.0) Tloc = 1e-12;
+        double val = std::exp(-dE / Tloc);
+        table[key] = val;
+        return val;
     }
 };
 
@@ -235,7 +125,7 @@ std::vector<float> createSweepList(float start, float end, float step, bool loop
 */
 void MonteCarloStepChemicalExchange(Lattice& lattice,
                                     const SimulationParameters& params,
-                                    const FastBoltzmannTableBEG& table, 
+                                    BoltzmannDeltaETable& table,
                                     float& DeltaEAcumM,
                                     int& changesAccepted,
                                     int& changesAttempted);
@@ -251,7 +141,7 @@ void MonteCarloStepChemicalExchange(Lattice& lattice,
 void MonteCarloStepSpinExtH(Lattice& lattice, 
                             float H,
                             const SimulationParameters& params, 
-                            const FastBoltzmannTableSpin& table,
+                            BoltzmannDeltaETable& table,
                             float& DeltaEAcumM,
                             int& changesAccepted,
                             int& changesAttempted);
