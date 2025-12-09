@@ -137,17 +137,7 @@ void MonteCarloStepChemicalExchange(Lattice& lattice,
             // Accept: Probabilistically
             double epsilon = Ran0a1();
             
-            float BoltzmannChem = table.lookup(dETotal);
-            
-            if (BoltzmannChem == 0.0f) {
-                std::cout << "Warning: dE not found in Boltzmann table: dE = " << dETotal << std::endl;
-                std::cout << "Species on site: " << SpecieAct << ", Species at neighbor " << siteNeighbor << ": " << SpecieNeigh << std::endl;
-                std::cout << "SumLinNN_A: " << SumLinNN_A << ", SumLinNNN_A: " << SumLinNNN_A
-                          << ", SumCuadNN_A: " << SumCuadNN_A << ", SumCuadNNN_A: " << SumCuadNNN_A << std::endl;
-                std::cout << "SumLinNN_N: " << SumLinNN_N << ", SumLinNNN_N: " << SumLinNNN_N
-                          << ", SumCuadNN_N: " << SumCuadNN_N << ", SumCuadNNN_N: " << SumCuadNNN_N << std::endl;
-                std::cout << "----------------------------------------" << std::endl;
-            }
+            double BoltzmannChem = table.lookup(dETotal);
 
             if (BoltzmannChem >= epsilon) {
                 lattice.exchangeSpecies(site, siteNeighbor);
@@ -200,11 +190,7 @@ void MonteCarloStepSpinExtH(Lattice& lattice,
         
             // Accept: Probabilistically
             double epsilon = Ran0a1();
-            float Boltzmann = table.lookup(dETotal);
-
-            if (Boltzmann == 0.0f) {
-                std::cout << "Warning: dE not found in Boltzmann table: dE = " << dETotal << std::endl;
-            }
+            double Boltzmann = table.lookup(dETotal);
 
             if (Boltzmann >= epsilon) {
         

@@ -29,7 +29,7 @@ struct BoltzmannDeltaETable {
         return static_cast<long long>(std::llround(x / eps));
     }
 
-    BoltzmannDeltaETable(const std::vector<double>& all_dEs, double T_, double eps_ = 1e-7)
+    BoltzmannDeltaETable(const std::vector<double>& all_dEs, double T_, double eps_ = 1e-6)
         : eps(eps_), T(T_)
     {
         if (T == 0.0) T = 1e-12;
