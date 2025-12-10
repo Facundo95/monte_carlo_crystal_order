@@ -440,11 +440,11 @@ bool Lattice::saveFinalConfiguration(const char* nombrefile,
             float z = static_cast<float>(k) * 0.5f;
 
             if ((k % 2) != 0) {
-                float x = static_cast<float>(i) + 0.5f;
-                float y = static_cast<float>(j) + 0.5f;
+                x = static_cast<float>(i) + 0.5f;
+                y = static_cast<float>(j) + 0.5f;
             } else {
-                float x = static_cast<float>(i);
-                float y = static_cast<float>(j);
+                x = static_cast<float>(i);
+                y = static_cast<float>(j);
             }
 
             int specie = red_flat[site];
