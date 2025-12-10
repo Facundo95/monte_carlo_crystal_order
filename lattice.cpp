@@ -435,16 +435,24 @@ bool Lattice::saveFinalConfiguration(const char* nombrefile,
             int i, j, k;
             idxToXYZ(site, m_side, i, j, k);
             // Simple geometric mapping: unit spacing in x,y and 0.5 in z to reflect depth
-            float x = static_cast<float>(i);
-            float y = static_cast<float>(j);
+            float x;
+            float y;
             float z = static_cast<float>(k) * 0.5f;
+
+            if ((k % 2) != 0) {
+                float x = static_cast<float>(i) + 0.5f;
+                float y = static_cast<float>(j) + 0.5f;
+            } else {
+                float x = static_cast<float>(i);
+                float y = static_cast<float>(j);
+            }
 
             int specie = red_flat[site];
             int spin = magn_flat[site];
-            const char* elem = (specie == 1) ? "Cu" : (specie == 0 ? "Mn" : "Al");
+            const char* elem = (specie == 1) ? "Co" : (specie == 0 ? "Ni" : "Al");
 
             // Write: ElementSymbol x y z specie spin
-            redout << elem << " " << x << " " << y << " " << z << spin << "\n";
+            redout << elem << " " << x << " " << y << " " << z << " " << spin << "\n";
         }
 
         redout.close();
