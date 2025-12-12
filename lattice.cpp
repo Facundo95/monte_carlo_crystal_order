@@ -64,11 +64,6 @@ void Lattice::loadInitialConfiguration(const std::string& filename) {
             natoms = -1;
         }
 
-        // 2) read comment/header line
-        if (!std::getline(redin, line)) {
-            throw std::runtime_error("Archivo .xyz mal formado (sin linea de comentario): " + filename);
-        }
-
         int filled = 0;
         while (std::getline(redin, line)) {
             if (line.empty()) continue;
@@ -92,15 +87,18 @@ void Lattice::loadInitialConfiguration(const std::string& filename) {
             }
 
             // Map coordinates back to integer lattice indices
-            int ix = static_cast<int>(std::round(x));
-            int iy = static_cast<int>(std::round(y));
-            int kz = static_cast<int>(std::round(z / 0.5));
+            int ix, iy;
+            int kz = static_cast<int>(std::round(z * 2.0));
 
-            if (ix < 0 || ix >= m_side || iy < 0 || iy >= m_side || kz < 0 || kz >= m_depth) {
-                throw std::runtime_error("Coordenadas fuera de rango en .xyz: " + line);
+            if ((kz % 2) != 0) {
+                ix = static_cast<int>(std::round(x - 0.5f));
+                iy = static_cast<int>(std::round(y - 0.5f));
+            } else {
+                ix = static_cast<int>(std::round(x));
+                iy = static_cast<int>(std::round(y));
             }
 
-            int idx = idx3D(ix, iy, kz);
+            int idx = idx3D(wrap(ix,m_side), wrap(iy, m_side), wrap(kz, m_depth));
             red_flat[idx] = specie;
             magn_flat[idx] = spin;
             ++filled;

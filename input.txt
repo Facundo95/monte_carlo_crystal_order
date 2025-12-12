@@ -42,5 +42,5 @@ LOOP false
 
 --- File List ---
 Filename to simulate it supports ".txt" and ".xyz" extensions
-FILE_ENTRY Co364Ni348Al288.txt
+FILE_ENTRY dump_0.0H_700.0K_0Co364Ni348Al288_700K.xyz
 FILE_OUTPUT test.xyz
