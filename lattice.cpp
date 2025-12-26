@@ -66,7 +66,7 @@ void Lattice::loadInitialConfiguration(const std::string& filename) {
 
         int filled = 0;
         while (std::getline(redin, line)) {
-            if (line.empty()) continue;
+            if (line.empty() || line.find("Lattice=") != std::string::npos || line.find("Properties=") != std::string::npos) continue;
             std::istringstream ss(line);
             std::string atomToken;
             double x,y,z;
