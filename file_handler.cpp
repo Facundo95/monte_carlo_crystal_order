@@ -43,7 +43,7 @@ bool OpenLROParametersFile(const char* nombrefile, std::ofstream& output_stream)
                   << "X_A\tX_BUp\tX_BDown\tX_C\t"
                   << "Y_A\tY_BUp\tY_BDown\tY_C\t"
                   << "Z_A\tZ_BUp\tZ_BDown\tZ_C\t"
-                  << "Magnetization\tDeltaEAcumM\n";
+                  << "Magnetization\tEtotal\n";
 
     return true;
 }
