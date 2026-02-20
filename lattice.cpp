@@ -120,7 +120,6 @@ void Lattice::loadInitialConfiguration(const std::string& filename) {
 double Lattice::calculateTotalEnergy(const SimulationParameters& params, float H) const {
     double totalChemicalE = 0.0;
     double totalMagneticE = 0.0;
-    double fieldEnergy = 0.0;
 
     // Pre-calculate chemical constants as done in MonteCarloStep
     float jota1 = 0.25 * params.w1_13;
@@ -153,7 +152,6 @@ double Lattice::calculateTotalEnergy(const SimulationParameters& params, float H
             float sumSpin3 = calculateNeighborSpinSum(site, 3);
             float sumSpin6 = calculateNeighborSpinSum(site, 6);
             totalMagneticE += calculateSiteMagneticEnergy(Mi, params.Jm3, params.Jm6, H, sumSpin3, sumSpin6);
-            fieldEnergy += Mi * H;
         }
     }
 

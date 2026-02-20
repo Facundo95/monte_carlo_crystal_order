@@ -6,6 +6,8 @@
 #include <string>
 #include <fstream>
 
+struct SimulationParameters;
+
 /***
  * @class Lattice
  * @brief Represents a 3D BCC lattice for Monte Carlo simulations.
