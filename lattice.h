@@ -57,6 +57,8 @@ public:
         std::swap(magn_flat[site1], magn_flat[site2]);
     }
 
+    double calculateTotalEnergy(const SimulationParameters& params, float H) const;
+
     /** @brief Calculates the chemical energy contribution for a given site. */
     double calculateDeltaChemicalEnergy(int type_A, int type_N, 
                                     float JOTA1, float JOTA2, 

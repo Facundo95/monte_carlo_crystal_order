@@ -257,6 +257,8 @@ void SimulationLoop(const SimulationParameters& params,
         auto table = BoltzmannDeltaETable(dEs, T);
         
         for (float H: listaCampos) {
+
+            double currentTotalEnergy = lattice.calculateTotalEnergy(params, H);
             
             if (verbose) {
                 std::cout << "----------------------------------------" << std::endl;
@@ -274,9 +276,12 @@ void SimulationLoop(const SimulationParameters& params,
                 } else if (params.simulation_method == 1) {
                     MonteCarloStepSpinExtH(lattice, H, params, table, DeltaEAcumM, changesAccepted, changesAttempted);
                 }
+
+                double energyAtStep = currentTotalEnergy + DeltaEAcumM;
+
                     // 3b. Measurement and Output
                 if (contador > (params.num_steps - params.steps_to_output)) {
-                    lattice.calculateAndWriteLRO(parout, contador, T, H, DeltaEAcumM);
+                    lattice.calculateAndWriteLRO(parout, contador, T, H, energyAtStep);
                 }
             }
 

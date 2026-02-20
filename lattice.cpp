@@ -117,6 +117,56 @@ void Lattice::loadInitialConfiguration(const std::string& filename) {
     }
 }
 
+double Lattice::calculateTotalEnergy(const SimulationParameters& params, float H) const {
+    double totalChemicalE = 0.0;
+    double totalMagneticE = 0.0;
+    double fieldEnergy = 0.0;
+
+    // Pre-calculate chemical constants as done in MonteCarloStep
+    float jota1 = 0.25 * params.w1_13;
+    float jota2 = 0.25 * params.w2_13;
+    float ka1 = 0.25 * (2 * params.w1_12 + 2 * params.w1_23 - params.w1_13);
+    float ka2 = 0.25 * (2 * params.w2_12 + 2 * params.w2_23 - params.w2_13);
+    float ele1 = 0.25 * (params.w1_12 - params.w1_23);
+    float ele2 = 0.25 * (params.w2_12 - params.w2_23);
+
+    for (int site = 0; site < m_total_sites; ++site) {
+        int Si = red_flat[site];
+        int Mi = magn_flat[site];
+
+        // --- 1. CHEMICAL ENERGY ---
+        // Neighbors 1 (NN) and Neighbors 2 (NNN)
+        float sumLin1 = calculateNeighborSpeciesSum(site, 1, 1);
+        float sumCuad1 = calculateNeighborSpeciesSum(site, 1, 2);
+        float sumLin2 = calculateNeighborSpeciesSum(site, 2, 1);
+        float sumCuad2 = calculateNeighborSpeciesSum(site, 2, 2);
+
+        // Standard BEG-like Hamiltonian: 
+        // H_chem = J*Si*Sj + K*Si^2*Sj^2 + L*(Si^2*Sj + Sj^2*Si)
+        totalChemicalE += Si * (jota1 * sumLin1 + ele1 * sumCuad1) + 
+                          Si * Si * (ka1 * sumCuad1 + ele1 * sumLin1) +
+                          Si * (jota2 * sumLin2 + ele2 * sumCuad2) + 
+                          Si * Si * (ka2 * sumCuad2 + ele2 * sumLin2);
+
+        // --- 2. MAGNETIC ENERGY ---
+        if (Mi != 0) {
+            float sumSpin3 = calculateNeighborSpinSum(site, 3);
+            float sumSpin6 = calculateNeighborSpinSum(site, 6);
+            totalMagneticE += calculateSiteMagneticEnergy(Mi, params.Jm3, params.Jm6, H, sumSpin3, sumSpin6);
+            fieldEnergy += Mi * H;
+        }
+    }
+
+    double totalMagnetization = 0;
+    for(int i=0; i < m_total_sites; ++i) totalMagnetization += magn_flat[i];
+    double fieldEnergy = -totalMagnetization * H;
+
+    // (TotalSum - FieldPart) gives the interaction part which needs the 0.5 correction
+    double interactionMagneticE = totalMagneticE - fieldEnergy;
+
+    return 0.5 * (totalChemicalE + interactionMagneticE) + fieldEnergy;
+}
+
 /** @brief Initializes the neighbor lists for each lattice site. */
 void Lattice::initializeNeighbors() {
     for (int site = 0; site < m_total_sites; ++site) {
