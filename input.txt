@@ -46,6 +46,6 @@ STEP_H 50.0
 LOOP false
 
 --- File List ---
-Filename to simulate it supports ".txt" and ".xyz" extensions
+Filename to simulate it supports ".fl" and ".xyz" extensions
 FILE_ENTRY Co364Ni348Al288.xyz
 FILE_OUTPUT test2.xyz

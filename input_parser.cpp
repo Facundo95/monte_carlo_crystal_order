@@ -140,8 +140,8 @@ bool readInputFile(const std::string& input_filename, SimulationParameters& para
     int lattice_side = 32;  // Default small lattice
     float w1_12 = 0.0, w2_12 = 0.0, w1_13 = 0.0, w2_13 = 0.0, w1_23 = 0.0, w2_23 = 0.0;
     float Jm3 = 0.0, Jm6 = 0.0;
-    float T_start = 0.0, T_end = 0.0, step_T = 0.0;
-    float H_start = 0.0, H_end = 0.0, step_H = 0.0;
+    float T_start = 0.0, T_end = 0.0, step_T = 1.0;
+    float H_start = 0.0, H_end = 0.0, step_H = 1.0;
     bool flag_save_config = false;
     bool flag_loop = false;
     int steps_to_output = 100;  // Default value
@@ -151,6 +151,7 @@ bool readInputFile(const std::string& input_filename, SimulationParameters& para
     std::string atom_3 = "";
     bool has_t_end = false;  // Track if T_END was explicitly set
     bool has_h_end = false;  // Track if H_END was explicitly set
+    bool has_file_output = false;  // Track if FILE_OUTPUT was explicitly set
 
     std::string line;
     int line_number = 0;
@@ -215,7 +216,12 @@ bool readInputFile(const std::string& input_filename, SimulationParameters& para
             }
         }
         else if (key == "STEP_T") {
-            extractFloatValue(ss, step_T);
+            if (extractFloatValue(ss, step_T)) {
+                if (step_T <= 0.0f) {
+                    std::cerr << "WARNING: STEP_T must be greater than zero at line " << line_number << ". Using default value 1." << std::endl;
+                    step_T = 1.0f;
+                }
+            }
         }
         else if (key == "H_START") {
             if (extractFloatValue(ss, H_start)) {
@@ -232,7 +238,12 @@ bool readInputFile(const std::string& input_filename, SimulationParameters& para
             }
         }
         else if (key == "STEP_H") {
-            extractFloatValue(ss, step_H);
+            if (extractFloatValue(ss, step_H)) {
+                if (step_H <= 0.0f) {
+                    std::cerr << "WARNING: STEP_H must be greater than zero at line " << line_number << ". Using default value 1." << std::endl;
+                    step_H = 1.0f;
+                }
+            }
         }
         else if (key == "STEPS_TO_OUTPUT") {
             extractIntValue(ss, steps_to_output);
@@ -258,6 +269,7 @@ bool readInputFile(const std::string& input_filename, SimulationParameters& para
                 std::cerr << "WARNING: FILE_OUTPUT has no value at line " << line_number << std::endl;
             } else {
                 file_out = filename;
+                has_file_output = true;
             }
         }
         else if (key == "ATOM_1") {
@@ -314,6 +326,11 @@ bool readInputFile(const std::string& input_filename, SimulationParameters& para
     // If H_END was not explicitly set, use H_START
     if (!has_h_end) {
         H_end = H_start;
+    }
+
+    if (!has_file_output){
+        // If FILE_OUTPUT was not explicitly set, use FILE_ENTRY
+        file_out = file_in;
     }
 
     // If successful, initialize the SimulationParameters struct
