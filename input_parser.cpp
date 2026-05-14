@@ -139,7 +139,7 @@ bool readInputFile(const std::string& input_filename, SimulationParameters& para
     int simulation_method = 1;  // Default: Ising Hamiltonian
     int lattice_side = 32;  // Default small lattice
     float w1_12 = 0.0, w2_12 = 0.0, w1_13 = 0.0, w2_13 = 0.0, w1_23 = 0.0, w2_23 = 0.0;
-    float Jm3 = 0.0, Jm6 = 0.0;
+    float Jm1 = 0.0, Jm2 = 0.0, Jm3 = 0.0, Jm4 = 0.0, Jm5 = 0.0, Jm6 = 0.0;
     float T_start = 0.0, T_end = 0.0, step_T = 1.0;
     float H_start = 0.0, H_end = 0.0, step_H = 1.0;
     bool flag_save_config = false;
@@ -191,12 +191,20 @@ bool readInputFile(const std::string& input_filename, SimulationParameters& para
         else if (key == "W2_23") {
             extractFloatValue(ss, w2_23);
         }
+        else if (key == "J_M1") {
+            extractFloatValue(ss, Jm1);
+        }
+        else if (key == "J_M2") {
+            extractFloatValue(ss, Jm2);
+        }
         else if (key == "J_M3") {
-            if (extractFloatValue(ss, Jm3)) {
-                found_count++;  // MANDATORY
-            } else {
-                std::cerr << "WARNING: J_M3 has invalid value at line " << line_number << std::endl;
-            }
+            extractFloatValue(ss, Jm3);
+        }
+        else if (key == "J_M4") {
+            extractFloatValue(ss, Jm4);
+        }
+        else if (key == "J_M5") {
+            extractFloatValue(ss, Jm5);
         }
         else if (key == "J_M6") {
             extractFloatValue(ss, Jm6);
@@ -311,10 +319,16 @@ bool readInputFile(const std::string& input_filename, SimulationParameters& para
         return false;
     }
 
-    // Check for mandatory parameters (ATOM_1, ATOM_2, ATOM_3, J_M3, T_START, H_START, FILE_ENTRY = 7 total)
-    if (found_count < 7) {
-        std::cerr << "ERROR: Missing mandatory parameters. Expected 7, found " << found_count << std::endl;
-        std::cerr << "Mandatory parameters: ATOM_1, ATOM_2, ATOM_3, J_M3, T_START, H_START, FILE_ENTRY" << std::endl;
+    // Check for mandatory parameters (ATOM_1, ATOM_2, ATOM_3, T_START, H_START, FILE_ENTRY = 6 total)
+    if (found_count < 6) {
+        std::cerr << "ERROR: Missing mandatory parameters. Expected 6, found " << found_count << std::endl;
+        std::cerr << "Mandatory parameters: ATOM_1, ATOM_2, ATOM_3, T_START, H_START, FILE_ENTRY" << std::endl;
+        return false;
+    }
+
+    // Check that at least one of the 6 magnetic interaction parameters is non-zero
+    if (Jm1 == 0.0f && Jm2 == 0.0f && Jm3 == 0.0f && Jm4 == 0.0f && Jm5 == 0.0f && Jm6 == 0.0f) {
+        std::cerr << "ERROR: At least one magnetic interaction parameter (J_M1, J_M2, J_M3, J_M4, J_M5, or J_M6) must be non-zero." << std::endl;
         return false;
     }
 
@@ -337,7 +351,7 @@ bool readInputFile(const std::string& input_filename, SimulationParameters& para
     params_out = SimulationParameters(
         num_steps, simulation_method, lattice_side,
         w1_12, w2_12, w1_13, w2_13, w1_23, w2_23, 
-        Jm3, Jm6, 
+        Jm1, Jm2, Jm3, Jm4, Jm5, Jm6,
         T_start, T_end, step_T, 
         H_start, H_end, step_H, 
         steps_to_output, flag_save_config, flag_loop

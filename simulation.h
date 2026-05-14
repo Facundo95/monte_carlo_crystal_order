@@ -67,7 +67,11 @@ struct SimulationParameters {
     float w2_13; // Interaction energy between species 1 and 3 at 2nd NN
     float w1_23; // Interaction energy between species 2 and 3 at 1st NN
     float w2_23; // Interaction energy between species 2 and 3 at 2nd NN
+    float Jm1; // 1st NN magnetic interaction energy
+    float Jm2; // 2nd NN magnetic interaction energy
     float Jm3; // 3rd NN interaction energy
+    float Jm4; // 4th NN magnetic interaction energy
+    float Jm5; // 5th NN magnetic interaction energy
     float Jm6; // 6th NN interaction energy
     float T_start;
     float T_end;
@@ -84,12 +88,12 @@ struct SimulationParameters {
     std::string atom3;
 
     SimulationParameters(int steps, int sim, int side, float w1_12, float w2_12, float w1_13, 
-                         float w2_13, float w1_23, float w2_23, float j3, float j6, 
+                         float w2_13, float w1_23, float w2_23, float j1, float j2, float j3, float j4, float j5, float j6,
                          float t_s, float t_e, float dt, float h_start, float h_end, 
                          float dh, int step_out, bool flag_red, bool loop)
         : num_steps(steps), simulation_method(sim), lattice_side(side), 
         w1_12(w1_12), w2_12(w2_12), w1_13(w1_13), w2_13(w2_13), w1_23(w1_23), w2_23(w2_23), 
-        Jm3(j3), Jm6(j6), T_start(t_s), T_end(t_e), step_T(dt),H_start(h_start), H_end(h_end), 
+        Jm1(j1), Jm2(j2), Jm3(j3), Jm4(j4), Jm5(j5), Jm6(j6), T_start(t_s), T_end(t_e), step_T(dt),H_start(h_start), H_end(h_end), 
         step_H(dh), steps_to_output(step_out), flag_save_config(flag_red), flag_loop(loop) {}
 };
 
@@ -97,20 +101,24 @@ inline std::ostream& operator<<(std::ostream& os, const SimulationParameters& p)
     os << "  NUM_STEPS: " << p.num_steps << '\n'
        << "  SIMULATION_METHOD: " << p.simulation_method << (p.simulation_method == 0 ? " (Chemical Exchange)" : " (Spin Flip)") << '\n'
        << "  LATTICE_SIDE: " << p.lattice_side << '\n'
-       << "  W1_12: " << p.w1_12 << 'kB\n'
-       << "  W2_12: " << p.w2_12 << 'kB\n'
-       << "  W1_13: " << p.w1_13 << 'kB\n'
-       << "  W2_13: " << p.w2_13 << 'kB\n'
-       << "  W1_23: " << p.w1_23 << 'kB\n'
-       << "  W2_23: " << p.w2_23 << 'kB\n'
-       << "  J_M3: " << p.Jm3 << 'kB\n'
-       << "  J_M6: " << p.Jm6 << 'kB\n'
-       << "  T_START: " << p.T_start << 'K\n'
-       << "  T_END: " << p.T_end << 'K\n'
-       << "  STEP_T: " << p.step_T << 'K\n'
-       << "  H_UPPER: " << p.H_start << 'muB\n'
-       << "  H_LOWER: " << p.H_end << 'muB\n'
-       << "  STEP_H: " << p.step_H << 'muB\n'
+       << "  W1_12: " << p.w1_12 << " kB" << '\n'
+       << "  W2_12: " << p.w2_12 << " kB" << '\n'
+       << "  W1_13: " << p.w1_13 << " kB" << '\n'
+       << "  W2_13: " << p.w2_13 << " kB" << '\n'
+       << "  W1_23: " << p.w1_23 << " kB" << '\n'
+       << "  W2_23: " << p.w2_23 << " kB" << '\n'
+       << "  J_M1: " << p.Jm1 << " kB" << '\n'
+       << "  J_M2: " << p.Jm2 << " kB" << '\n'
+       << "  J_M3: " << p.Jm3 << " kB" << '\n'
+       << "  J_M4: " << p.Jm4 << " kB" << '\n'
+       << "  J_M5: " << p.Jm5 << " kB" << '\n'
+       << "  J_M6: " << p.Jm6 << " kB" << '\n'
+       << "  T_START: " << p.T_start << " K" << '\n'
+       << "  T_END: " << p.T_end << " K" << '\n'
+       << "  STEP_T: " << p.step_T << " K" << '\n'
+       << "  H_UPPER: " << p.H_start << " muB" << '\n'
+       << "  H_LOWER: " << p.H_end << " muB" << '\n'
+       << "  STEP_H: " << p.step_H << " muB" << '\n'
        << "  LOOP_FLAG: " << (p.flag_loop ? "true" : "false") << '\n'
        << "  STEPS_TO_OUTPUT: " << p.steps_to_output << '\n'
        << "  FLAG_SAVE_CONFIG: " << (p.flag_save_config ? "true" : "false");

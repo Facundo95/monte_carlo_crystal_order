@@ -180,10 +180,25 @@ void MonteCarloStepSpinExtH(Lattice& lattice,
 
         changesAttempted++;
 
+        int Sum1N = lattice.calculateNeighborSpinSum(site, 1);
+        int Sum2N = lattice.calculateNeighborSpinSum(site, 2);
         int Sum3N = lattice.calculateNeighborSpinSum(site, 3);
+        // NOTE: neighbors4 and neighbors5 initialization incomplete in initializeNeighbors()
+        int Sum4N = 0; // Temporarily 0 until neighbors4/5 are implemented
+        int Sum5N = 0; // Temporarily 0 until neighbors4/5 are implemented
         int Sum6N = lattice.calculateNeighborSpinSum(site, 6);
 
-        float dETotal = 2 * SpinAct * (params.Jm3 * Sum3N + params.Jm6 * Sum6N + H);
+        const std::array<int, 6> neighborSums = {Sum1N, Sum2N, Sum3N, Sum4N, Sum5N, Sum6N};
+        const std::array<float, 6> magneticCouplings = {
+            params.Jm1, params.Jm2, params.Jm3, params.Jm4, params.Jm5, params.Jm6
+        };
+
+        float magneticContribution = H;
+        for (std::size_t shell = 0; shell < magneticCouplings.size(); ++shell) {
+            magneticContribution += magneticCouplings[shell] * neighborSums[shell];
+        }
+
+        float dETotal = 2 * SpinAct * magneticContribution;
         
         // Metropolis Algorithm
         if (dETotal > 0) {

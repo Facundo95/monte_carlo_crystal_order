@@ -20,7 +20,7 @@ int main(int argc, char* argv[]){
     timer.start();
 
     // 1. Declare variables to hold read data
-    SimulationParameters params(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, false, false);
+    SimulationParameters params(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, false, false);
     std::string file_in;
     std::string file_out;
     std::string inputFile = argv[2];

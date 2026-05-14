@@ -149,9 +149,16 @@ double Lattice::calculateTotalEnergy(const SimulationParameters& params, float H
 
         // --- 2. MAGNETIC ENERGY ---
         if (Mi != 0) {
+            float sumSpin1 = calculateNeighborSpinSum(site, 1);
+            float sumSpin2 = calculateNeighborSpinSum(site, 2);
             float sumSpin3 = calculateNeighborSpinSum(site, 3);
+            // NOTE: neighbors4 and neighbors5 initialization incomplete ("To do" in initializeNeighbors)
+            // Temporarily set sums to 0 until implementation is finished
+            float sumSpin4 = 0; // calculateNeighborSpinSum(site, 4); // TODO
+            float sumSpin5 = 0; // calculateNeighborSpinSum(site, 5); // TODO
             float sumSpin6 = calculateNeighborSpinSum(site, 6);
-            totalMagneticE += calculateSiteMagneticEnergy(Mi, params.Jm3, params.Jm6, H, sumSpin3, sumSpin6);
+            totalMagneticE += calculateSiteMagneticEnergy(Mi, params.Jm1, params.Jm2, params.Jm3, params.Jm4, params.Jm5, params.Jm6,
+                                                          H, sumSpin1, sumSpin2, sumSpin3, sumSpin4, sumSpin5, sumSpin6);
         }
     }
 
@@ -174,6 +181,8 @@ void Lattice::initializeNeighbors() {
         auto& n1 = neighbors1[site];
         auto& n2 = neighbors2[site];
         auto& n3 = neighbors3[site];
+        auto& n4 = neighbors4[site];
+        auto& n5 = neighbors5[site];
         auto& n6 = neighbors6[site];
 
         // 1st Neighbors (8 sites)
@@ -198,12 +207,12 @@ void Lattice::initializeNeighbors() {
 
         // 2nd Neighbors (6 sites)
         p = 0;
-        n2[p++] = idx3D(wrap(x + 1, m_side), wrap(y, m_side), z);
-        n2[p++] = idx3D(wrap(x - 1, m_side), wrap(y, m_side), z);
+        n2[p++] = idx3D(wrap(x + 1, m_side), y, z);
+        n2[p++] = idx3D(wrap(x - 1, m_side), y, z);
         n2[p++] = idx3D(x, wrap(y + 1, m_side), z);
         n2[p++] = idx3D(x, wrap(y - 1, m_side), z);
-        n2[p++] = idx3D(x, wrap(y, m_side), wrap(z + 2, m_depth));
-        n2[p++] = idx3D(x, wrap(y, m_side), wrap(z - 2, m_depth));
+        n2[p++] = idx3D(x, y, wrap(z + 2, m_depth));
+        n2[p++] = idx3D(x, y, wrap(z - 2, m_depth));
 
         // 3rd Neighbors (12 sites)
         p = 0;
@@ -219,6 +228,27 @@ void Lattice::initializeNeighbors() {
         n3[p++] = idx3D(wrap(x - 1, m_side), y, wrap(z + 2, m_depth));
         n3[p++] = idx3D(wrap(x + 1, m_side), y, wrap(z - 2, m_depth));
         n3[p++] = idx3D(wrap(x - 1, m_side), y, wrap(z - 2, m_depth));
+
+        // 4th Neighbors (24 sites)
+        p = 0;
+        //Add the 24 neighbors of the 4th shell
+        if (z%2==0) {
+            //To do
+        } else {
+            //To do
+        }
+        
+
+        // 5th Neighbors (8 sites)
+        p = 0;
+        n5[p++] = idx3D(wrap(x + 1, m_side), wrap(y + 1, m_side), wrap(z + 2, m_depth));
+        n5[p++] = idx3D(wrap(x + 1, m_side), wrap(y + 1, m_side), wrap(z - 2, m_depth));
+        n5[p++] = idx3D(wrap(x + 1, m_side), wrap(y - 1, m_side), wrap(z + 2, m_depth));
+        n5[p++] = idx3D(wrap(x + 1, m_side), wrap(y - 1, m_side), wrap(z - 2, m_depth));
+        n5[p++] = idx3D(wrap(x - 1, m_side), wrap(y + 1, m_side), wrap(z + 2, m_depth));
+        n5[p++] = idx3D(wrap(x - 1, m_side), wrap(y + 1, m_side), wrap(z - 2, m_depth));
+        n5[p++] = idx3D(wrap(x - 1, m_side), wrap(y - 1, m_side), wrap(z + 2, m_depth));
+        n5[p++] = idx3D(wrap(x - 1, m_side), wrap(y - 1, m_side), wrap(z - 2, m_depth));
 
         // 6th Neighbors (6 sites)
         p = 0;
@@ -238,8 +268,8 @@ void Lattice::initializeNeighbors() {
  * (Original Jm1 and Jm2 (1st and 2nd NN) were 0, so only 3 and 6 are implemented here).
  */
 float Lattice::calculateNeighborSpinSum(int site, int shell_type) const {
-    if (shell_type != 1 && shell_type != 2 && shell_type != 3 && shell_type != 6) {
-        throw std::invalid_argument("shell_type options: 1,2,3 or 6.");
+    if (shell_type != 1 && shell_type != 2 && shell_type != 3 && shell_type != 6 && shell_type != 4 && shell_type != 5) {
+        throw std::invalid_argument("shell_type options: 1,2,3,4,5 or 6.");
     }
     float sum = 0;
     if (shell_type == 1) {
@@ -251,6 +281,12 @@ float Lattice::calculateNeighborSpinSum(int site, int shell_type) const {
     } else if (shell_type == 3) {
         const auto &n3 = neighbors3[site];
         for (int i = 0; i < 12; ++i) sum += magn_flat[n3[i]];
+    } else if (shell_type == 4) {
+        const auto &n4 = neighbors4[site];
+        for (int i = 0; i < 24; ++i) sum += 0; //magn_flat[n4[i]]; Hasta que no se implementen los vecinos se suma 0
+    } else if (shell_type == 5) {
+        const auto &n5 = neighbors5[site];
+        for (int i = 0; i < 8; ++i) sum += magn_flat[n5[i]];
     } else if (shell_type == 6) {
         const auto &n6 = neighbors6[site];
         for (int i = 0; i < 6; ++i) sum += magn_flat[n6[i]];
@@ -350,10 +386,10 @@ double Lattice::calculateDeltaChemicalEnergy(int type_A, int type_N,
  * @param sum3, sum6 Sums over neighbor spins for 3rd and 6th NN.
  */
 float Lattice::calculateSiteMagneticEnergy(int Spin, 
-                                        float j3, float j6, 
+                                        float j1, float j2, float j3, float j4, float j5, float j6,
                                         float H, 
-                                        float sum3, float sum6) const {
-    return - Spin * (j3 * sum3 + j6 * sum6 + H);
+                                        float sum1, float sum2, float sum3, float sum4, float sum5, float sum6) const {
+    return - Spin * (j1 * sum1 + j2 * sum2 + j3 * sum3 + j4 * sum4 + j5 * sum5 + j6 * sum6 + H);
 }
 
 /**

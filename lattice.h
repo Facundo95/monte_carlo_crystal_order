@@ -28,6 +28,8 @@ public:
           neighbors1(m_total_sites),
           neighbors2(m_total_sites),
           neighbors3(m_total_sites),
+          neighbors4(m_total_sites),
+          neighbors5(m_total_sites),    
           neighbors6(m_total_sites)
     {}
 
@@ -73,11 +75,11 @@ public:
                                     int sumLinNN_N, int sumLinNNN_N,
                                     int sumCuadNN_N, int sumCuadNNN_N) const;
     
-    /** @brief Calculates the magnetic energy contribution for a given site. */
+    /** @brief Calculates the magnetic energy contribution for a given site (all 6 shells). */
     float calculateSiteMagneticEnergy(int Spin, 
-                                      float j3, float j6, 
+                                      float j1, float j2, float j3, float j4, float j5, float j6,
                                       float H, 
-                                      float sum3, float sum6) const;
+                                      float sum1, float sum2, float sum3, float sum4, float sum5, float sum6) const;
     
     /** @brief Calculates the sum of neighbor spins for a given shell type. */
     float calculateNeighborSpinSum(int site, int shell_type) const;
@@ -128,6 +130,8 @@ private:
     std::vector<std::array<int, 8>>  neighbors1;
     std::vector<std::array<int, 6>>  neighbors2;
     std::vector<std::array<int, 12>> neighbors3;
+    std::vector<std::array<int, 24>>  neighbors4;
+    std::vector<std::array<int, 8>>  neighbors5;
     std::vector<std::array<int, 6>>  neighbors6;
     
     /** @brief Helper to convert 3D indices to flat index */
