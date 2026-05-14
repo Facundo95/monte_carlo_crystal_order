@@ -20,7 +20,7 @@ void Lattice::loadInitialConfiguration(const std::string& filename) {
     else ext = filename.substr(pos);
     // lower-case ext for case-insensitive compare
     std::transform(ext.begin(), ext.end(), ext.begin(), [](unsigned char c){ return static_cast<char>(std::tolower(c)); });
-    if (ext == ".txt") {
+    if (ext == ".fl") {
         std::ifstream redin(filename, std::ios::in | std::ios::binary);
         if (!redin.is_open()) {
             throw std::runtime_error("No se pudo abrir el archivo de entrada inicial: " + filename);
@@ -113,7 +113,7 @@ void Lattice::loadInitialConfiguration(const std::string& filename) {
 
         redin.close();
     } else {
-        throw std::runtime_error("Formato de archivo no soportado para el archivo de entrada inicial: " + filename);
+        throw std::runtime_error("Formato de archivo no soportado para el archivo de entrada inicial: " + filename + " (se esperan .fl o .xyz)");
     }
 }
 
@@ -405,15 +405,15 @@ void Lattice::calculateAndWriteLRO(std::ofstream& parout,
         }
         
         // Increment counters based on species (red[site] = 1, 0, or -1)
-        if (red_flat[site] == 1) { // Copper
+        if (red_flat[site] == 1) { // ATOM_1
             (*A_ptr)++;
-        } else if (red_flat[site] == 0) { // Manganese
+        } else if (red_flat[site] == 0) { // ATOM_2
             if (magn_flat[site] == 1) {
                 (*BUp_ptr)++;
             } else {
                 (*BDown_ptr)++;
             }
-        } else if (red_flat[site] == -1) { // Aluminum
+        } else if (red_flat[site] == -1) { // ATOM_3
             (*C_ptr)++;
         }
     }
@@ -473,8 +473,7 @@ bool Lattice::saveFinalConfiguration(const char* nombrefile,
     if (ext == ".xyz") {
         // Write extended .xyz header
         redout << m_total_sites << "\n";
-        redout << "Lattice=\"" << m_side << " 0.0 0.0 0.0 " << m_side << " 0.0 0.0 0.0" << m_depth << "\"\n";
-        redout << "Properties=\"species:S:1:pos:R:3:spin:I:1\"" << "\n";
+        redout << "Lattice=\"" << m_side << " 0.0 0.0 0.0 " << m_side << " 0.0 0.0 0.0" << m_depth << "Properties=\"species:S:1:pos:R:3:spin:I:1\"" << "\n";;
 
         // For each site, write: Element x y z species spin
         for (int site = 0; site < m_total_sites; ++site) {
@@ -495,7 +494,7 @@ bool Lattice::saveFinalConfiguration(const char* nombrefile,
 
             int specie = red_flat[site];
             int spin = magn_flat[site];
-            const char* elem = (specie == 1) ? "Co" : (specie == 0 ? "Ni" : "Al");
+            const char* elem = (specie == 1) ? atom1.c_str() : (specie == 0 ? atom2.c_str() : atom3.c_str());
 
             // Write: ElementSymbol x y z specie spin
             redout << elem << " " << x << " " << y << " " << z << " " << spin << "\n";
@@ -503,7 +502,7 @@ bool Lattice::saveFinalConfiguration(const char* nombrefile,
 
         redout.close();
         return true;
-    } else {    
+    } else if (ext == ".fl") {
         float aux2, aux3;
         for (int site = 0; site < m_total_sites; site++) {
             aux2 = red_flat[site];
