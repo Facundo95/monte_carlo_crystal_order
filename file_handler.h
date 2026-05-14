@@ -4,15 +4,19 @@
 #include <fstream>
 #include <string>
 
+// Forward declaration
+class Lattice;
+
 /**
  * @brief Constructs the output filename and attempts to open the ofstream.
  * * The file is opened in append mode (ios::app) so that subsequent runs 
  * with the same name continue writing to the existing file.
  * * @param nombrefile The base name of the simulation file (e.g., "cu-al-mn_...").
  * @param output_stream The std::ofstream object to be initialized and opened.
+ * @param lattice The Lattice object to access atom names.
  * @return bool True if the file was successfully opened, false otherwise.
  */
-bool OpenLROParametersFile(const char* nombrefile, std::ofstream& output_stream);
+bool OpenLROParametersFile(const char* nombrefile, std::ofstream& output_stream, const Lattice& lattice);
 
 /**
  * @brief Constructs the final configuration filename and attempts to open the ofstream.

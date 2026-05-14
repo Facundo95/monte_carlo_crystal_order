@@ -236,7 +236,7 @@ void SimulationLoop(const SimulationParameters& params,
 
     // 2. Setup Output
     std::ofstream parout;
-    if (!OpenLROParametersFile(file_out, parout)) {
+    if (!OpenLROParametersFile(file_out, parout, lattice)) {
         return; 
     }
     

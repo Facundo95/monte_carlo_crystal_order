@@ -113,6 +113,11 @@ public:
         std::transform(atom3.begin(), atom3.end(), atom3.begin(), [](unsigned char c){ return static_cast<char>(std::tolower(c)); });
     }
 
+    /** @brief Get element symbols for output file headers. */
+    const std::string& getAtom1() const { return atom1; }
+    const std::string& getAtom2() const { return atom2; }
+    const std::string& getAtom3() const { return atom3; }
+
 private:
     int m_side;
     int m_depth;
