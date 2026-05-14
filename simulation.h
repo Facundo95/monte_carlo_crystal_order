@@ -95,7 +95,7 @@ struct SimulationParameters {
 
 inline std::ostream& operator<<(std::ostream& os, const SimulationParameters& p) {
     os << "  NUM_STEPS: " << p.num_steps << '\n'
-       << "  SIMULATION_METHOD: " << p.simulation_method << '\n'
+       << "  SIMULATION_METHOD: " << p.simulation_method << (p.simulation_method == 0 ? " (Chemical Exchange)" : " (Spin Flip)") << '\n'
        << "  LATTICE_SIDE: " << p.lattice_side << '\n'
        << "  W1_12: " << p.w1_12 << 'kB\n'
        << "  W2_12: " << p.w2_12 << 'kB\n'
@@ -108,9 +108,9 @@ inline std::ostream& operator<<(std::ostream& os, const SimulationParameters& p)
        << "  T_START: " << p.T_start << 'K\n'
        << "  T_END: " << p.T_end << 'K\n'
        << "  STEP_T: " << p.step_T << 'K\n'
-       << "  H_UPPER: " << p.H_start << 'K\n'
-       << "  H_LOWER: " << p.H_end << 'K\n'
-       << "  STEP_H: " << p.step_H << 'K\n'
+       << "  H_UPPER: " << p.H_start << 'muB\n'
+       << "  H_LOWER: " << p.H_end << 'muB\n'
+       << "  STEP_H: " << p.step_H << 'muB\n'
        << "  LOOP_FLAG: " << (p.flag_loop ? "true" : "false") << '\n'
        << "  STEPS_TO_OUTPUT: " << p.steps_to_output << '\n'
        << "  FLAG_SAVE_CONFIG: " << (p.flag_save_config ? "true" : "false");
