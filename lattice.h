@@ -5,6 +5,8 @@
 #include <array>
 #include <string>
 #include <fstream>
+#include <algorithm>
+#include <cctype>
 
 struct SimulationParameters;
 
@@ -100,6 +102,17 @@ public:
                               float H, 
                               float DeltaEAcumM) const;
 
+    /** @brief Set element symbols (e.g., "Cu", "Ni", "Al") used when parsing/writing .xyz files. */
+    void setAtomNames(const std::string& a1, const std::string& a2, const std::string& a3) {
+        atom1 = a1;
+        atom2 = a2;
+        atom3 = a3;
+        // store lowercase versions for case-insensitive comparisons
+        std::transform(atom1.begin(), atom1.end(), atom1.begin(), [](unsigned char c){ return static_cast<char>(std::tolower(c)); });
+        std::transform(atom2.begin(), atom2.end(), atom2.begin(), [](unsigned char c){ return static_cast<char>(std::tolower(c)); });
+        std::transform(atom3.begin(), atom3.end(), atom3.begin(), [](unsigned char c){ return static_cast<char>(std::tolower(c)); });
+    }
+
 private:
     int m_side;
     int m_depth;
@@ -133,6 +146,11 @@ private:
         if (v >= M) return v - M;
         return v;
     }
+
+    // element symbols (lowercase) used for .xyz parsing and writing
+    std::string atom1;
+    std::string atom2;
+    std::string atom3;
 };
 
 #endif // LATTICE_H

@@ -35,6 +35,9 @@ bool readInputFile(const std::string& input_filename, SimulationParameters& para
     bool flag_loop = false;
     int steps_to_output = 0;
     int found_count = 0; // Tracks critical parameters found
+    std::string atom_1 = "";
+    std::string atom_2 = "";
+    std::string atom_3 = "";
 
     std::string line;
     while (getline(input_file, line)) {
@@ -88,6 +91,18 @@ bool readInputFile(const std::string& input_filename, SimulationParameters& para
                 file_out = filename;
             }
         }
+        else if (key == "ATOM_1") {
+            std::string val;
+            if (ss >> val) atom_1 = val;
+        }
+        else if (key == "ATOM_2") {
+            std::string val;
+            if (ss >> val) atom_2 = val;
+        }
+        else if (key == "ATOM_3") {
+            std::string val;
+            if (ss >> val) atom_3 = val;
+        }
     }
 
     input_file.close();
@@ -106,6 +121,11 @@ bool readInputFile(const std::string& input_filename, SimulationParameters& para
         H_start, H_end, step_H, 
         steps_to_output, flag_save_config, flag_loop
     );
+
+    // Attach element symbols (if provided) to the params object
+    params_out.atom1 = atom_1;
+    params_out.atom2 = atom_2;
+    params_out.atom3 = atom_3;
 
     return true;
 }

@@ -224,6 +224,8 @@ void SimulationLoop(const SimulationParameters& params,
     bool verbose = false;
 
     Lattice lattice(params.lattice_side);
+    // set element symbols from params (if any)
+    lattice.setAtomNames(params.atom1, params.atom2, params.atom3);
     // 1. Initialization
     try {
         lattice.loadInitialConfiguration(file_in);

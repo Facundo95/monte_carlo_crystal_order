@@ -79,9 +79,9 @@ void Lattice::loadInitialConfiguration(const std::string& filename) {
             std::string tok = atomToken;
             std::transform(tok.begin(), tok.end(), tok.begin(), [](unsigned char c){ return static_cast<char>(std::tolower(c)); });
             int specie = 0;
-            if (tok == "co") specie = 1;
-            else if (tok == "ni") specie = 0;
-            else if (tok == "al") specie = -1;
+            if (tok == atom1) specie = 1;
+            else if (tok == atom2) specie = 0;
+            else if (tok == atom3) specie = -1;
             else {
                 throw std::runtime_error("Tipo de atomo no reconocido en .xyz (solo símbolos permitidos): " + atomToken);
             }

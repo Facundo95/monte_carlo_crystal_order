@@ -78,6 +78,10 @@ struct SimulationParameters {
     int steps_to_output;
     bool flag_save_config;
     bool flag_loop;
+    // Element symbols defined in the input file (e.g., "Cu", "Ni", "Al").
+    std::string atom1;
+    std::string atom2;
+    std::string atom3;
 
     SimulationParameters(int steps, int sim, int side, float w1_12, float w2_12, float w1_13, 
                          float w2_13, float w1_23, float w2_23, float j3, float j6, 
