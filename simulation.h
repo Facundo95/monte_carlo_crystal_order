@@ -159,12 +159,28 @@ std::vector<T> createSweepList(T start, T end, T step, bool loop = false);
  * @param DeltaEAcumM Accumulated energy change for magnetization.
  * @param changesAccepted Counter for accepted changes.
 */
+// (See MCStepResults below) -- prototype using stats struct provided further down.
+
+/**
+ * @struct MCStepResults
+ * @brief Aggregates counters and accumulators modified during a Monte Carlo step.
+ * Stored as references so callers may keep their existing variables and pass
+ * them bundled into a single parameter.
+ */
+struct MCStepResults {
+    double& DeltaEAcum;
+    int& changesAccepted;
+    int& changesAttempted;
+
+    MCStepResults(double& dE, int& acc, int& att)
+        : DeltaEAcum(dE), changesAccepted(acc), changesAttempted(att) {}
+};
+
+// Updated prototype: pass results as a single struct reference
 void MonteCarloStepChemicalExchange(Lattice& lattice,
                                     const SimulationParameters& params,
                                     BoltzmannDeltaETable& table,
-                                    double& DeltaEAcumM,
-                                    int& changesAccepted,
-                                    int& changesAttempted);
+                                    MCStepResults& stats);
 
 /** @brief Performs a Monte Carlo step using spin flip dynamics.
  * @param lattice The lattice object representing the system.
@@ -174,13 +190,12 @@ void MonteCarloStepChemicalExchange(Lattice& lattice,
  * @param DeltaEAcumM Accumulated energy change for magnetization.
  * @param changesAccepted Counter for accepted changes.
 */
-void MonteCarloStepSpinExtH(Lattice& lattice, 
+// Updated prototype: pass results as a single struct reference
+void MonteCarloStepSpinExtH(Lattice& lattice,
                             double H,
-                            const SimulationParameters& params, 
+                            const SimulationParameters& params,
                             BoltzmannDeltaETable& table,
-                            double& DeltaEAcumM,
-                            int& changesAccepted,
-                            int& changesAttempted);
+                            MCStepResults& stats);
 
 /** @brief Main simulation loop handling temperature and magnetic field sweeps.
  * @param params The simulation parameters.

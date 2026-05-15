@@ -73,10 +73,8 @@ template std::vector<double> createSweepList<double>(double, double, double, boo
 */
 void MonteCarloStepChemicalExchange(Lattice& lattice,
                                     const SimulationParameters& params,
-                                    BoltzmannDeltaETable& table,  
-                                    double& DeltaEAcumM,
-                                    int& changesAccepted,
-                                    int& changesAttempted) {
+                                    BoltzmannDeltaETable& table,
+                                    MCStepResults& stats) {
 
     for (int site = 0; site < lattice.totalSites(); site++) {
         
@@ -87,7 +85,7 @@ void MonteCarloStepChemicalExchange(Lattice& lattice,
         
         if (SpecieAct == SpecieNeigh) continue; // Skip if same species
 
-        changesAttempted++;
+        stats.changesAttempted++;
         
         int SumLinNN_A = lattice.calculateNeighborSpeciesSum(site, 1, 1) - lattice.getSpecies(siteNeighbor);
         int SumLinNN_N = lattice.calculateNeighborSpeciesSum(siteNeighbor, 1, 1) - lattice.getSpecies(site);
@@ -117,16 +115,16 @@ void MonteCarloStepChemicalExchange(Lattice& lattice,
 
             if (BoltzmannChem >= epsilon) {
                 lattice.exchangeSpecies(site, siteNeighbor);
-                changesAccepted++;
-                DeltaEAcumM += dETotal;
+                stats.changesAccepted++;
+                stats.DeltaEAcum += dETotal;
             }
             continue;
         }
 
         // Accept: Exchange species
         lattice.exchangeSpecies(site, siteNeighbor);
-        changesAccepted++;
-        DeltaEAcumM += dETotal;
+        stats.changesAccepted++;
+        stats.DeltaEAcum += dETotal;
     
     }
 }
@@ -140,21 +138,19 @@ void MonteCarloStepChemicalExchange(Lattice& lattice,
  * @param DeltaEAcumM Accumulated energy change for magnetization.
  * @param changesAccepted Counter for accepted changes.
  */
-void MonteCarloStepSpinExtH(Lattice& lattice, 
+void MonteCarloStepSpinExtH(Lattice& lattice,
                             double H,
-                            const SimulationParameters& params, 
+                            const SimulationParameters& params,
                             BoltzmannDeltaETable& table,
-                            double& DeltaEAcumM,
-                            int& changesAccepted,
-                            int& changesAttempted) {
-    
+                            MCStepResults& stats) {
+
     for (int site = 0; site < lattice.totalSites(); site++) {
-        
+
         int SpinAct = lattice.getSpin(site);
-        
+
         if (SpinAct == 0) continue; // Skip if spin is 0 (non-magnetic species)
 
-        changesAttempted++;
+        stats.changesAttempted++;
 
         int Sum1N = static_cast<int>(lattice.calculateNeighborSpinSum(site, 1));
         int Sum2N = static_cast<int>(lattice.calculateNeighborSpinSum(site, 2));
@@ -184,11 +180,11 @@ void MonteCarloStepSpinExtH(Lattice& lattice,
             double Boltzmann = table.lookup(dETotal);
 
             if (Boltzmann >= epsilon) {
-        
+
                 lattice.flipSpin(site);
-                changesAccepted++;
-                DeltaEAcumM += dETotal;
-        
+                stats.changesAccepted++;
+                stats.DeltaEAcum += dETotal;
+
             }
         
             continue;
@@ -196,8 +192,8 @@ void MonteCarloStepSpinExtH(Lattice& lattice,
         
         // Accept: Flip spin
         lattice.flipSpin(site);
-        changesAccepted++;
-        DeltaEAcumM += dETotal;
+        stats.changesAccepted++;
+        stats.DeltaEAcum += dETotal;
     
     }
 }
@@ -264,15 +260,19 @@ void SimulationLoop(const SimulationParameters& params,
             double DeltaEAcumM = 0.0;
             double DeltaEAcumC = 0.0;
 
+            // Bundle counters into MCStepResults for cleaner function calls
+            MCStepResults chemStats(DeltaEAcumC, chemicalChangesAccepted, chemicalChangesAttempted);
+            MCStepResults spinStats(DeltaEAcumM, spinChangesAccepted, spinChangesAttempted);
+
             for (int contador = 1; contador <= params.num_steps; contador++) {
                 
                 if (params.simulation_method == 0) {
-                    MonteCarloStepChemicalExchange(lattice, params, table, DeltaEAcumC, chemicalChangesAccepted, chemicalChangesAttempted);
+                    MonteCarloStepChemicalExchange(lattice, params, table, chemStats);
                 } else if (params.simulation_method == 1) {
-                    MonteCarloStepSpinExtH(lattice, H, params, table, DeltaEAcumM, spinChangesAccepted, spinChangesAttempted);
+                    MonteCarloStepSpinExtH(lattice, H, params, table, spinStats);
                 } else if (params.simulation_method == 2) {
-                    MonteCarloStepChemicalExchange(lattice, params, table, DeltaEAcumC, chemicalChangesAccepted, chemicalChangesAttempted);
-                    MonteCarloStepSpinExtH(lattice, H, params, table, DeltaEAcumM, spinChangesAccepted, spinChangesAttempted);
+                    MonteCarloStepChemicalExchange(lattice, params, table, chemStats);
+                    MonteCarloStepSpinExtH(lattice, H, params, table, spinStats);
                 }
 
                 double energyAtStep = currentTotalEnergy + DeltaEAcumM + DeltaEAcumC;
