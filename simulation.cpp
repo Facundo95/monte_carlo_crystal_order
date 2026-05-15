@@ -8,8 +8,8 @@
 /**
  * @brief Creates the vector of values for the sweep list.
  */
-std::vector<float> createSweepList(float start, float end, float step, bool loop) {
-    std::vector<float> list;
+std::vector<double> createSweepList(double start, double end, double step, bool loop) {
+    std::vector<double> list;
     
     if (step <= 0) {
         throw std::invalid_argument("Step must be positive.");
@@ -22,11 +22,11 @@ std::vector<float> createSweepList(float start, float end, float step, bool loop
 
     if (!loop) {
         if (start < end) {
-            for (float val = start; val <= end; val += step) {
+            for (double val = start; val <= end; val += step) {
                 list.push_back(val);
             }
         } else {
-            for (float val = start; val >= end; val -= step) {
+            for (double val = start; val >= end; val -= step) {
                 list.push_back(val);
             }
         }
@@ -34,17 +34,17 @@ std::vector<float> createSweepList(float start, float end, float step, bool loop
     }
     // Looping case
     if (start < end) {
-        for (float val = start; val <= end; val += step) {
+        for (double val = start; val <= end; val += step) {
             list.push_back(val);
         }
-        for (float val = end - step; val >= start; val -= step) {
+        for (double val = end - step; val >= start; val -= step) {
             list.push_back(val);
         }
     } else {
-        for (float val = start; val >= end; val -= step) {
+        for (double val = start; val >= end; val -= step) {
             list.push_back(val);
         }
-        for (float val = end + step; val <= start; val += step) {
+        for (double val = end + step; val <= start; val += step) {
             list.push_back(val);
         }
     }
@@ -55,8 +55,8 @@ std::vector<float> createSweepList(float start, float end, float step, bool loop
 /**
  * @brief Creates the vector of temperatures values for the T-sweep loop.
  */
-std::vector<float> createTSweepList(const SimulationParameters& params) {
-    std::vector<float> list;
+std::vector<double> createTSweepList(const SimulationParameters& params) {
+    std::vector<double> list;
     
     if (params.step_T <= 0) {
         throw std::invalid_argument("Step_T must be positive.");
@@ -68,13 +68,13 @@ std::vector<float> createTSweepList(const SimulationParameters& params) {
     }
 
     if (params.T_start < params.T_end) {
-        for (float t = params.T_start; t <= params.T_end; t += params.step_T) {
+        for (double t = params.T_start; t <= params.T_end; t += params.step_T) {
             list.push_back(t);
         }
         return list;
     }
 
-    for (float t = params.T_start; t >= params.T_end; t -= params.step_T) {
+    for (double t = params.T_start; t >= params.T_end; t -= params.step_T) {
         list.push_back(t);
     }
 
@@ -91,16 +91,16 @@ std::vector<float> createTSweepList(const SimulationParameters& params) {
 void MonteCarloStepChemicalExchange(Lattice& lattice,
                                     const SimulationParameters& params,
                                     BoltzmannDeltaETable& table,  
-                                    float& DeltaEAcumM,
+                                    double& DeltaEAcumM,
                                     int& changesAccepted,
                                     int& changesAttempted) {
 
-    float jota1 = 0.25 * params.w1_13;
-    float jota2 = 0.25 * params.w2_13;
-    float ka1 = 0.25 * (2 * params.w1_12 + 2 * params.w1_23 - params.w1_13);
-    float ka2 = 0.25 * (2 * params.w2_12 + 2 * params.w2_23 - params.w2_13);
-    float ele1 = 0.25 * (params.w1_12 - params.w1_23);
-    float ele2 = 0.25 * (params.w2_12 - params.w2_23);
+    double jota1 = 0.25 * params.w1_13;
+    double jota2 = 0.25 * params.w2_13;
+    double ka1 = 0.25 * (2 * params.w1_12 + 2 * params.w1_23 - params.w1_13);
+    double ka2 = 0.25 * (2 * params.w2_12 + 2 * params.w2_23 - params.w2_13);
+    double ele1 = 0.25 * (params.w1_12 - params.w1_23);
+    double ele2 = 0.25 * (params.w2_12 - params.w2_23);
 
     for (int site = 0; site < lattice.totalSites(); site++) {
         
@@ -165,10 +165,10 @@ void MonteCarloStepChemicalExchange(Lattice& lattice,
  * @param changesAccepted Counter for accepted changes.
  */
 void MonteCarloStepSpinExtH(Lattice& lattice, 
-                            float H,
+                            double H,
                             const SimulationParameters& params, 
                             BoltzmannDeltaETable& table,
-                            float& DeltaEAcumM,
+                            double& DeltaEAcumM,
                             int& changesAccepted,
                             int& changesAttempted) {
     
@@ -180,25 +180,25 @@ void MonteCarloStepSpinExtH(Lattice& lattice,
 
         changesAttempted++;
 
-        int Sum1N = lattice.calculateNeighborSpinSum(site, 1);
-        int Sum2N = lattice.calculateNeighborSpinSum(site, 2);
-        int Sum3N = lattice.calculateNeighborSpinSum(site, 3);
+        int Sum1N = static_cast<int>(lattice.calculateNeighborSpinSum(site, 1));
+        int Sum2N = static_cast<int>(lattice.calculateNeighborSpinSum(site, 2));
+        int Sum3N = static_cast<int>(lattice.calculateNeighborSpinSum(site, 3));
         // NOTE: neighbors4 and neighbors5 initialization incomplete in initializeNeighbors()
         int Sum4N = 0; // Temporarily 0 until neighbors4/5 are implemented
         int Sum5N = 0; // Temporarily 0 until neighbors4/5 are implemented
         int Sum6N = lattice.calculateNeighborSpinSum(site, 6);
 
         const std::array<int, 6> neighborSums = {Sum1N, Sum2N, Sum3N, Sum4N, Sum5N, Sum6N};
-        const std::array<float, 6> magneticCouplings = {
+        const std::array<double, 6> magneticCouplings = {
             params.Jm1, params.Jm2, params.Jm3, params.Jm4, params.Jm5, params.Jm6
         };
 
-        float magneticContribution = H;
+        double magneticContribution = H;
         for (std::size_t shell = 0; shell < magneticCouplings.size(); ++shell) {
-            magneticContribution += magneticCouplings[shell] * neighborSums[shell];
+            magneticContribution += magneticCouplings[shell] * static_cast<double>(neighborSums[shell]);
         }
 
-        float dETotal = 2 * SpinAct * magneticContribution;
+        double dETotal = 2.0 * static_cast<double>(SpinAct) * magneticContribution;
         
         // Metropolis Algorithm
         if (dETotal > 0) {
@@ -264,16 +264,16 @@ void SimulationLoop(const SimulationParameters& params,
     }
 
     
-    std::vector<float> listaCampos = createSweepList(params.H_start, params.H_end, params.step_H, params.flag_loop);
-    std::vector<float> listaTemperaturas = createSweepList(params.T_start, params.T_end, params.step_T, false);
+    std::vector<double> listaCampos = createSweepList(params.H_start, params.H_end, params.step_H, params.flag_loop);
+    std::vector<double> listaTemperaturas = createSweepList(params.T_start, params.T_end, params.step_T, false);
     int output_count = 0; // Counter for final file naming
 
-    for (float T : listaTemperaturas) {
+    for (double T : listaTemperaturas) {
 
         std::vector<double> dEs = {};
         auto table = BoltzmannDeltaETable(dEs, T);
         
-        for (float H: listaCampos) {
+        for (double H: listaCampos) {
 
             double currentTotalEnergy = lattice.calculateTotalEnergy(params, H);
             
@@ -284,7 +284,7 @@ void SimulationLoop(const SimulationParameters& params,
 
             int changesAccepted = 0;
             int changesAttempted = 0;
-            float DeltaEAcumM = 0.0f;
+            double DeltaEAcumM = 0.0;
 
             for (int contador = 1; contador <= params.num_steps; contador++) {
                 

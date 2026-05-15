@@ -26,6 +26,6 @@ bool OpenLROParametersFile(const char* nombrefile, std::ofstream& output_stream,
  * @param output_stream The std::ofstream object to be initialized and opened.
  * @return bool True if the file was successfully opened, false otherwise.
  */
-bool OpenFinalRedFile(const char* nombrefile, float Hache, float TEMPERA, int count, std::ofstream& output_stream);
+bool OpenFinalRedFile(const char* nombrefile, double Hache, double TEMPERA, int count, std::ofstream& output_stream);
 
 #endif // FILE_HANDLER_H

@@ -6,7 +6,7 @@ NUM_STEPS 100
 Lattice side, N_atoms =  2 * lattice_side ** 3
 LATTICE_SIDE 32
 
-ATOM_1 Mn
+ATOM_1 Co
 ATOM_2 Ni
 ATOM_3 Al
 
@@ -47,5 +47,5 @@ LOOP false
 
 --- File List ---
 Filename to simulate it supports ".fl" and ".xyz" extensions
-FILE_ENTRY Ni2AlMn_spin.xyz
+FILE_ENTRY Co364Ni348Al288.xyz
 FILE_OUTPUT test.xyz

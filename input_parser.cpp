@@ -57,14 +57,14 @@ static bool extractIntValue(std::stringstream& ss, int& value) {
  * @param value Reference to store the extracted float.
  * @return true if a float was successfully extracted, false otherwise.
  */
-static bool extractFloatValue(std::stringstream& ss, float& value) {
+static bool extractFloatValue(std::stringstream& ss, double& value) {
     std::string token;
     while (ss >> token) {
         if (token == "=" || token == ":") {
             continue; // Skip delimiter, try next token
         }
         try {
-            value = std::stof(token);
+            value = std::stod(token);
             return true;
         } catch (const std::invalid_argument&) {
             return false;
@@ -138,10 +138,10 @@ bool readInputFile(const std::string& input_filename, SimulationParameters& para
     int num_steps = 100;  // Default value
     int simulation_method = 1;  // Default: Ising Hamiltonian
     int lattice_side = 32;  // Default small lattice
-    float w1_12 = 0.0, w2_12 = 0.0, w1_13 = 0.0, w2_13 = 0.0, w1_23 = 0.0, w2_23 = 0.0;
-    float Jm1 = 0.0, Jm2 = 0.0, Jm3 = 0.0, Jm4 = 0.0, Jm5 = 0.0, Jm6 = 0.0;
-    float T_start = 0.0, T_end = 0.0, step_T = 1.0;
-    float H_start = 0.0, H_end = 0.0, step_H = 1.0;
+    double w1_12 = 0.0, w2_12 = 0.0, w1_13 = 0.0, w2_13 = 0.0, w1_23 = 0.0, w2_23 = 0.0;
+    double Jm1 = 0.0, Jm2 = 0.0, Jm3 = 0.0, Jm4 = 0.0, Jm5 = 0.0, Jm6 = 0.0;
+    double T_start = 0.0, T_end = 0.0, step_T = 1.0;
+    double H_start = 0.0, H_end = 0.0, step_H = 1.0;
     bool flag_save_config = false;
     bool flag_loop = false;
     int steps_to_output = 100;  // Default value
@@ -225,9 +225,9 @@ bool readInputFile(const std::string& input_filename, SimulationParameters& para
         }
         else if (key == "STEP_T") {
             if (extractFloatValue(ss, step_T)) {
-                if (step_T <= 0.0f) {
+                if (step_T <= 0.0) {
                     std::cerr << "WARNING: STEP_T must be greater than zero at line " << line_number << ". Using default value 1." << std::endl;
-                    step_T = 1.0f;
+                    step_T = 1.0;
                 }
             }
         }
@@ -247,9 +247,9 @@ bool readInputFile(const std::string& input_filename, SimulationParameters& para
         }
         else if (key == "STEP_H") {
             if (extractFloatValue(ss, step_H)) {
-                if (step_H <= 0.0f) {
+                if (step_H <= 0.0) {
                     std::cerr << "WARNING: STEP_H must be greater than zero at line " << line_number << ". Using default value 1." << std::endl;
-                    step_H = 1.0f;
+                    step_H = 1.0;
                 }
             }
         }
@@ -327,7 +327,7 @@ bool readInputFile(const std::string& input_filename, SimulationParameters& para
     }
 
     // Check that at least one of the 6 magnetic interaction parameters is non-zero
-    if (Jm1 == 0.0f && Jm2 == 0.0f && Jm3 == 0.0f && Jm4 == 0.0f && Jm5 == 0.0f && Jm6 == 0.0f) {
+    if (Jm1 == 0.0 && Jm2 == 0.0 && Jm3 == 0.0 && Jm4 == 0.0 && Jm5 == 0.0 && Jm6 == 0.0) {
         std::cerr << "ERROR: At least one magnetic interaction parameter (J_M1, J_M2, J_M3, J_M4, J_M5, or J_M6) must be non-zero." << std::endl;
         return false;
     }

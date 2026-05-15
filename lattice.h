@@ -63,26 +63,26 @@ public:
         std::swap(magn_flat[site1], magn_flat[site2]);
     }
 
-    double calculateTotalEnergy(const SimulationParameters& params, float H) const;
+    double calculateTotalEnergy(const SimulationParameters& params, double H) const;
 
     /** @brief Calculates the chemical energy contribution for a given site. */
     double calculateDeltaChemicalEnergy(int type_A, int type_N, 
-                                    float JOTA1, float JOTA2, 
-                                    float KA1, float KA2, 
-                                    float ELE1, float ELE2,
+                                    double JOTA1, double JOTA2, 
+                                    double KA1, double KA2, 
+                                    double ELE1, double ELE2,
                                     int sumLinNN_A, int sumLinNNN_A,
                                     int sumCuadNN_A, int sumCuadNNN_A,
                                     int sumLinNN_N, int sumLinNNN_N,
                                     int sumCuadNN_N, int sumCuadNNN_N) const;
     
     /** @brief Calculates the magnetic energy contribution for a given site (all 6 shells). */
-    float calculateSiteMagneticEnergy(int Spin, 
-                                      float j1, float j2, float j3, float j4, float j5, float j6,
-                                      float H, 
-                                      float sum1, float sum2, float sum3, float sum4, float sum5, float sum6) const;
+    double calculateSiteMagneticEnergy(int Spin, 
+                                      double j1, double j2, double j3, double j4, double j5, double j6,
+                                      double H, 
+                                      double sum1, double sum2, double sum3, double sum4, double sum5, double sum6) const;
     
     /** @brief Calculates the sum of neighbor spins for a given shell type. */
-    float calculateNeighborSpinSum(int site, int shell_type) const;
+    double calculateNeighborSpinSum(int site, int shell_type) const;
     
     /** @brief Calculates the sum of neighbor species for a given shell type and order. */
     float calculateNeighborSpeciesSum(int site, int shell_type, int order) const;
@@ -94,15 +94,15 @@ public:
      * The returned std::ofstream is moved to the caller and remains open.
      */
     bool saveFinalConfiguration(const char* nombrefile, 
-                                float Hache, float TEMPERA, 
+                                double Hache, double TEMPERA, 
                                 int count);
     
     /** @brief Calculates and writes LRO parameters to the output file. */
     void calculateAndWriteLRO(std::ofstream& parout, 
                               int step_count, 
-                              float T, 
-                              float H, 
-                              float DeltaEAcumM) const;
+                              double T, 
+                              double H, 
+                              double DeltaEAcumM) const;
 
     /** @brief Set element symbols (e.g., "Cu", "Ni", "Al") used when parsing/writing .xyz files. */
     void setAtomNames(const std::string& a1, const std::string& a2, const std::string& a3) {

@@ -117,17 +117,17 @@ void Lattice::loadInitialConfiguration(const std::string& filename) {
     }
 }
 
-double Lattice::calculateTotalEnergy(const SimulationParameters& params, float H) const {
+double Lattice::calculateTotalEnergy(const SimulationParameters& params, double H) const {
     double totalChemicalE = 0.0;
     double totalMagneticE = 0.0;
 
     // Pre-calculate chemical constants as done in MonteCarloStep
-    float jota1 = 0.25 * params.w1_13;
-    float jota2 = 0.25 * params.w2_13;
-    float ka1 = 0.25 * (2 * params.w1_12 + 2 * params.w1_23 - params.w1_13);
-    float ka2 = 0.25 * (2 * params.w2_12 + 2 * params.w2_23 - params.w2_13);
-    float ele1 = 0.25 * (params.w1_12 - params.w1_23);
-    float ele2 = 0.25 * (params.w2_12 - params.w2_23);
+    double jota1 = 0.25 * params.w1_13;
+    double jota2 = 0.25 * params.w2_13;
+    double ka1 = 0.25 * (2 * params.w1_12 + 2 * params.w1_23 - params.w1_13);
+    double ka2 = 0.25 * (2 * params.w2_12 + 2 * params.w2_23 - params.w2_13);
+    double ele1 = 0.25 * (params.w1_12 - params.w1_23);
+    double ele2 = 0.25 * (params.w2_12 - params.w2_23);
 
     for (int site = 0; site < m_total_sites; ++site) {
         int Si = red_flat[site];
@@ -149,16 +149,16 @@ double Lattice::calculateTotalEnergy(const SimulationParameters& params, float H
 
         // --- 2. MAGNETIC ENERGY ---
         if (Mi != 0) {
-            float sumSpin1 = calculateNeighborSpinSum(site, 1);
-            float sumSpin2 = calculateNeighborSpinSum(site, 2);
-            float sumSpin3 = calculateNeighborSpinSum(site, 3);
+            double sumSpin1 = calculateNeighborSpinSum(site, 1);
+            double sumSpin2 = calculateNeighborSpinSum(site, 2);
+            double sumSpin3 = calculateNeighborSpinSum(site, 3);
             // NOTE: neighbors4 and neighbors5 initialization incomplete ("To do" in initializeNeighbors)
             // Temporarily set sums to 0 until implementation is finished
-            float sumSpin4 = 0; // calculateNeighborSpinSum(site, 4); // TODO
-            float sumSpin5 = 0; // calculateNeighborSpinSum(site, 5); // TODO
-            float sumSpin6 = calculateNeighborSpinSum(site, 6);
+            double sumSpin4 = 0; // calculateNeighborSpinSum(site, 4); // TODO
+            double sumSpin5 = 0; // calculateNeighborSpinSum(site, 5); // TODO
+            double sumSpin6 = calculateNeighborSpinSum(site, 6);
             totalMagneticE += calculateSiteMagneticEnergy(Mi, params.Jm1, params.Jm2, params.Jm3, params.Jm4, params.Jm5, params.Jm6,
-                                                          H, sumSpin1, sumSpin2, sumSpin3, sumSpin4, sumSpin5, sumSpin6);
+                                      H, sumSpin1, sumSpin2, sumSpin3, sumSpin4, sumSpin5, sumSpin6);
         }
     }
 
@@ -267,11 +267,11 @@ void Lattice::initializeNeighbors() {
  * @param shell_type Must be 3 (3rd NN) or 6 (6th NN).
  * (Original Jm1 and Jm2 (1st and 2nd NN) were 0, so only 3 and 6 are implemented here).
  */
-float Lattice::calculateNeighborSpinSum(int site, int shell_type) const {
+double Lattice::calculateNeighborSpinSum(int site, int shell_type) const {
     if (shell_type != 1 && shell_type != 2 && shell_type != 3 && shell_type != 6 && shell_type != 4 && shell_type != 5) {
         throw std::invalid_argument("shell_type options: 1,2,3,4,5 or 6.");
     }
-    float sum = 0;
+    double sum = 0;
     if (shell_type == 1) {
         const auto &n1 = neighbors1[site];
         for (int i = 0; i < 8; ++i) sum += magn_flat[n1[i]];
@@ -344,9 +344,9 @@ float Lattice::calculateNeighborSpeciesSum(int site, int shell_type, int order) 
  * @param sumLin2, sumCuad2 Linear and quadratic sums over 2nd NN species.
  */
 double Lattice::calculateDeltaChemicalEnergy(int type_A, int type_N, 
-                                            float JOTA1, float JOTA2, 
-                                            float KA1, float KA2, 
-                                            float ELE1, float ELE2,
+                                            double JOTA1, double JOTA2, 
+                                            double KA1, double KA2, 
+                                            double ELE1, double ELE2,
                                             int sumLinNN_A, int sumLinNNN_A,
                                             int sumCuadNN_A, int sumCuadNNN_A,
                                             int sumLinNN_N, int sumLinNNN_N,
@@ -365,7 +365,7 @@ double Lattice::calculateDeltaChemicalEnergy(int type_A, int type_N,
 
     // 4. Calculate Delta directly
     // Notice that 'diffTipo' factors out of the entire equation
-    float deltaEQ = diffTipo * (
+    double deltaEQ = diffTipo * (
         // Nearest Neighbors (NN)
         JOTA1 * diffLinNN +
         KA1   * diffCuadNN * sumTipo +
@@ -385,11 +385,11 @@ double Lattice::calculateDeltaChemicalEnergy(int type_A, int type_N,
  * @param H External magnetic field.
  * @param sum3, sum6 Sums over neighbor spins for 3rd and 6th NN.
  */
-float Lattice::calculateSiteMagneticEnergy(int Spin, 
-                                        float j1, float j2, float j3, float j4, float j5, float j6,
-                                        float H, 
-                                        float sum1, float sum2, float sum3, float sum4, float sum5, float sum6) const {
-    return - Spin * (j1 * sum1 + j2 * sum2 + j3 * sum3 + j4 * sum4 + j5 * sum5 + j6 * sum6 + H);
+double Lattice::calculateSiteMagneticEnergy(int Spin, 
+                                        double j1, double j2, double j3, double j4, double j5, double j6,
+                                        double H, 
+                                        double sum1, double sum2, double sum3, double sum4, double sum5, double sum6) const {
+    return - static_cast<double>(Spin) * (j1 * sum1 + j2 * sum2 + j3 * sum3 + j4 * sum4 + j5 * sum5 + j6 * sum6 + H);
 }
 
 /**
@@ -401,8 +401,8 @@ float Lattice::calculateSiteMagneticEnergy(int Spin,
  * @param DeltaEAcumM Accumulated energy change for magnetization.
  */
 void Lattice::calculateAndWriteLRO(std::ofstream& parout, 
-                                int step_count, float T, 
-                                float H, float DeltaEAcumM) const {
+                                int step_count, double T, 
+                                double H, double DeltaEAcumM) const {
     
     int AI=0, AII=0, AIII=0, AIV=0;
     int BUpI=0, BUpII=0, BUpIII=0, BUpIV=0, BDownI=0, BDownII=0, BDownIII=0, BDownIV=0; 
@@ -455,7 +455,7 @@ void Lattice::calculateAndWriteLRO(std::ofstream& parout,
     }
     
     // Calculate LRO Parameters (X, Y, Z) and normalized Magnetization
-    const float ENE = (float)m_total_sites;
+    const double ENE = static_cast<double>(m_total_sites);
     
     // X parameters (I+II vs III+IV)
     float X_A = (AI+AII-AIII-AIV) / ENE;
@@ -476,12 +476,12 @@ void Lattice::calculateAndWriteLRO(std::ofstream& parout,
     float Z_C = 2 * (CIII-CIV) / ENE;
     
     // Write results to file
-    parout << step_count << "\t" << H << "\t" << T << "\t"
+        parout << step_count << "\t" << H << "\t" << T << "\t"
            << X_A << "\t" << X_Bup << "\t" << X_Bdown << "\t" << X_C << "\t"
            << Y_A << "\t" << Y_Bup << "\t" << Y_Bdown << "\t" << Y_C << "\t"
            << Z_A << "\t" << Z_Bup << "\t" << Z_Bdown << "\t" << Z_C << "\t"
-           << Magnetizacion/ENE << "\t"
-           << DeltaEAcumM << "\t" << std::endl;
+            << Magnetizacion/ENE << "\t"
+            << DeltaEAcumM << "\t" << std::endl;
 }
 
 /**
@@ -492,7 +492,7 @@ void Lattice::calculateAndWriteLRO(std::ofstream& parout,
  * @param count Current simulation step count.
  */
 bool Lattice::saveFinalConfiguration(const char* nombrefile, 
-                                    float Hache, float TEMPERA, int count) {
+                                    double Hache, double TEMPERA, int count) {
     std::ofstream redout;
     if (!OpenFinalRedFile(nombrefile, Hache, TEMPERA, count, redout)) {
         return false;

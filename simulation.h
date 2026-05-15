@@ -61,24 +61,24 @@ struct SimulationParameters {
     int num_steps;
     int simulation_method;
     int lattice_side;
-    float w1_12; // Interaction energy between species 1 and 2 at 1st NN
-    float w2_12; // Interaction energy between species 1 and 2 at 2nd NN
-    float w1_13; // Interaction energy between species 1 and 3 at 1st NN
-    float w2_13; // Interaction energy between species 1 and 3 at 2nd NN
-    float w1_23; // Interaction energy between species 2 and 3 at 1st NN
-    float w2_23; // Interaction energy between species 2 and 3 at 2nd NN
-    float Jm1; // 1st NN magnetic interaction energy
-    float Jm2; // 2nd NN magnetic interaction energy
-    float Jm3; // 3rd NN interaction energy
-    float Jm4; // 4th NN magnetic interaction energy
-    float Jm5; // 5th NN magnetic interaction energy
-    float Jm6; // 6th NN interaction energy
-    float T_start;
-    float T_end;
-    float step_T;
-    float H_start;
-    float H_end;
-    float step_H;
+    double w1_12; // Interaction energy between species 1 and 2 at 1st NN
+    double w2_12; // Interaction energy between species 1 and 2 at 2nd NN
+    double w1_13; // Interaction energy between species 1 and 3 at 1st NN
+    double w2_13; // Interaction energy between species 1 and 3 at 2nd NN
+    double w1_23; // Interaction energy between species 2 and 3 at 1st NN
+    double w2_23; // Interaction energy between species 2 and 3 at 2nd NN
+    double Jm1; // 1st NN magnetic interaction energy
+    double Jm2; // 2nd NN magnetic interaction energy
+    double Jm3; // 3rd NN interaction energy
+    double Jm4; // 4th NN magnetic interaction energy
+    double Jm5; // 5th NN magnetic interaction energy
+    double Jm6; // 6th NN interaction energy
+    double T_start;
+    double T_end;
+    double step_T;
+    double H_start;
+    double H_end;
+    double step_H;
     int steps_to_output;
     bool flag_save_config;
     bool flag_loop;
@@ -87,10 +87,10 @@ struct SimulationParameters {
     std::string atom2;
     std::string atom3;
 
-    SimulationParameters(int steps, int sim, int side, float w1_12, float w2_12, float w1_13, 
-                         float w2_13, float w1_23, float w2_23, float j1, float j2, float j3, float j4, float j5, float j6,
-                         float t_s, float t_e, float dt, float h_start, float h_end, 
-                         float dh, int step_out, bool flag_red, bool loop)
+    SimulationParameters(int steps, int sim, int side, double w1_12, double w2_12, double w1_13, 
+                         double w2_13, double w1_23, double w2_23, double j1, double j2, double j3, double j4, double j5, double j6,
+                         double t_s, double t_e, double dt, double h_start, double h_end, 
+                         double dh, int step_out, bool flag_red, bool loop)
         : num_steps(steps), simulation_method(sim), lattice_side(side), 
         w1_12(w1_12), w2_12(w2_12), w1_13(w1_13), w2_13(w2_13), w1_23(w1_23), w2_23(w2_23), 
         Jm1(j1), Jm2(j2), Jm3(j3), Jm4(j4), Jm5(j5), Jm6(j6), T_start(t_s), T_end(t_e), step_T(dt),H_start(h_start), H_end(h_end), 
@@ -126,7 +126,7 @@ inline std::ostream& operator<<(std::ostream& os, const SimulationParameters& p)
 }
 
 /** @brief Creates a list of magnetic field values for the sweep. */
-std::vector<float> createSweepList(float start, float end, float step, bool loop);
+std::vector<double> createSweepList(double start, double end, double step, bool loop);
 
 /** @brief Performs a Monte Carlo step using chemical species exchange dynamics. 
  * @param lattice The lattice object representing the system.
@@ -138,7 +138,7 @@ std::vector<float> createSweepList(float start, float end, float step, bool loop
 void MonteCarloStepChemicalExchange(Lattice& lattice,
                                     const SimulationParameters& params,
                                     BoltzmannDeltaETable& table,
-                                    float& DeltaEAcumM,
+                                    double& DeltaEAcumM,
                                     int& changesAccepted,
                                     int& changesAttempted);
 
@@ -151,10 +151,10 @@ void MonteCarloStepChemicalExchange(Lattice& lattice,
  * @param changesAccepted Counter for accepted changes.
 */
 void MonteCarloStepSpinExtH(Lattice& lattice, 
-                            float H,
+                            double H,
                             const SimulationParameters& params, 
                             BoltzmannDeltaETable& table,
-                            float& DeltaEAcumM,
+                            double& DeltaEAcumM,
                             int& changesAccepted,
                             int& changesAttempted);
 
