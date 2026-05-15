@@ -95,13 +95,6 @@ void MonteCarloStepChemicalExchange(Lattice& lattice,
                                     int& changesAccepted,
                                     int& changesAttempted) {
 
-    double jota1 = 0.25 * params.w1_13;
-    double jota2 = 0.25 * params.w2_13;
-    double ka1 = 0.25 * (2 * params.w1_12 + 2 * params.w1_23 - params.w1_13);
-    double ka2 = 0.25 * (2 * params.w2_12 + 2 * params.w2_23 - params.w2_13);
-    double ele1 = 0.25 * (params.w1_12 - params.w1_23);
-    double ele2 = 0.25 * (params.w2_12 - params.w2_23);
-
     for (int site = 0; site < lattice.totalSites(); site++) {
         
         int SpecieAct = lattice.getSpecies(site);
@@ -124,9 +117,9 @@ void MonteCarloStepChemicalExchange(Lattice& lattice,
         int SumCuadNNN_N = lattice.calculateNeighborSpeciesSum(siteNeighbor, 2, 2);
 
         double dETotal = lattice.calculateDeltaChemicalEnergy(SpecieAct, SpecieNeigh,
-                                                            jota1, jota2,
-                                                            ka1, ka2,
-                                                            ele1, ele2,
+                                                            params.jota1, params.jota2,
+                                                            params.ka1, params.ka2,
+                                                            params.ele1, params.ele2,
                                                             SumLinNN_A, SumLinNNN_A,
                                                             SumCuadNN_A, SumCuadNNN_A,
                                                             SumLinNN_N, SumLinNNN_N,

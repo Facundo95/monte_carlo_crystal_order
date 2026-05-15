@@ -86,6 +86,14 @@ struct SimulationParameters {
     std::string atom1;
     std::string atom2;
     std::string atom3;
+    
+    // Pre-computed BEG energy coefficients (computed once at initialization)
+    double jota1; ///< Coefficient for w1_13 interaction
+    double jota2; ///< Coefficient for w2_13 interaction
+    double ka1;   ///< Interaction coefficient combining w1_12, w1_23, w1_13
+    double ka2;   ///< Interaction coefficient combining w2_12, w2_23, w2_13
+    double ele1;  ///< Electrostatic-like coefficient from w1_12 - w1_23
+    double ele2;  ///< Electrostatic-like coefficient from w2_12 - w2_23
 
     SimulationParameters(int steps, int sim, int side, double w1_12, double w2_12, double w1_13, 
                          double w2_13, double w1_23, double w2_23, double j1, double j2, double j3, double j4, double j5, double j6,
@@ -94,7 +102,13 @@ struct SimulationParameters {
         : num_steps(steps), simulation_method(sim), lattice_side(side), 
         w1_12(w1_12), w2_12(w2_12), w1_13(w1_13), w2_13(w2_13), w1_23(w1_23), w2_23(w2_23), 
         Jm1(j1), Jm2(j2), Jm3(j3), Jm4(j4), Jm5(j5), Jm6(j6), T_start(t_s), T_end(t_e), step_T(dt),H_start(h_start), H_end(h_end), 
-        step_H(dh), steps_to_output(step_out), flag_save_config(flag_red), flag_loop(loop) {}
+        step_H(dh), steps_to_output(step_out), flag_save_config(flag_red), flag_loop(loop),
+        jota1(0.25 * w1_13),
+        jota2(0.25 * w2_13),
+        ka1(0.25 * (2 * w1_12 + 2 * w1_23 - w1_13)),
+        ka2(0.25 * (2 * w2_12 + 2 * w2_23 - w2_13)),
+        ele1(0.25 * (w1_12 - w1_23)),
+        ele2(0.25 * (w2_12 - w2_23)) {}
 };
 
 inline std::ostream& operator<<(std::ostream& os, const SimulationParameters& p) {
