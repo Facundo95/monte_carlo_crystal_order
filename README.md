@@ -60,29 +60,50 @@ The simulation requires two types of input files: a configuration file for param
 You must create an `input.txt` file in the project directory using the format `KEY VALUE`. This file dictates the simulation run settings. It's not necessary to name the file as the example, you can use any name and extension you want.
 
 ```
-# Example content for input.txt
+# Example content for input.txt (keys accepted by the parser)
 
 # --- File Information ---
-FILENAME_PREFIX cu-al-mn_0.67-0.25-0.08
-INITIAL_STATE_FILE cu-al-mn_0.67-0.25-0.08_365.txt
+FILE_ENTRY    cu-al-mn_0.67-0.25-0.08_365.xyz
+FILE_OUTPUT   cu-al-mn_0.67-0.25-0.08_out
 
 # --- Simulation Parameters ---
-STEP_NUMBER 100000 
+NUM_STEPS         100000
+SIMULATION_METHOD 1        # 0 = chemical exchange, 1 = spin flip
+LATTICE_SIDE      32
+
+# --- Interaction parameters (optional; at least one J_M* must be non-zero) ---
 J_M3 150.0
 J_M6 100.0
+W1_12 0.0
+W2_12 0.0
+W1_13 0.0
+W2_13 0.0
+W1_23 0.0
+W2_23 0.0
 
 # --- Temperature (T) Sweep ---
-T_UPPER 365.0
-T_LOWER 365.0
-STEP_T 10.0
+T_START 365.0
+T_END   365.0       # if omitted, T_END defaults to T_START
+STEP_T  10.0
 
 # --- Magnetic Field (H) Sweep ---
-H_UPPER 200.0
-H_LOWER -200.0
-STEP_H 1.0
+H_START 200.0
+H_END  -200.0       # if omitted, H_END defaults to H_START
+STEP_H  1.0
 
-# --- Output Flag (0 = disabled, 1 = enabled) ---
-SAVE_FINAL_CONFIG 0
+# --- Other flags ---
+STEPS_TO_OUTPUT 100
+FLAG_SAVE_CONFIG false
+LOOP false
+
+# --- Atom symbols (mandatory) ---
+ATOM_1 Cu
+ATOM_2 Ni
+ATOM_3 Al
+
+# Notes:
+# - Keys are case-sensitive and must match the names above (e.g., FILE_ENTRY, T_START, ATOM_1).
+# - If FILE_OUTPUT is omitted, the program uses FILE_ENTRY as the base for output files.
 ```
 
 **B. Initial Lattice State**
@@ -95,13 +116,18 @@ Ensure the `input.txt` and initial state file are ready.
 
 Execute the compiled program:
 
-```
+```bash
 ./mc_simulation -in input.txt
 ```
 
 **D. Output**
 
-The results will be written to a file named using the `FILENAME_PREFIX` and the suffix `_out.txt` (e.g., `cu-al-mn_0.67-0.25-0.08_out.txt`). This file contains the calculated LRO parameters, magnetization, and accumulated energy for the measured steps.
+- The LRO parameters and measurements are written to an output file constructed from `FILE_OUTPUT` (or `FILE_ENTRY` if `FILE_OUTPUT` is omitted) with the `.out` suffix. If that file already exists, the program appends `_new.out` to avoid overwriting.
+- Final lattice dumps use the `dump_<H>H_<T>K_<count><basefilename>` pattern (see `file_handler.cpp`).
+
+**Deterministic RNG**
+
+The program uses a fixed RNG seed by default (`rng.cpp` uses `std::mt19937_64` seeded with 5489). Change the seed in `rng.cpp` if you require non-deterministic runs.
 
 ## 5. Generating Documentation
 

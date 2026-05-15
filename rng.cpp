@@ -1,36 +1,32 @@
 #include "rng.h"
+#include <random>
+#include <mutex>
 
-// Constants defined in the original code
-#define semilla 0x00001158e460913dL
-#define mascara48 0x00001ffffffffffL
+// Thread-safe PRNG using std::mt19937_64. Seed is fixed for deterministic runs;
+// change the seed value below to get different sequences.
+static std::mt19937_64& global_engine() {
+    static std::mt19937_64 eng(5489ULL);
+    return eng;
+}
 
-// Static variables used by the generator (must be defined once)
-static unsigned long ALE32 = semilla;
-static union
-{
-    long tmp;
-    float fl;
-} xx;
+static std::mutex& global_engine_mutex() {
+    static std::mutex m;
+    return m;
+}
 
-/** @brief Returns a random integer. */
 long RanEnt(){
-    ALE32 = ALE32 * semilla;
-    ALE32 = ALE32 & mascara48;
-    return((long) ALE32);
+    std::lock_guard<std::mutex> lock(global_engine_mutex());
+    return static_cast<long>(global_engine()());
 }
 
-/** @brief Returns a random float in [0, 1). */
 float Ran0a1(){
-    xx.tmp = RanEnt();
-    // Masking bits to ensure result is between 0 and 1 (standard LCG trick)
-    xx.tmp = (xx.tmp & 0x3fffffffL) | 0x3f800000l;
-    return((double)(xx.fl - 1.0));
+    std::lock_guard<std::mutex> lock(global_engine_mutex());
+    std::uniform_real_distribution<float> dist(0.0f, 1.0f);
+    return dist(global_engine());
 }
 
-/** @brief Returns a random integer in [1, 8]. */
 int RanEnt1a8(){
-    // Use the random float generation to map to an integer between 1 and 8
-    xx.fl = RanEnt();
-    xx.fl = (xx.tmp & 0x00000007L);
-    return((int)(xx.fl + 1.0));
+    std::lock_guard<std::mutex> lock(global_engine_mutex());
+    std::uniform_int_distribution<int> dist(1, 8);
+    return dist(global_engine());
 }

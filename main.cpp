@@ -12,6 +12,7 @@
 int main(int argc, char* argv[]){
     if (argc != 3){
         std::cerr << "# Modo de uso: ./mc_simulation -in <input_file_name>" << std::endl;
+        return 1;
     } else{
         std::cout << "--- Carlos Montes Iniciando (C++17) ---" << std::endl;
     }
