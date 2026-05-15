@@ -37,4 +37,13 @@ double calculateDeltaChemicalEnergy(int specieA, int specieN,
                                     const BEGCoefficients& coeff,
                                     const NeighborSpeciesSums& sums);
 
+/**
+ * @brief Calculate the total chemical (BEG) energy for the entire lattice.
+ *
+ * This returns the BEG chemical contribution already divided by two where
+ * appropriate (to correct for double-counting of pair interactions), so the
+ * returned value can be summed directly with the Ising magnetic contribution.
+ */
+double calculateTotalChemicalEnergy(const Lattice& lattice, const BEGCoefficients& coeff);
+
 #endif // BEG_HAMILTONIAN_H

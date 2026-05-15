@@ -63,7 +63,8 @@ public:
         std::swap(magn_flat[site1], magn_flat[site2]);
     }
 
-    double calculateTotalEnergy(const SimulationParameters& params, double H) const;
+    // Total energy calculation moved to BEG and Ising modules:
+    // use calculateTotalChemicalEnergy(...) + calculateTotalIsingEnergy(...)
 
     // NOTE: chemical energy delta calculation moved to beg_hamiltonian module
     
@@ -97,8 +98,7 @@ public:
      *  @param H Magnetic field.
      *  @param energyValue Energy value to record (e.g., total energy).
      *  @param computeLRO If true, compute and include full LRO parameters; otherwise only magnetization and energy are written.
-     *  @param printToConsole If true, mirror the output to stdout.
-     *  @param extras Optional labeled extra parameters to append to the output line.
+    *  @param printToConsole If true, mirror the output to stdout.
      */
     void writeOutput(std::ofstream& parout,
                      int step_count,
@@ -106,8 +106,7 @@ public:
                      double H,
                      double energyValue,
                      bool computeLRO = true,
-                     bool printToConsole = false,
-                     const std::vector<std::pair<std::string,double>>& extras = {}) const;
+                 bool printToConsole = false) const;
 
     /** @brief Set element symbols (e.g., "Cu", "Ni", "Al") used when parsing/writing .xyz files. */
     void setAtomNames(const std::string& a1, const std::string& a2, const std::string& a3) {
@@ -133,32 +132,14 @@ public:
         double Z_A, Z_Bup, Z_Bdown, Z_C;
     };
 
-    /** @brief Compute LRO parameters (X, Y, Z) for the current lattice configuration. */
-    LROParameters computeLROParameters() const;
+    struct Observables {
+        LROParameters lro;
+        double normalizedMagnetization;
+    };
 
-    /** @brief Compute normalized magnetization (magnetization / total_sites). */
-    double computeNormalizedMagnetization() const;
+    /** @brief Compute observables (LRO parameters and normalized magnetization) in a single pass. */
+    Observables computeObservables() const;
 
-    /** @brief Write LRO parameters and other diagnostics to the provided output stream.
-     *  @param parout Output stream (opened).
-     *  @param step_count Current simulation step.
-     *  @param T Temperature.
-     *  @param H Magnetic field.
-     *  @param lro Precomputed LRO parameters (use computeLROParameters()).
-     *  @param normalizedMagnetization Normalized magnetization (use computeNormalizedMagnetization()).
-     *  @param energyValue Value to write in the final column (e.g. total energy).
-     *  @param printToConsole If true, also print the same line to stdout.
-     *  @param extras Optional extra labeled parameters to append to the output line.
-     */
-    void writeLROParameters(std::ofstream& parout,
-                            int step_count,
-                            double T,
-                            double H,
-                            const LROParameters& lro,
-                            double normalizedMagnetization,
-                            double energyValue,
-                            bool printToConsole = false,
-                            const std::vector<std::pair<std::string,double>>& extras = {}) const;
     ///@}
 
 private:

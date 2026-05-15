@@ -7,7 +7,7 @@
 #include <cctype>
 #include <sstream>
 #include <cmath>
-#include <iostream>
+#include "lattice_output.h"
 
 /** @brief Loads the initial configuration from a specified file.
  * The file should contain the species and spin states for each lattice site.
@@ -118,60 +118,7 @@ void Lattice::loadInitialConfiguration(const std::string& filename) {
     }
 }
 
-double Lattice::calculateTotalEnergy(const SimulationParameters& params, double H) const {
-    double totalChemicalE = 0.0;
-    double totalMagneticE = 0.0;
 
-    // Pre-calculate chemical constants as done in MonteCarloStep
-    double jota1 = 0.25 * params.w1_13;
-    double jota2 = 0.25 * params.w2_13;
-    double ka1 = 0.25 * (2 * params.w1_12 + 2 * params.w1_23 - params.w1_13);
-    double ka2 = 0.25 * (2 * params.w2_12 + 2 * params.w2_23 - params.w2_13);
-    double ele1 = 0.25 * (params.w1_12 - params.w1_23);
-    double ele2 = 0.25 * (params.w2_12 - params.w2_23);
-
-    for (int site = 0; site < m_total_sites; ++site) {
-        int Si = red_flat[site];
-        int Mi = magn_flat[site];
-
-        // --- 1. CHEMICAL ENERGY ---
-        // Neighbors 1 (NN) and Neighbors 2 (NNN)
-        float sumLin1 = calculateNeighborSpeciesSum(site, 1, 1);
-        float sumCuad1 = calculateNeighborSpeciesSum(site, 1, 2);
-        float sumLin2 = calculateNeighborSpeciesSum(site, 2, 1);
-        float sumCuad2 = calculateNeighborSpeciesSum(site, 2, 2);
-
-        // Standard BEG-like Hamiltonian: 
-        // H_chem = J*Si*Sj + K*Si^2*Sj^2 + L*(Si^2*Sj + Sj^2*Si)
-        totalChemicalE += Si * (jota1 * sumLin1 + ele1 * sumCuad1) + 
-                          Si * Si * (ka1 * sumCuad1 + ele1 * sumLin1) +
-                          Si * (jota2 * sumLin2 + ele2 * sumCuad2) + 
-                          Si * Si * (ka2 * sumCuad2 + ele2 * sumLin2);
-
-        // --- 2. MAGNETIC ENERGY ---
-        if (Mi != 0) {
-            double sumSpin1 = calculateNeighborSpinSum(site, 1);
-            double sumSpin2 = calculateNeighborSpinSum(site, 2);
-            double sumSpin3 = calculateNeighborSpinSum(site, 3);
-            // NOTE: neighbors4 and neighbors5 initialization incomplete ("To do" in initializeNeighbors)
-            // Temporarily set sums to 0 until implementation is finished
-            double sumSpin4 = 0; // calculateNeighborSpinSum(site, 4); // TODO
-            double sumSpin5 = 0; // calculateNeighborSpinSum(site, 5); // TODO
-            double sumSpin6 = calculateNeighborSpinSum(site, 6);
-            totalMagneticE += calculateSiteMagneticEnergy(Mi, params.Jm1, params.Jm2, params.Jm3, params.Jm4, params.Jm5, params.Jm6,
-                                      H, sumSpin1, sumSpin2, sumSpin3, sumSpin4, sumSpin5, sumSpin6);
-        }
-    }
-
-    double totalMagnetization = 0;
-    for(int i=0; i < m_total_sites; ++i) totalMagnetization += magn_flat[i];
-    double fieldEnergy = -totalMagnetization * H;
-
-    // (TotalSum - FieldPart) gives the interaction part which needs the 0.5 correction
-    double interactionMagneticE = totalMagneticE - fieldEnergy;
-
-    return 0.5 * (totalChemicalE + interactionMagneticE) + fieldEnergy;
-}
 
 /** @brief Initializes the neighbor lists for each lattice site. */
 void Lattice::initializeNeighbors() {
@@ -182,7 +129,6 @@ void Lattice::initializeNeighbors() {
         auto& n1 = neighbors1[site];
         auto& n2 = neighbors2[site];
         auto& n3 = neighbors3[site];
-        auto& n4 = neighbors4[site];
         auto& n5 = neighbors5[site];
         auto& n6 = neighbors6[site];
 
@@ -283,7 +229,7 @@ int Lattice::calculateNeighborSpinSum(int site, int shell_type) const {
         const auto &n3 = neighbors3[site];
         for (int i = 0; i < 12; ++i) sum += magn_flat[n3[i]];
     } else if (shell_type == 4) {
-        const auto &n4 = neighbors4[site];
+        const auto &n4 = neighbors4[site]; (void)n4;
         for (int i = 0; i < 24; ++i) sum += 0; //magn_flat[n4[i]]; Hasta que no se implementen los vecinos se suma 0
     } else if (shell_type == 5) {
         const auto &n5 = neighbors5[site];
@@ -369,12 +315,13 @@ double Lattice::calculateSiteMagneticEnergy(int Spin,
  */
 
 
-Lattice::LROParameters Lattice::computeLROParameters() const {
+Lattice::Observables Lattice::computeObservables() const {
     int AI=0, AII=0, AIII=0, AIV=0;
     int BUpI=0, BUpII=0, BUpIII=0, BUpIV=0, BDownI=0, BDownII=0, BDownIII=0, BDownIV=0; 
     int CI=0, CII=0, CIII=0, CIV=0;
+    double totalMagnetization = 0.0;
 
-    // Traversal and counting for LRO parameters
+    // Single traversal computing both LRO counts and magnetization
     for (int site = 0; site < m_total_sites; ++site) {
         int i, j, k;
         idxToXYZ(site, m_side, i, j, k);
@@ -391,86 +338,55 @@ Lattice::LROParameters Lattice::computeLROParameters() const {
         if (Z_is_even) {
             if (XY_sum_is_even) {
                 A_ptr = &AI; BUp_ptr = &BUpI; BDown_ptr = &BDownI; C_ptr = &CI;
-            } else { // Sublattice II (Z even, X+Y+Z/2 odd)
+            } else {
                 A_ptr = &AII; BUp_ptr = &BUpII; BDown_ptr = &BDownII; C_ptr = &CII;
             }
         } else {
-            if (XY_sum_is_even) { // Sublattice III (Z odd, X+Y+Z/2 even)
+            if (XY_sum_is_even) {
                 A_ptr = &AIII; BUp_ptr = &BUpIII; BDown_ptr = &BDownIII; C_ptr = &CIII;
-            } else { // Sublattice IV (Z odd, X+Y+Z/2 odd)
+            } else {
                 A_ptr = &AIV; BUp_ptr = &BUpIV; BDown_ptr = &BDownIV; C_ptr = &CIV;
             }
         }
 
         // Increment counters based on species (red[site] = 1, 0, or -1)
-        if (red_flat[site] == 1) { // ATOM_1
+        int species = red_flat[site];
+        int spin = magn_flat[site];
+        totalMagnetization += spin;
+
+        if (species == 1) {
             (*A_ptr)++;
-        } else if (red_flat[site] == 0) { // ATOM_2
-            if (magn_flat[site] == 1) {
-                (*BUp_ptr)++;
-            } else {
-                (*BDown_ptr)++;
-            }
-        } else if (red_flat[site] == -1) { // ATOM_3
+        } else if (species == 0) {
+            if (spin == 1) (*BUp_ptr)++; else (*BDown_ptr)++;
+        } else if (species == -1) {
             (*C_ptr)++;
         }
     }
 
     const double ENE = static_cast<double>(m_total_sites);
-    LROParameters res;
-    res.X_A = (AI + AII - AIII - AIV) / ENE;
-    res.X_Bup = (BUpI + BUpII - BUpIII - BUpIV) / ENE;
-    res.X_Bdown = (BDownI + BDownII - BDownIII - BDownIV) / ENE;
-    res.X_C = (CI + CII - CIII - CIV) / ENE;
+    Lattice::LROParameters lro;
+    lro.X_A = (AI + AII - AIII - AIV) / ENE;
+    lro.X_Bup = (BUpI + BUpII - BUpIII - BUpIV) / ENE;
+    lro.X_Bdown = (BDownI + BDownII - BDownIII - BDownIV) / ENE;
+    lro.X_C = (CI + CII - CIII - CIV) / ENE;
 
-    res.Y_A = 2 * (AI - AII) / ENE;
-    res.Y_Bup = 2 * (BUpI - BUpII) / ENE;
-    res.Y_Bdown = 2 * (BDownI - BDownII) / ENE;
-    res.Y_C = 2 * (CI - CII) / ENE;
+    lro.Y_A = 2 * (AI - AII) / ENE;
+    lro.Y_Bup = 2 * (BUpI - BUpII) / ENE;
+    lro.Y_Bdown = 2 * (BDownI - BDownII) / ENE;
+    lro.Y_C = 2 * (CI - CII) / ENE;
 
-    res.Z_A = 2 * (AIII - AIV) / ENE;
-    res.Z_Bup = 2 * (BUpIII - BUpIV) / ENE;
-    res.Z_Bdown = 2 * (BDownIII - BDownIV) / ENE;
-    res.Z_C = 2 * (CIII - CIV) / ENE;
+    lro.Z_A = 2 * (AIII - AIV) / ENE;
+    lro.Z_Bup = 2 * (BUpIII - BUpIV) / ENE;
+    lro.Z_Bdown = 2 * (BDownIII - BDownIV) / ENE;
+    lro.Z_C = 2 * (CIII - CIV) / ENE;
 
-    return res;
+    Observables obs;
+    obs.lro = lro;
+    obs.normalizedMagnetization = totalMagnetization / ENE;
+    return obs;
 }
 
-double Lattice::computeNormalizedMagnetization() const {
-    double totalMagnetization = 0.0;
-    for (int i = 0; i < m_total_sites; ++i) totalMagnetization += magn_flat[i];
-    return totalMagnetization / static_cast<double>(m_total_sites);
-}
-
-void Lattice::writeLROParameters(std::ofstream& parout,
-                                int step_count,
-                                double T,
-                                double H,
-                                const LROParameters& lro,
-                                double normalizedMagnetization,
-                                double energyValue,
-                                bool printToConsole,
-                                const std::vector<std::pair<std::string,double>>& extras) const {
-    parout << step_count << "\t" << H << "\t" << T << "\t"
-           << lro.X_A << "\t" << lro.X_Bup << "\t" << lro.X_Bdown << "\t" << lro.X_C << "\t"
-           << lro.Y_A << "\t" << lro.Y_Bup << "\t" << lro.Y_Bdown << "\t" << lro.Y_C << "\t"
-           << lro.Z_A << "\t" << lro.Z_Bup << "\t" << lro.Z_Bdown << "\t" << lro.Z_C << "\t"
-           << normalizedMagnetization << "\t"
-           << energyValue;
-
-    for (const auto &p : extras) {
-        parout << "\t" << p.second;
-    }
-    parout << "\t" << std::endl;
-
-    if (printToConsole) {
-        std::cout << "Step=" << step_count << " H=" << H << " T=" << T << " | "
-                  << "X_A=" << lro.X_A << " X_Bup=" << lro.X_Bup << " X_Bdown=" << lro.X_Bdown << " X_C=" << lro.X_C
-                  << " | mag=" << normalizedMagnetization << " | E=" << energyValue;
-        for (const auto &p : extras) std::cout << " | " << p.first << "=" << p.second;
-        std::cout << std::endl;
-    }
-}
+// computeNormalizedMagnetization removed: use computeObservables() instead
 
 void Lattice::writeOutput(std::ofstream& parout,
                           int step_count,
@@ -478,24 +394,13 @@ void Lattice::writeOutput(std::ofstream& parout,
                           double H,
                           double energyValue,
                           bool computeLRO,
-                          bool printToConsole,
-                          const std::vector<std::pair<std::string,double>>& extras) const {
+                          bool printToConsole) const {
     if (computeLRO) {
-        LROParameters lro = computeLROParameters();
-        double magNorm = computeNormalizedMagnetization();
-        writeLROParameters(parout, step_count, T, H, lro, magNorm, energyValue, printToConsole, extras);
+        auto obs = computeObservables();
+        lattice_output::writeLROParameters(parout, step_count, T, H, obs.lro, obs.normalizedMagnetization, energyValue, printToConsole);
     } else {
-        double magNorm = computeNormalizedMagnetization();
-        parout << step_count << "\t" << H << "\t" << T << "\t"
-               << magNorm << "\t" << energyValue;
-        for (const auto &p : extras) parout << "\t" << p.second;
-        parout << "\t" << std::endl;
-
-        if (printToConsole) {
-            std::cout << "Step=" << step_count << " H=" << H << " T=" << T << " | mag=" << magNorm << " | E=" << energyValue;
-            for (const auto &p : extras) std::cout << " | " << p.first << "=" << p.second;
-            std::cout << std::endl;
-        }
+        auto obs = computeObservables();
+        lattice_output::writeReducedOutput(parout, step_count, T, H, obs.normalizedMagnetization, energyValue, printToConsole);
     }
 }
 

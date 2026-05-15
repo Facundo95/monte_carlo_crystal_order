@@ -133,8 +133,13 @@ void SimulationLoop(const SimulationParameters& params,
         std::vector<double> dEs = {};
         auto table = BoltzmannDeltaETable(dEs, T);
         
-        for (double H: listaCampos) {
-            double currentTotalEnergy = lattice.calculateTotalEnergy(params, H);
+            for (double H: listaCampos) {
+                // Build BEG and Ising coefficient structs and compute energies via modules
+                BEGCoefficients begCoeff{params.jota1, params.jota2, params.ka1, params.ka2, params.ele1, params.ele2};
+                IsingCouplings isingCoupl{params.Jm1, params.Jm2, params.Jm3, params.Jm4, params.Jm5, params.Jm6};
+                double chemicalE = calculateTotalChemicalEnergy(lattice, begCoeff);
+                double magneticE = calculateTotalIsingEnergy(lattice, isingCoupl, H);
+                double currentTotalEnergy = chemicalE + magneticE;
 
             if (verbose) {
                 std::cout << "----------------------------------------" << std::endl;

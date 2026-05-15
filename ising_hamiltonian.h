@@ -4,6 +4,9 @@
 #include <array>
 #include <cmath>
 
+// Forward declaration
+class Lattice;
+
 /**
  * @struct IsingCouplings
  * @brief Ising Hamiltonian magnetic couplings for up to 6 neighbor shells.
@@ -42,5 +45,11 @@ double calculateDeltaIsingEnergy(int spinAtSite,
                                  double externalField,
                                  const IsingCouplings& couplings,
                                  const std::array<int, 6>& neighborSpinSums);
+
+/**
+ * @brief Calculate the total magnetic (Ising) energy for the entire lattice,
+ * including the external field term and the 1/2 correction for pair counting.
+ */
+double calculateTotalIsingEnergy(const Lattice& lattice, const IsingCouplings& couplings, double externalField);
 
 #endif // ISING_HAMILTONIAN_H

@@ -1,5 +1,6 @@
 #include "beg_hamiltonian.h"
 #include "neighbor_sums.h"
+#include "lattice.h"
 
 /**
  * @brief Calculate the energy change for a chemical species exchange using BEG Hamiltonian.
@@ -40,4 +41,23 @@ double calculateDeltaChemicalEnergy(int specieA, int specieN,
         coeff.ele2  * (diffLinNNN * sumTipo + diffCuadNNN));
     
     return deltaEQ;
+}
+
+double calculateTotalChemicalEnergy(const Lattice& lattice, const BEGCoefficients& coeff) {
+    double totalChemicalE = 0.0;
+    for (int site = 0; site < lattice.totalSites(); ++site) {
+        int Si = lattice.getSpecies(site);
+
+        float sumLin1 = lattice.calculateNeighborSpeciesSum(site, 1, 1);
+        float sumCuad1 = lattice.calculateNeighborSpeciesSum(site, 1, 2);
+        float sumLin2 = lattice.calculateNeighborSpeciesSum(site, 2, 1);
+        float sumCuad2 = lattice.calculateNeighborSpeciesSum(site, 2, 2);
+
+        totalChemicalE += Si * (coeff.jota1 * sumLin1 + coeff.ele1 * sumCuad1) +
+                          Si * Si * (coeff.ka1 * sumCuad1 + coeff.ele1 * sumLin1) +
+                          Si * (coeff.jota2 * sumLin2 + coeff.ele2 * sumCuad2) +
+                          Si * Si * (coeff.ka2 * sumCuad2 + coeff.ele2 * sumLin2);
+    }
+    // Pair interactions were summed twice across sites; apply 1/2 correction here.
+    return 0.5 * totalChemicalE;
 }
