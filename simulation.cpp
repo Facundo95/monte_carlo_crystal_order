@@ -226,7 +226,7 @@ void SimulationLoop(const SimulationParameters& params,
     // 3. Monte Carlo Loop Setup
     lattice.initializeNeighbors();
 
-    if (params.simulation_method != 0 && params.simulation_method != 1) {
+    if (params.simulation_method != 0 && params.simulation_method != 1 && params.simulation_method != 2) {
         std::cerr << "ERROR: Método de simulación desconocido: " << params.simulation_method << std::endl;
         return;
     }
