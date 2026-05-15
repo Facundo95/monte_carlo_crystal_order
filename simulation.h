@@ -12,6 +12,9 @@
 #include <cstdint> // For int8_t
 
 #include "lattice.h"
+#include "mc_helpers.h"
+#include "neighbor_sums.h"
+#include "sweep_list.h"
 
 #include <unordered_map>
 #include <vector>
@@ -139,44 +142,13 @@ inline std::ostream& operator<<(std::ostream& os, const SimulationParameters& p)
     return os;
 }
 
-/** 
- * @brief Generic template to create a sweep list for any parameter.
- * @tparam T The numeric type (double, int, etc.)
- * @param start Starting value
- * @param end Ending value
- * @param step Step size (must be positive)
- * @param loop If true, sweep goes from start to end and back to start. If false, just start to end.
- * @return Vector containing sweep values
- * @throws std::invalid_argument if step <= 0
- */
-template<typename T>
-std::vector<T> createSweepList(T start, T end, T step, bool loop = false);
-
 /** @brief Performs a Monte Carlo step using chemical species exchange dynamics. 
  * @param lattice The lattice object representing the system.
  * @param params The simulation parameters.
- * @param tableBeg The pre-computed BEG site energy table.
- * @param DeltaEAcumM Accumulated energy change for magnetization.
- * @param changesAccepted Counter for accepted changes.
+ * @param table The pre-computed BEG site energy table.
+ * @param stats Result structure aggregating changes
 */
-// (See MCStepResults below) -- prototype using stats struct provided further down.
 
-/**
- * @struct MCStepResults
- * @brief Aggregates counters and accumulators modified during a Monte Carlo step.
- * Stored as references so callers may keep their existing variables and pass
- * them bundled into a single parameter.
- */
-struct MCStepResults {
-    double& DeltaEAcum;
-    int& changesAccepted;
-    int& changesAttempted;
-
-    MCStepResults(double& dE, int& acc, int& att)
-        : DeltaEAcum(dE), changesAccepted(acc), changesAttempted(att) {}
-};
-
-// Updated prototype: pass results as a single struct reference
 void MonteCarloStepChemicalExchange(Lattice& lattice,
                                     const SimulationParameters& params,
                                     BoltzmannDeltaETable& table,
@@ -190,44 +162,16 @@ void MonteCarloStepChemicalExchange(Lattice& lattice,
  * @param DeltaEAcumM Accumulated energy change for magnetization.
  * @param changesAccepted Counter for accepted changes.
 */
-// Updated prototype: pass results as a single struct reference
 void MonteCarloStepSpinExtH(Lattice& lattice,
                             double H,
                             const SimulationParameters& params,
                             BoltzmannDeltaETable& table,
                             MCStepResults& stats);
 
-/**
- * @struct NeighborSpeciesSums
- * @brief Holds precomputed neighbor species sums for a site and its chosen neighbor.
- */
-struct NeighborSpeciesSums {
-    int linNN_A;
-    int linNN_N;
-    int cuadNN_A;
-    int cuadNN_N;
-    int linNNN_A;
-    int linNNN_N;
-    int cuadNNN_A;
-    int cuadNNN_N;
-};
-
-/**
- * @brief Compute and return neighbor species sums needed for chemical energy.
- * @param lattice The lattice
- * @param site The active site index
- * @param siteNeighbor The neighbor site index being exchanged with
- */
-NeighborSpeciesSums computeNeighborSpeciesSums(const Lattice& lattice, int site, int siteNeighbor);
-
-/**
- * @brief Compute and return spin neighbor sums for shells 1..6 for a given site.
- */
-std::array<int,6> computeNeighborSpinSums(const Lattice& lattice, int site);
-
 /** @brief Main simulation loop handling temperature and magnetic field sweeps.
  * @param params The simulation parameters.
- * @param nombrefile The base name for output files.
+ * @param file_in Input configuration file
+ * @param file_out Output results file
 */
 void SimulationLoop(const SimulationParameters& params, 
                     const char* file_in, 
