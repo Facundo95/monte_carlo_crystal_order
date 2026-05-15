@@ -64,6 +64,38 @@ std::vector<T> createSweepList(T start, T end, T step, bool loop) {
 // Explicit template instantiation for double
 template std::vector<double> createSweepList<double>(double, double, double, bool);
 
+/**
+ * @brief Compute neighbor species sums used by chemical exchange step.
+ */
+NeighborSpeciesSums computeNeighborSpeciesSums(const Lattice& lattice, int site, int siteNeighbor) {
+    NeighborSpeciesSums s{};
+    s.linNN_A = lattice.calculateNeighborSpeciesSum(site, 1, 1) - lattice.getSpecies(siteNeighbor);
+    s.linNN_N = lattice.calculateNeighborSpeciesSum(siteNeighbor, 1, 1) - lattice.getSpecies(site);
+    s.cuadNN_A = lattice.calculateNeighborSpeciesSum(site, 1, 2) - lattice.getSpecies(siteNeighbor) * lattice.getSpecies(siteNeighbor);
+    s.cuadNN_N = lattice.calculateNeighborSpeciesSum(siteNeighbor, 1, 2) - lattice.getSpecies(site) * lattice.getSpecies(site);
+
+    s.linNNN_A = lattice.calculateNeighborSpeciesSum(site, 2, 1);
+    s.linNNN_N = lattice.calculateNeighborSpeciesSum(siteNeighbor, 2, 1);
+    s.cuadNNN_A = lattice.calculateNeighborSpeciesSum(site, 2, 2);
+    s.cuadNNN_N = lattice.calculateNeighborSpeciesSum(siteNeighbor, 2, 2);
+    return s;
+}
+
+/**
+ * @brief Compute neighbor spin sums for shells 1..6.
+ */
+std::array<int,6> computeNeighborSpinSums(const Lattice& lattice, int site) {
+    std::array<int,6> sums;
+    sums[0] = static_cast<int>(lattice.calculateNeighborSpinSum(site, 1));
+    sums[1] = static_cast<int>(lattice.calculateNeighborSpinSum(site, 2));
+    sums[2] = static_cast<int>(lattice.calculateNeighborSpinSum(site, 3));
+    // neighbors4 and neighbors5 may be uninitialized; keep as 0 if so
+    sums[3] = 0;
+    sums[4] = 0;
+    sums[5] = static_cast<int>(lattice.calculateNeighborSpinSum(site, 6));
+    return sums;
+}
+
 /** @brief Performs a Monte Carlo step using chemical species exchange dynamics. 
  * @param lattice The lattice object representing the system.
  * @param params The simulation parameters.
@@ -87,24 +119,16 @@ void MonteCarloStepChemicalExchange(Lattice& lattice,
 
         stats.changesAttempted++;
         
-        int SumLinNN_A = lattice.calculateNeighborSpeciesSum(site, 1, 1) - lattice.getSpecies(siteNeighbor);
-        int SumLinNN_N = lattice.calculateNeighborSpeciesSum(siteNeighbor, 1, 1) - lattice.getSpecies(site);
-        int SumCuadNN_A = lattice.calculateNeighborSpeciesSum(site, 1, 2) - lattice.getSpecies(siteNeighbor)*lattice.getSpecies(siteNeighbor);
-        int SumCuadNN_N = lattice.calculateNeighborSpeciesSum(siteNeighbor, 1, 2) - lattice.getSpecies(site)*lattice.getSpecies(site);
-
-        int SumLinNNN_A = lattice.calculateNeighborSpeciesSum(site, 2, 1);
-        int SumLinNNN_N = lattice.calculateNeighborSpeciesSum(siteNeighbor, 2, 1);
-        int SumCuadNNN_A = lattice.calculateNeighborSpeciesSum(site, 2, 2);
-        int SumCuadNNN_N = lattice.calculateNeighborSpeciesSum(siteNeighbor, 2, 2);
+        auto sums = computeNeighborSpeciesSums(lattice, site, siteNeighbor);
 
         double dETotal = lattice.calculateDeltaChemicalEnergy(SpecieAct, SpecieNeigh,
-                                                            params.jota1, params.jota2,
-                                                            params.ka1, params.ka2,
-                                                            params.ele1, params.ele2,
-                                                            SumLinNN_A, SumLinNNN_A,
-                                                            SumCuadNN_A, SumCuadNNN_A,
-                                                            SumLinNN_N, SumLinNNN_N,
-                                                            SumCuadNN_N, SumCuadNNN_N);
+                                    params.jota1, params.jota2,
+                                    params.ka1, params.ka2,
+                                    params.ele1, params.ele2,
+                                    sums.linNN_A, sums.linNNN_A,
+                                    sums.cuadNN_A, sums.cuadNNN_A,
+                                    sums.linNN_N, sums.linNNN_N,
+                                    sums.cuadNN_N, sums.cuadNNN_N);
         
         // Metropolis Algorithm
         if (dETotal > 0) {
@@ -152,15 +176,7 @@ void MonteCarloStepSpinExtH(Lattice& lattice,
 
         stats.changesAttempted++;
 
-        int Sum1N = static_cast<int>(lattice.calculateNeighborSpinSum(site, 1));
-        int Sum2N = static_cast<int>(lattice.calculateNeighborSpinSum(site, 2));
-        int Sum3N = static_cast<int>(lattice.calculateNeighborSpinSum(site, 3));
-        // NOTE: neighbors4 and neighbors5 initialization incomplete in initializeNeighbors()
-        int Sum4N = 0; // Temporarily 0 until neighbors4/5 are implemented
-        int Sum5N = 0; // Temporarily 0 until neighbors4/5 are implemented
-        int Sum6N = lattice.calculateNeighborSpinSum(site, 6);
-
-        const std::array<int, 6> neighborSums = {Sum1N, Sum2N, Sum3N, Sum4N, Sum5N, Sum6N};
+        const std::array<int, 6> neighborSums = computeNeighborSpinSums(lattice, site);
         const std::array<double, 6> magneticCouplings = {
             params.Jm1, params.Jm2, params.Jm3, params.Jm4, params.Jm5, params.Jm6
         };
