@@ -16,7 +16,7 @@ class Lattice;
  * @param lattice The Lattice object to access atom names.
  * @return bool True if the file was successfully opened, false otherwise.
  */
-bool OpenLROParametersFile(const char* nombrefile, std::ofstream& output_stream, const Lattice& lattice);
+bool OpenOutputParametersFile(const char* nombrefile, std::ofstream& output_stream, const Lattice& lattice);
 
 /**
  * @brief Constructs the final configuration filename and attempts to open the ofstream.

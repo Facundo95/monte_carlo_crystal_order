@@ -14,19 +14,23 @@
  * @param lattice The Lattice object to access atom names.
  * @return bool True if the file was successfully opened, false otherwise.
  */
-bool OpenLROParametersFile(const char* nombrefile, std::ofstream& output_stream, const Lattice& lattice) {
-    // 1. Construct the full filename: e.g., "LRO_cu-al-mn_....txt"
+bool OpenOutputParametersFile(const char* nombrefile, std::ofstream& output_stream, const Lattice& lattice) {
+    // 1. Construct the base output filename with .out extension.
     std::string filename(nombrefile);
     auto pos = filename.find_last_of('.');
     std::string fileOUT = filename.substr(0, pos) + ".out";
-    std::ifstream in(fileOUT);
-    if (in.good()) {
-        in.close();
-        fileOUT = fileOUT + "_new.out";
-        std::cerr << "WARNING: El archivo de salida para parámetros LRO ya existe, cambiando el nombre a: " 
+    const std::string baseName = fileOUT.substr(0, fileOUT.size() - 4);
+    const std::string extension = ".out";
+
+    int suffix = 1;
+    while (std::ifstream(fileOUT).good()) {
+        fileOUT = baseName + "(" + std::to_string(suffix) + ")" + extension;
+        ++suffix;
+    }
+
+    if (suffix > 1) {
+        std::cerr << "WARNING: El archivo de salida para parámetros LRO ya existe, cambiando el nombre a: "
                   << fileOUT << std::endl;
-    } else {
-        in.close();
     }
 
     // 2. Attempt to open the file in output and append mode
