@@ -139,8 +139,18 @@ inline std::ostream& operator<<(std::ostream& os, const SimulationParameters& p)
     return os;
 }
 
-/** @brief Creates a list of magnetic field values for the sweep. */
-std::vector<double> createSweepList(double start, double end, double step, bool loop);
+/** 
+ * @brief Generic template to create a sweep list for any parameter.
+ * @tparam T The numeric type (double, int, etc.)
+ * @param start Starting value
+ * @param end Ending value
+ * @param step Step size (must be positive)
+ * @param loop If true, sweep goes from start to end and back to start. If false, just start to end.
+ * @return Vector containing sweep values
+ * @throws std::invalid_argument if step <= 0
+ */
+template<typename T>
+std::vector<T> createSweepList(T start, T end, T step, bool loop = false);
 
 /** @brief Performs a Monte Carlo step using chemical species exchange dynamics. 
  * @param lattice The lattice object representing the system.

@@ -6,10 +6,18 @@
 #include <cstdint>
 
 /**
- * @brief Creates the vector of values for the sweep list.
+ * @brief Generic template to create a sweep list for any parameter.
+ * @tparam T The numeric type (double, int, etc.)
+ * @param start Starting value
+ * @param end Ending value
+ * @param step Step size (must be positive)
+ * @param loop If true, sweep goes from start to end and back. If false, just start to end.
+ * @return Vector containing sweep values
+ * @throws std::invalid_argument if step <= 0
  */
-std::vector<double> createSweepList(double start, double end, double step, bool loop) {
-    std::vector<double> list;
+template<typename T>
+std::vector<T> createSweepList(T start, T end, T step, bool loop) {
+    std::vector<T> list;
     
     if (step <= 0) {
         throw std::invalid_argument("Step must be positive.");
@@ -21,65 +29,40 @@ std::vector<double> createSweepList(double start, double end, double step, bool 
     }
 
     if (!loop) {
+        // Non-looping case: go from start to end only
         if (start < end) {
-            for (double val = start; val <= end; val += step) {
+            for (T val = start; val <= end; val += step) {
                 list.push_back(val);
             }
         } else {
-            for (double val = start; val >= end; val -= step) {
+            for (T val = start; val >= end; val -= step) {
                 list.push_back(val);
             }
         }
         return list;
     }
-    // Looping case
+    
+    // Looping case: go from start to end, then back to start
     if (start < end) {
-        for (double val = start; val <= end; val += step) {
+        for (T val = start; val <= end; val += step) {
             list.push_back(val);
         }
-        for (double val = end - step; val >= start; val -= step) {
+        for (T val = end - step; val >= start; val -= step) {
             list.push_back(val);
         }
     } else {
-        for (double val = start; val >= end; val -= step) {
+        for (T val = start; val >= end; val -= step) {
             list.push_back(val);
         }
-        for (double val = end + step; val <= start; val += step) {
+        for (T val = end + step; val <= start; val += step) {
             list.push_back(val);
         }
     }
     return list;
 }
 
-
-/**
- * @brief Creates the vector of temperatures values for the T-sweep loop.
- */
-std::vector<double> createTSweepList(const SimulationParameters& params) {
-    std::vector<double> list;
-    
-    if (params.step_T <= 0) {
-        throw std::invalid_argument("Step_T must be positive.");
-    }
-    
-    if (params.T_start == params.T_end) {
-        list.push_back(params.T_start);
-        return list;
-    }
-
-    if (params.T_start < params.T_end) {
-        for (double t = params.T_start; t <= params.T_end; t += params.step_T) {
-            list.push_back(t);
-        }
-        return list;
-    }
-
-    for (double t = params.T_start; t >= params.T_end; t -= params.step_T) {
-        list.push_back(t);
-    }
-
-    return list;
-}
+// Explicit template instantiation for double
+template std::vector<double> createSweepList<double>(double, double, double, bool);
 
 /** @brief Performs a Monte Carlo step using chemical species exchange dynamics. 
  * @param lattice The lattice object representing the system.
