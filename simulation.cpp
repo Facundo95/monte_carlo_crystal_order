@@ -96,6 +96,16 @@ std::array<int,6> computeNeighborSpinSums(const Lattice& lattice, int site) {
     return sums;
 }
 
+/**
+ * @brief Metropolis acceptance test. Returns true if the change should be accepted.
+ */
+static inline bool metropolisAccept(double dE, BoltzmannDeltaETable& table) {
+    if (dE <= 0.0) return true;
+    double epsilon = Ran0a1();
+    double boltz = table.lookup(dE);
+    return boltz >= epsilon;
+}
+
 /** @brief Performs a Monte Carlo step using chemical species exchange dynamics. 
  * @param lattice The lattice object representing the system.
  * @param params The simulation parameters.
@@ -130,26 +140,13 @@ void MonteCarloStepChemicalExchange(Lattice& lattice,
                                     sums.linNN_N, sums.linNNN_N,
                                     sums.cuadNN_N, sums.cuadNNN_N);
         
-        // Metropolis Algorithm
-        if (dETotal > 0) {
-            // Accept: Probabilistically
-            double epsilon = Ran0a1();
-            
-            double BoltzmannChem = table.lookup(dETotal);
+        // Metropolis acceptance
+        if (metropolisAccept(dETotal, table)) {
+            lattice.exchangeSpecies(site, siteNeighbor);
+            stats.changesAccepted++;
+            stats.DeltaEAcum += dETotal;
 
-            if (BoltzmannChem >= epsilon) {
-                lattice.exchangeSpecies(site, siteNeighbor);
-                stats.changesAccepted++;
-                stats.DeltaEAcum += dETotal;
-            }
-            continue;
         }
-
-        // Accept: Exchange species
-        lattice.exchangeSpecies(site, siteNeighbor);
-        stats.changesAccepted++;
-        stats.DeltaEAcum += dETotal;
-    
     }
 }
 
@@ -188,29 +185,12 @@ void MonteCarloStepSpinExtH(Lattice& lattice,
 
         double dETotal = 2.0 * static_cast<double>(SpinAct) * magneticContribution;
         
-        // Metropolis Algorithm
-        if (dETotal > 0) {
-        
-            // Accept: Probabilistically
-            double epsilon = Ran0a1();
-            double Boltzmann = table.lookup(dETotal);
-
-            if (Boltzmann >= epsilon) {
-
-                lattice.flipSpin(site);
-                stats.changesAccepted++;
-                stats.DeltaEAcum += dETotal;
-
-            }
-        
-            continue;
+        // Metropolis acceptance
+        if (metropolisAccept(dETotal, table)) {
+            lattice.flipSpin(site);
+            stats.changesAccepted++;
+            stats.DeltaEAcum += dETotal;
         }
-        
-        // Accept: Flip spin
-        lattice.flipSpin(site);
-        stats.changesAccepted++;
-        stats.DeltaEAcum += dETotal;
-    
     }
 }
 
