@@ -7,6 +7,7 @@
 #include <cctype>
 #include <sstream>
 #include <cmath>
+#include <iostream>
 
 /** @brief Loads the initial configuration from a specified file.
  * The file should contain the species and spin states for each lattice site.
@@ -343,41 +344,7 @@ int Lattice::calculateNeighborSpeciesSum(int site, int shell_type, int order) co
  * @param sumLin1, sumCuad1 Linear and quadratic sums over 1st NN species.
  * @param sumLin2, sumCuad2 Linear and quadratic sums over 2nd NN species.
  */
-double Lattice::calculateDeltaChemicalEnergy(int type_A, int type_N, 
-                                            double JOTA1, double JOTA2, 
-                                            double KA1, double KA2, 
-                                            double ELE1, double ELE2,
-                                            int sumLinNN_A, int sumLinNNN_A,
-                                            int sumCuadNN_A, int sumCuadNNN_A,
-                                            int sumLinNN_N, int sumLinNNN_N,
-                                            int sumCuadNN_N, int sumCuadNNN_N) const {
-    // 1. Pre-calculate state differences
-    double diffTipo = type_N - type_A;
-    double sumTipo  = type_N + type_A;
-
-    // 2. Pre-calculate Sum differences (Nearest Neighbors)
-    double diffLinNN  = sumLinNN_A  - sumLinNN_N;
-    double diffCuadNN = sumCuadNN_A - sumCuadNN_N;
-
-    // 3. Pre-calculate Sum differences (Next Nearest Neighbors)
-    double diffLinNNN  = sumLinNNN_A  - sumLinNNN_N;
-    double diffCuadNNN = sumCuadNNN_A - sumCuadNNN_N;
-
-    // 4. Calculate Delta directly
-    // Notice that 'diffTipo' factors out of the entire equation
-    double deltaEQ = diffTipo * (
-        // Nearest Neighbors (NN)
-        JOTA1 * diffLinNN +
-        KA1   * diffCuadNN * sumTipo +
-        ELE1  * (diffLinNN * sumTipo + diffCuadNN) +
-
-        // Next Nearest Neighbors (NNN)
-        JOTA2 * diffLinNNN +
-        KA2   * diffCuadNNN * sumTipo +
-        ELE2  * (diffLinNNN * sumTipo + diffCuadNNN));
-    
-    return deltaEQ;
-}
+// `calculateDeltaChemicalEnergy` moved to `beg_hamiltonian.*`
 
 /** @brief Calculates the magnetic energy contribution for a given site. 
  * @param Spin Spin state at the site.
@@ -400,21 +367,17 @@ double Lattice::calculateSiteMagneticEnergy(int Spin,
  * @param H Current magnetic field.
  * @param DeltaEAcumM Accumulated energy change for magnetization.
  */
-void Lattice::calculateAndWriteLRO(std::ofstream& parout, 
-                                int step_count, double T, 
-                                double H, double DeltaEAcumM) const {
-    
+
+
+Lattice::LROParameters Lattice::computeLROParameters() const {
     int AI=0, AII=0, AIII=0, AIV=0;
     int BUpI=0, BUpII=0, BUpIII=0, BUpIV=0, BDownI=0, BDownII=0, BDownIII=0, BDownIV=0; 
     int CI=0, CII=0, CIII=0, CIV=0;
 
-    float Magnetizacion = 0;
-    
     // Traversal and counting for LRO parameters
-    for (int site = 0; site<m_total_sites;site++){
+    for (int site = 0; site < m_total_sites; ++site) {
         int i, j, k;
         idxToXYZ(site, m_side, i, j, k);
-        Magnetizacion += magn_flat[site];
 
         // Determine sublattice (I, II, III, or IV)
         bool Z_is_even = (k % 2 == 0);
@@ -424,10 +387,9 @@ void Lattice::calculateAndWriteLRO(std::ofstream& parout,
         int* BUp_ptr = nullptr;
         int* BDown_ptr = nullptr;
         int* C_ptr = nullptr;
-        
-        // Simplified conditional logic using pointers
+
         if (Z_is_even) {
-            if (XY_sum_is_even) { // Sublattice I (Z even, X+Y+Z/2 even)
+            if (XY_sum_is_even) {
                 A_ptr = &AI; BUp_ptr = &BUpI; BDown_ptr = &BDownI; C_ptr = &CI;
             } else { // Sublattice II (Z even, X+Y+Z/2 odd)
                 A_ptr = &AII; BUp_ptr = &BUpII; BDown_ptr = &BDownII; C_ptr = &CII;
@@ -439,7 +401,7 @@ void Lattice::calculateAndWriteLRO(std::ofstream& parout,
                 A_ptr = &AIV; BUp_ptr = &BUpIV; BDown_ptr = &BDownIV; C_ptr = &CIV;
             }
         }
-        
+
         // Increment counters based on species (red[site] = 1, 0, or -1)
         if (red_flat[site] == 1) { // ATOM_1
             (*A_ptr)++;
@@ -453,35 +415,88 @@ void Lattice::calculateAndWriteLRO(std::ofstream& parout,
             (*C_ptr)++;
         }
     }
-    
-    // Calculate LRO Parameters (X, Y, Z) and normalized Magnetization
+
     const double ENE = static_cast<double>(m_total_sites);
-    
-    // X parameters (I+II vs III+IV)
-    float X_A = (AI+AII-AIII-AIV) / ENE;
-    float X_Bup = (BUpI+BUpII-BUpIII-BUpIV) / ENE;
-    float X_Bdown = (BDownI+BDownII-BDownIII-BDownIV) / ENE;
-    float X_C = (CI+CII-CIII-CIV) / ENE;
-    
-    // Y parameters (I vs II)
-    float Y_A = 2 * (AI-AII) / ENE;
-    float Y_Bup = 2 * (BUpI-BUpII) / ENE;
-    float Y_Bdown = 2 * (BDownI-BDownII) / ENE;
-    float Y_C = 2 * (CI-CII) / ENE;
-    
-    // Z parameters (III vs IV)
-    float Z_A = 2 * (AIII-AIV) / ENE;
-    float Z_Bup = 2 * (BUpIII-BUpIV) / ENE;
-    float Z_Bdown = 2 * (BDownIII-BDownIV) / ENE;
-    float Z_C = 2 * (CIII-CIV) / ENE;
-    
-    // Write results to file
+    LROParameters res;
+    res.X_A = (AI + AII - AIII - AIV) / ENE;
+    res.X_Bup = (BUpI + BUpII - BUpIII - BUpIV) / ENE;
+    res.X_Bdown = (BDownI + BDownII - BDownIII - BDownIV) / ENE;
+    res.X_C = (CI + CII - CIII - CIV) / ENE;
+
+    res.Y_A = 2 * (AI - AII) / ENE;
+    res.Y_Bup = 2 * (BUpI - BUpII) / ENE;
+    res.Y_Bdown = 2 * (BDownI - BDownII) / ENE;
+    res.Y_C = 2 * (CI - CII) / ENE;
+
+    res.Z_A = 2 * (AIII - AIV) / ENE;
+    res.Z_Bup = 2 * (BUpIII - BUpIV) / ENE;
+    res.Z_Bdown = 2 * (BDownIII - BDownIV) / ENE;
+    res.Z_C = 2 * (CIII - CIV) / ENE;
+
+    return res;
+}
+
+double Lattice::computeNormalizedMagnetization() const {
+    double totalMagnetization = 0.0;
+    for (int i = 0; i < m_total_sites; ++i) totalMagnetization += magn_flat[i];
+    return totalMagnetization / static_cast<double>(m_total_sites);
+}
+
+void Lattice::writeLROParameters(std::ofstream& parout,
+                                int step_count,
+                                double T,
+                                double H,
+                                const LROParameters& lro,
+                                double normalizedMagnetization,
+                                double energyValue,
+                                bool printToConsole,
+                                const std::vector<std::pair<std::string,double>>& extras) const {
+    parout << step_count << "\t" << H << "\t" << T << "\t"
+           << lro.X_A << "\t" << lro.X_Bup << "\t" << lro.X_Bdown << "\t" << lro.X_C << "\t"
+           << lro.Y_A << "\t" << lro.Y_Bup << "\t" << lro.Y_Bdown << "\t" << lro.Y_C << "\t"
+           << lro.Z_A << "\t" << lro.Z_Bup << "\t" << lro.Z_Bdown << "\t" << lro.Z_C << "\t"
+           << normalizedMagnetization << "\t"
+           << energyValue;
+
+    for (const auto &p : extras) {
+        parout << "\t" << p.second;
+    }
+    parout << "\t" << std::endl;
+
+    if (printToConsole) {
+        std::cout << "Step=" << step_count << " H=" << H << " T=" << T << " | "
+                  << "X_A=" << lro.X_A << " X_Bup=" << lro.X_Bup << " X_Bdown=" << lro.X_Bdown << " X_C=" << lro.X_C
+                  << " | mag=" << normalizedMagnetization << " | E=" << energyValue;
+        for (const auto &p : extras) std::cout << " | " << p.first << "=" << p.second;
+        std::cout << std::endl;
+    }
+}
+
+void Lattice::writeOutput(std::ofstream& parout,
+                          int step_count,
+                          double T,
+                          double H,
+                          double energyValue,
+                          bool computeLRO,
+                          bool printToConsole,
+                          const std::vector<std::pair<std::string,double>>& extras) const {
+    if (computeLRO) {
+        LROParameters lro = computeLROParameters();
+        double magNorm = computeNormalizedMagnetization();
+        writeLROParameters(parout, step_count, T, H, lro, magNorm, energyValue, printToConsole, extras);
+    } else {
+        double magNorm = computeNormalizedMagnetization();
         parout << step_count << "\t" << H << "\t" << T << "\t"
-           << X_A << "\t" << X_Bup << "\t" << X_Bdown << "\t" << X_C << "\t"
-           << Y_A << "\t" << Y_Bup << "\t" << Y_Bdown << "\t" << Y_C << "\t"
-           << Z_A << "\t" << Z_Bup << "\t" << Z_Bdown << "\t" << Z_C << "\t"
-            << Magnetizacion/ENE << "\t"
-            << DeltaEAcumM << "\t" << std::endl;
+               << magNorm << "\t" << energyValue;
+        for (const auto &p : extras) parout << "\t" << p.second;
+        parout << "\t" << std::endl;
+
+        if (printToConsole) {
+            std::cout << "Step=" << step_count << " H=" << H << " T=" << T << " | mag=" << magNorm << " | E=" << energyValue;
+            for (const auto &p : extras) std::cout << " | " << p.first << "=" << p.second;
+            std::cout << std::endl;
+        }
+    }
 }
 
 /**

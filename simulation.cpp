@@ -167,7 +167,7 @@ void SimulationLoop(const SimulationParameters& params,
 
                     // 3b. Measurement and Output
                 if (contador > (params.num_steps - params.steps_to_output)) {
-                    lattice.calculateAndWriteLRO(parout, contador, T, H, energyAtStep);
+                    lattice.writeOutput(parout, contador, T, H, energyAtStep, params.flag_compute_lro, false);
                 }
             }
 
