@@ -30,14 +30,11 @@ void MonteCarloStepChemicalExchange(Lattice& lattice,
         
         auto sums = computeNeighborSpeciesSums(lattice, site, siteNeighbor);
 
-        double dETotal = lattice.calculateDeltaChemicalEnergy(SpecieAct, SpecieNeigh,
-                                    params.jota1, params.jota2,
-                                    params.ka1, params.ka2,
-                                    params.ele1, params.ele2,
-                                    sums.linNN_A, sums.linNNN_A,
-                                    sums.cuadNN_A, sums.cuadNNN_A,
-                                    sums.linNN_N, sums.linNNN_N,
-                                    sums.cuadNN_N, sums.cuadNNN_N);
+        // Construct BEG coefficients from simulation parameters
+        BEGCoefficients begCoeff{params.jota1, params.jota2, params.ka1, params.ka2, params.ele1, params.ele2};
+        
+        // Calculate energy change using BEG Hamiltonian
+        double dETotal = calculateDeltaChemicalEnergy(SpecieAct, SpecieNeigh, begCoeff, sums);
         
         // Metropolis acceptance
         if (metropolisAccept(dETotal, table)) {
@@ -73,16 +70,12 @@ void MonteCarloStepSpinExtH(Lattice& lattice,
         stats.changesAttempted++;
 
         const std::array<int, 6> neighborSums = computeNeighborSpinSums(lattice, site);
-        const std::array<double, 6> magneticCouplings = {
-            params.Jm1, params.Jm2, params.Jm3, params.Jm4, params.Jm5, params.Jm6
-        };
-
-        double magneticContribution = H;
-        for (std::size_t shell = 0; shell < magneticCouplings.size(); ++shell) {
-            magneticContribution += magneticCouplings[shell] * static_cast<double>(neighborSums[shell]);
-        }
-
-        double dETotal = 2.0 * static_cast<double>(SpinAct) * magneticContribution;
+        
+        // Construct Ising couplings from simulation parameters
+        IsingCouplings isingCoeff{params.Jm1, params.Jm2, params.Jm3, params.Jm4, params.Jm5, params.Jm6};
+        
+        // Calculate energy change using Ising Hamiltonian
+        double dETotal = calculateDeltaIsingEnergy(SpinAct, H, isingCoeff, neighborSums);
         
         // Metropolis acceptance
         if (metropolisAccept(dETotal, table)) {

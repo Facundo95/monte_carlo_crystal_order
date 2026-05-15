@@ -21,7 +21,7 @@ else
     endif
 endif
 
-SRCS = main.cpp simulation.cpp rng.cpp file_handler.cpp lattice.cpp input_parser.cpp mc_helpers.cpp neighbor_sums.cpp sweep_list.cpp
+SRCS = main.cpp simulation.cpp rng.cpp file_handler.cpp lattice.cpp input_parser.cpp mc_helpers.cpp neighbor_sums.cpp sweep_list.cpp beg_hamiltonian.cpp ising_hamiltonian.cpp
 OBJS = $(SRCS:.cpp=.o)
 DOXYGEN = doxygen
 DOXYFILE = Doxyfile

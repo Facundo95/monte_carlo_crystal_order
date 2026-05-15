@@ -15,6 +15,8 @@
 #include "mc_helpers.h"
 #include "neighbor_sums.h"
 #include "sweep_list.h"
+#include "beg_hamiltonian.h"
+#include "ising_hamiltonian.h"
 
 #include <unordered_map>
 #include <vector>
