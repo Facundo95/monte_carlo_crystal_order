@@ -274,27 +274,32 @@ void SimulationLoop(const SimulationParameters& params,
         auto table = BoltzmannDeltaETable(dEs, T);
         
         for (double H: listaCampos) {
-
             double currentTotalEnergy = lattice.calculateTotalEnergy(params, H);
-            
+
             if (verbose) {
                 std::cout << "----------------------------------------" << std::endl;
                 std::cout << "Trabajando a T = " << T << " y H = " << H << std::endl;
             }
 
-            int changesAccepted = 0;
-            int changesAttempted = 0;
+            int spinChangesAccepted = 0;
+            int chemicalChangesAccepted = 0;
+            int spinChangesAttempted = 0;
+            int chemicalChangesAttempted = 0;
             double DeltaEAcumM = 0.0;
+            double DeltaEAcumC = 0.0;
 
             for (int contador = 1; contador <= params.num_steps; contador++) {
                 
                 if (params.simulation_method == 0) {
-                    MonteCarloStepChemicalExchange(lattice, params, table, DeltaEAcumM, changesAccepted, changesAttempted);
+                    MonteCarloStepChemicalExchange(lattice, params, table, DeltaEAcumC, chemicalChangesAccepted, chemicalChangesAttempted);
                 } else if (params.simulation_method == 1) {
-                    MonteCarloStepSpinExtH(lattice, H, params, table, DeltaEAcumM, changesAccepted, changesAttempted);
+                    MonteCarloStepSpinExtH(lattice, H, params, table, DeltaEAcumM, spinChangesAccepted, spinChangesAttempted);
+                } else if (params.simulation_method == 2) {
+                    MonteCarloStepChemicalExchange(lattice, params, table, DeltaEAcumC, chemicalChangesAccepted, chemicalChangesAttempted);
+                    MonteCarloStepSpinExtH(lattice, H, params, table, DeltaEAcumM, spinChangesAccepted, spinChangesAttempted);
                 }
 
-                double energyAtStep = currentTotalEnergy + DeltaEAcumM;
+                double energyAtStep = currentTotalEnergy + DeltaEAcumM + DeltaEAcumC;
 
                     // 3b. Measurement and Output
                 if (contador > (params.num_steps - params.steps_to_output)) {
@@ -309,7 +314,8 @@ void SimulationLoop(const SimulationParameters& params,
             }
 
             if (verbose) {
-                std::cout << "Intercambios aceptados / intentado: " << changesAccepted << "/" << params.num_steps << " en " << params.num_steps << " pasos." << std::endl;
+                std::cout << "Intercambios de espines aceptados / intentado: " << spinChangesAccepted << "/" << spinChangesAttempted << " en " << params.num_steps << " pasos." << std::endl;
+                std::cout << "Intercambios químicos aceptados / intentado: " << chemicalChangesAccepted << "/" << chemicalChangesAttempted << " en " << params.num_steps << " pasos." << std::endl;
             }
 
             output_count++;

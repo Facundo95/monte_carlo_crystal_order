@@ -4,7 +4,7 @@ Total number of Monte Carlo steps per H/T point
 NUM_STEPS 100
 
 Lattice side, N_atoms =  2 * lattice_side ** 3
-LATTICE_SIDE 32
+LATTICE_SIDE 56
 
 ATOM_1 Co
 ATOM_2 Ni

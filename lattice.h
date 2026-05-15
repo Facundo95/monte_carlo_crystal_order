@@ -82,10 +82,10 @@ public:
                                       double sum1, double sum2, double sum3, double sum4, double sum5, double sum6) const;
     
     /** @brief Calculates the sum of neighbor spins for a given shell type. */
-    double calculateNeighborSpinSum(int site, int shell_type) const;
+    int calculateNeighborSpinSum(int site, int shell_type) const;
     
     /** @brief Calculates the sum of neighbor species for a given shell type and order. */
-    float calculateNeighborSpeciesSum(int site, int shell_type, int order) const;
+    int calculateNeighborSpeciesSum(int site, int shell_type, int order) const;
     
     /** @brief Saves the final configuration to a file and returns the opened ofstream.
      * The output is written in an extended .xyz-like format: first line is the

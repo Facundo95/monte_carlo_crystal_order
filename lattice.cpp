@@ -267,11 +267,11 @@ void Lattice::initializeNeighbors() {
  * @param shell_type Must be 3 (3rd NN) or 6 (6th NN).
  * (Original Jm1 and Jm2 (1st and 2nd NN) were 0, so only 3 and 6 are implemented here).
  */
-double Lattice::calculateNeighborSpinSum(int site, int shell_type) const {
+int Lattice::calculateNeighborSpinSum(int site, int shell_type) const {
     if (shell_type != 1 && shell_type != 2 && shell_type != 3 && shell_type != 6 && shell_type != 4 && shell_type != 5) {
         throw std::invalid_argument("shell_type options: 1,2,3,4,5 or 6.");
     }
-    double sum = 0;
+    int sum = 0;
     if (shell_type == 1) {
         const auto &n1 = neighbors1[site];
         for (int i = 0; i < 8; ++i) sum += magn_flat[n1[i]];
@@ -299,36 +299,36 @@ double Lattice::calculateNeighborSpinSum(int site, int shell_type) const {
  * @param shell_type Must be 1, 2, 3, or 6.
  * @param order Must be 1 (linear) or 2 (quadratic).
  */
-float Lattice::calculateNeighborSpeciesSum(int site, int shell_type, int order) const {
+int Lattice::calculateNeighborSpeciesSum(int site, int shell_type, int order) const {
     if (shell_type != 1 && shell_type != 2 && shell_type != 3 && shell_type != 6) {
         throw std::invalid_argument("shell_type options: 1,2,3 or 6.");
     }
     if (order != 1 && order != 2) {
         throw std::invalid_argument("order options: 1 (linear) or 2 (quadratic).");
     }
-    float sum = 0;
+    int sum = 0;
     if (shell_type == 1) {
         const auto &n1 = neighbors1[site];
         for (int i = 0; i < 8; ++i) {
-            float val = static_cast<float>(red_flat[n1[i]]);
+            int val = static_cast<int>(red_flat[n1[i]]);
             sum += (order == 1) ? val : val * val;
         }
     } else if (shell_type == 2) {
         const auto &n2 = neighbors2[site];
         for (int i = 0; i < 6; ++i) {
-            float val = static_cast<float>(red_flat[n2[i]]);
+            int val = static_cast<int>(red_flat[n2[i]]);
             sum += (order == 1) ? val : val * val;
         }
     } else if (shell_type == 3) {
         const auto &n3 = neighbors3[site];
         for (int i = 0; i < 12; ++i) {
-            float val = static_cast<float>(red_flat[n3[i]]);
+            int val = static_cast<int>(red_flat[n3[i]]);
             sum += (order == 1) ? val : val * val;
         }
     } else if (shell_type == 6) {
         const auto &n6 = neighbors6[site];
         for (int i = 0; i < 6; ++i) {
-            float val = static_cast<float>(red_flat[n6[i]]);
+            int val = static_cast<int>(red_flat[n6[i]]);
             sum += (order == 1) ? val : val * val;
         }
     }   

@@ -99,7 +99,7 @@ struct SimulationParameters {
 
 inline std::ostream& operator<<(std::ostream& os, const SimulationParameters& p) {
     os << "  NUM_STEPS: " << p.num_steps << '\n'
-       << "  SIMULATION_METHOD: " << p.simulation_method << (p.simulation_method == 0 ? " (Chemical Exchange)" : " (Spin Flip)") << '\n'
+       << "  SIMULATION_METHOD: " << p.simulation_method << ((p.simulation_method == 0) ? " (Chemical Exchange)" : ((p.simulation_method == 1) ? " (Spin Flip)" : " Chemical + Spin Flip")) << '\n'
        << "  LATTICE_SIDE: " << p.lattice_side << '\n'
        << "  W1_12: " << p.w1_12 << " kB" << '\n'
        << "  W2_12: " << p.w2_12 << " kB" << '\n'
