@@ -142,6 +142,7 @@ bool readInputFile(const std::string& input_filename, SimulationParameters& para
     double Jm1 = 0.0, Jm2 = 0.0, Jm3 = 0.0, Jm4 = 0.0, Jm5 = 0.0, Jm6 = 0.0;
     double T_start = 0.0, T_end = 0.0, step_T = 1.0;
     double H_start = 0.0, H_end = 0.0, step_H = 1.0;
+    bool flag_verbose = true;
     bool flag_save_config = false;
     bool flag_loop = false;
     int steps_to_output = 100;  // Default value
@@ -310,6 +311,12 @@ bool readInputFile(const std::string& input_filename, SimulationParameters& para
                 found_count++;  // MANDATORY
             }
         }
+        else if (key == "FLAG_VERBOSE") {
+            extractBoolValue(ss, flag_verbose);
+        }
+        else {
+            std::cerr << "WARNING: Unrecognized parameter '" << key << "' at line " << line_number << std::endl;
+        }
     }
 
     input_file.close();
@@ -354,7 +361,7 @@ bool readInputFile(const std::string& input_filename, SimulationParameters& para
         Jm1, Jm2, Jm3, Jm4, Jm5, Jm6,
         T_start, T_end, step_T, 
         H_start, H_end, step_H, 
-        steps_to_output, flag_save_config, flag_loop
+        steps_to_output, flag_verbose, flag_save_config, flag_loop
     );
 
     // Attach element symbols (if provided) to the params object

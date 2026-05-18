@@ -96,7 +96,7 @@ void SimulationLoop(const SimulationParameters& params,
                     const char* file_in, 
                     const char* file_out) {
     
-    bool verbose = false;
+    bool verbose = (params.flag_verbose > 0);
 
     Lattice lattice(params.lattice_side);
     // set element symbols from params (if any)

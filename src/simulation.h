@@ -85,6 +85,7 @@ struct SimulationParameters {
     double H_end;
     double step_H;
     int steps_to_output;
+    bool flag_verbose;
     bool flag_save_config;
     bool flag_loop;
     bool flag_compute_lro;
@@ -104,11 +105,11 @@ struct SimulationParameters {
     SimulationParameters(int steps, int sim, int side, double w1_12, double w2_12, double w1_13, 
                          double w2_13, double w1_23, double w2_23, double j1, double j2, double j3, double j4, double j5, double j6,
                          double t_s, double t_e, double dt, double h_start, double h_end, 
-                         double dh, int step_out, bool flag_red, bool loop)
+                         double dh, int step_out, bool flag_verbose, bool flag_red, bool loop)
         : num_steps(steps), simulation_method(sim), lattice_side(side), 
         w1_12(w1_12), w2_12(w2_12), w1_13(w1_13), w2_13(w2_13), w1_23(w1_23), w2_23(w2_23), 
         Jm1(j1), Jm2(j2), Jm3(j3), Jm4(j4), Jm5(j5), Jm6(j6), T_start(t_s), T_end(t_e), step_T(dt),H_start(h_start), H_end(h_end), 
-        step_H(dh), steps_to_output(step_out), flag_save_config(flag_red), flag_loop(loop), flag_compute_lro(true),
+        step_H(dh), steps_to_output(step_out), flag_verbose(flag_verbose), flag_save_config(flag_red), flag_loop(loop), flag_compute_lro(true),
         jota1(0.25 * w1_13),
         jota2(0.25 * w2_13),
         ka1(0.25 * (2 * w1_12 + 2 * w1_23 - w1_13)),
@@ -141,7 +142,11 @@ inline std::ostream& operator<<(std::ostream& os, const SimulationParameters& p)
        << "  STEP_H: " << p.step_H << " muB" << '\n'
        << "  LOOP_FLAG: " << (p.flag_loop ? "true" : "false") << '\n'
        << "  STEPS_TO_OUTPUT: " << p.steps_to_output << '\n'
-       << "  FLAG_SAVE_CONFIG: " << (p.flag_save_config ? "true" : "false");
+       << "  FLAG_SAVE_CONFIG: " << (p.flag_save_config ? "true" : "false") << '\n'
+       << "  FLAG_VERBOSE: " << (p.flag_verbose ? "true" : "false") << '\n'
+       << "  ATOM_1: " << p.atom1 << '\n'
+       << "  ATOM_2: " << p.atom2 << '\n'
+       << "  ATOM_3: " << p.atom3 << '\n';
     return os;
 }
 

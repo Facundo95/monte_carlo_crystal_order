@@ -4,6 +4,7 @@
 #include <sstream>
 #include <iomanip>
 #include "lattice.h"
+#include "logger.h"
 
 /**
  * @brief Constructs the output filename and attempts to open the ofstream.
@@ -22,15 +23,12 @@ bool OpenOutputParametersFile(const char* nombrefile, std::ofstream& output_stre
     const std::string baseName = fileOUT.substr(0, fileOUT.size() - 4);
     const std::string extension = ".out";
 
-    int suffix = 1;
-    while (std::ifstream(fileOUT).good()) {
-        fileOUT = baseName + "(" + std::to_string(suffix) + ")" + extension;
-        ++suffix;
-    }
-
-    if (suffix > 1) {
+    // Compute a unique filename (baseName.out, baseName(1).out, ...)
+    std::string unique = slog::makeUnique(fileOUT);
+    if (unique != fileOUT) {
         std::cerr << "WARNING: El archivo de salida para parámetros LRO ya existe, cambiando el nombre a: "
-                  << fileOUT << std::endl;
+                  << unique << std::endl;
+        fileOUT = std::move(unique);
     }
 
     // 2. Attempt to open the file in output and append mode
