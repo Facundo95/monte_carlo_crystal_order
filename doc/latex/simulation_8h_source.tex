@@ -1,0 +1,165 @@
+\hypertarget{simulation_8h_source}{}\doxysection{simulation.\+h}
+\label{simulation_8h_source}\index{/media/facundo/archivos/documentos\_facundo/unicen\_doctorado/monte\_carlo\_crystal\_order/src/simulation.h@{/media/facundo/archivos/documentos\_facundo/unicen\_doctorado/monte\_carlo\_crystal\_order/src/simulation.h}}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{1 \textcolor{preprocessor}{\#ifndef SIMULATION\_H}}
+\DoxyCodeLine{2 \textcolor{preprocessor}{\#define SIMULATION\_H}}
+\DoxyCodeLine{3 }
+\DoxyCodeLine{4 \textcolor{preprocessor}{\#include <iostream>}}
+\DoxyCodeLine{5 \textcolor{preprocessor}{\#include <fstream>}}
+\DoxyCodeLine{6 \textcolor{preprocessor}{\#include <vector>}}
+\DoxyCodeLine{7 \textcolor{preprocessor}{\#include <string>}}
+\DoxyCodeLine{8 \textcolor{preprocessor}{\#include <cmath>}}
+\DoxyCodeLine{9 \textcolor{preprocessor}{\#include <array>}}
+\DoxyCodeLine{10 \textcolor{preprocessor}{\#include <algorithm>}}
+\DoxyCodeLine{11 \textcolor{preprocessor}{\#include <cstring>}}
+\DoxyCodeLine{12 \textcolor{preprocessor}{\#include <cstdint>} \textcolor{comment}{// For int8\_t}}
+\DoxyCodeLine{13 }
+\DoxyCodeLine{14 \textcolor{preprocessor}{\#include "{}lattice.h"{}}}
+\DoxyCodeLine{15 \textcolor{preprocessor}{\#include "{}mc\_helpers.h"{}}}
+\DoxyCodeLine{16 \textcolor{preprocessor}{\#include "{}neighbor\_sums.h"{}}}
+\DoxyCodeLine{17 \textcolor{preprocessor}{\#include "{}sweep\_list.h"{}}}
+\DoxyCodeLine{18 \textcolor{preprocessor}{\#include "{}beg\_hamiltonian.h"{}}}
+\DoxyCodeLine{19 \textcolor{preprocessor}{\#include "{}ising\_hamiltonian.h"{}}}
+\DoxyCodeLine{20 }
+\DoxyCodeLine{21 \textcolor{preprocessor}{\#include <unordered\_map>}}
+\DoxyCodeLine{22 \textcolor{preprocessor}{\#include <vector>}}
+\DoxyCodeLine{23 \textcolor{preprocessor}{\#include <cmath>}}
+\DoxyCodeLine{24 \textcolor{preprocessor}{\#include <cstring>}}
+\DoxyCodeLine{25 }
+\DoxyCodeLine{26 \textcolor{keyword}{struct }\mbox{\hyperlink{structBoltzmannDeltaETable}{BoltzmannDeltaETable}} \{}
+\DoxyCodeLine{27     \textcolor{comment}{// Use quantized integer keys to avoid exact-\/bit mismatches caused by}}
+\DoxyCodeLine{28     \textcolor{comment}{// floating point rounding differences between the precompute and runtime.}}
+\DoxyCodeLine{29     std::unordered\_map<long long, double> table;}
+\DoxyCodeLine{30     \textcolor{keywordtype}{double} eps; \textcolor{comment}{// quantization resolution used to generate keys}}
+\DoxyCodeLine{31     \textcolor{keywordtype}{double} T;   \textcolor{comment}{// temperature used to compute Boltzmann factors (for fallback)}}
+\DoxyCodeLine{32 }
+\DoxyCodeLine{33     \textcolor{keyword}{static} \textcolor{keyword}{inline} \textcolor{keywordtype}{long} \textcolor{keywordtype}{long} key\_of(\textcolor{keywordtype}{double} x, \textcolor{keywordtype}{double} eps) \{}
+\DoxyCodeLine{34         \textcolor{keywordflow}{return} \textcolor{keyword}{static\_cast<}\textcolor{keywordtype}{long} \textcolor{keywordtype}{long}\textcolor{keyword}{>}(std::llround(x / eps));}
+\DoxyCodeLine{35     \}}
+\DoxyCodeLine{36 }
+\DoxyCodeLine{37     \mbox{\hyperlink{structBoltzmannDeltaETable}{BoltzmannDeltaETable}}(\textcolor{keyword}{const} std::vector<double>\& all\_dEs, \textcolor{keywordtype}{double} T\_, \textcolor{keywordtype}{double} eps\_ = 1e-\/6)}
+\DoxyCodeLine{38         : eps(eps\_), T(T\_)}
+\DoxyCodeLine{39     \{}
+\DoxyCodeLine{40         \textcolor{keywordflow}{if} (T == 0.0) T = 1e-\/12;}
+\DoxyCodeLine{41         \textcolor{keywordflow}{for} (\textcolor{keywordtype}{double} dE : all\_dEs) \{}
+\DoxyCodeLine{42             \textcolor{keywordtype}{long} \textcolor{keywordtype}{long} key = key\_of(dE, eps);}
+\DoxyCodeLine{43             table[key] = std::exp(-\/dE / T);}
+\DoxyCodeLine{44         \}}
+\DoxyCodeLine{45     \}}
+\DoxyCodeLine{46 }
+\DoxyCodeLine{47     \textcolor{keyword}{inline} \textcolor{keywordtype}{double} lookup(\textcolor{keywordtype}{double} dE) \{}
+\DoxyCodeLine{48         \textcolor{keywordtype}{long} \textcolor{keywordtype}{long} key = key\_of(dE, eps);}
+\DoxyCodeLine{49         \textcolor{keyword}{auto} it = table.find(key);}
+\DoxyCodeLine{50         \textcolor{keywordflow}{if} (it != table.end()) \textcolor{keywordflow}{return} it-\/>second;}
+\DoxyCodeLine{51 }
+\DoxyCodeLine{52         \textcolor{comment}{// Fallback: compute Boltzmann factor on the fly and insert it}}
+\DoxyCodeLine{53         \textcolor{keywordtype}{double} Tloc = T;}
+\DoxyCodeLine{54         \textcolor{keywordflow}{if} (Tloc == 0.0) Tloc = 1e-\/12;}
+\DoxyCodeLine{55         \textcolor{keywordtype}{double} val = std::exp(-\/dE / Tloc);}
+\DoxyCodeLine{56         table[key] = val;}
+\DoxyCodeLine{57         \textcolor{keywordflow}{return} val;}
+\DoxyCodeLine{58     \}}
+\DoxyCodeLine{59 \};}
+\DoxyCodeLine{60 }
+\DoxyCodeLine{65 \textcolor{keyword}{struct }\mbox{\hyperlink{structSimulationParameters}{SimulationParameters}} \{}
+\DoxyCodeLine{66     \textcolor{keywordtype}{int} num\_steps;}
+\DoxyCodeLine{67     \textcolor{keywordtype}{int} simulation\_method;}
+\DoxyCodeLine{68     \textcolor{keywordtype}{int} lattice\_side;}
+\DoxyCodeLine{69     \textcolor{keywordtype}{double} w1\_12; \textcolor{comment}{// Interaction energy between species 1 and 2 at 1st NN}}
+\DoxyCodeLine{70     \textcolor{keywordtype}{double} w2\_12; \textcolor{comment}{// Interaction energy between species 1 and 2 at 2nd NN}}
+\DoxyCodeLine{71     \textcolor{keywordtype}{double} w1\_13; \textcolor{comment}{// Interaction energy between species 1 and 3 at 1st NN}}
+\DoxyCodeLine{72     \textcolor{keywordtype}{double} w2\_13; \textcolor{comment}{// Interaction energy between species 1 and 3 at 2nd NN}}
+\DoxyCodeLine{73     \textcolor{keywordtype}{double} w1\_23; \textcolor{comment}{// Interaction energy between species 2 and 3 at 1st NN}}
+\DoxyCodeLine{74     \textcolor{keywordtype}{double} w2\_23; \textcolor{comment}{// Interaction energy between species 2 and 3 at 2nd NN}}
+\DoxyCodeLine{75     \textcolor{keywordtype}{double} Jm1; \textcolor{comment}{// 1st NN magnetic interaction energy}}
+\DoxyCodeLine{76     \textcolor{keywordtype}{double} Jm2; \textcolor{comment}{// 2nd NN magnetic interaction energy}}
+\DoxyCodeLine{77     \textcolor{keywordtype}{double} Jm3; \textcolor{comment}{// 3rd NN interaction energy}}
+\DoxyCodeLine{78     \textcolor{keywordtype}{double} Jm4; \textcolor{comment}{// 4th NN magnetic interaction energy}}
+\DoxyCodeLine{79     \textcolor{keywordtype}{double} Jm5; \textcolor{comment}{// 5th NN magnetic interaction energy}}
+\DoxyCodeLine{80     \textcolor{keywordtype}{double} Jm6; \textcolor{comment}{// 6th NN interaction energy}}
+\DoxyCodeLine{81     \textcolor{keywordtype}{double} T\_start;}
+\DoxyCodeLine{82     \textcolor{keywordtype}{double} T\_end;}
+\DoxyCodeLine{83     \textcolor{keywordtype}{double} step\_T;}
+\DoxyCodeLine{84     \textcolor{keywordtype}{double} H\_start;}
+\DoxyCodeLine{85     \textcolor{keywordtype}{double} H\_end;}
+\DoxyCodeLine{86     \textcolor{keywordtype}{double} step\_H;}
+\DoxyCodeLine{87     \textcolor{keywordtype}{int} steps\_to\_output;}
+\DoxyCodeLine{88     \textcolor{keywordtype}{bool} flag\_save\_config;}
+\DoxyCodeLine{89     \textcolor{keywordtype}{bool} flag\_loop;}
+\DoxyCodeLine{90     \textcolor{keywordtype}{bool} flag\_compute\_lro;}
+\DoxyCodeLine{91     \textcolor{comment}{// Element symbols defined in the input file (e.g., "{}Cu"{}, "{}Ni"{}, "{}Al"{}).}}
+\DoxyCodeLine{92     std::string atom1;}
+\DoxyCodeLine{93     std::string atom2;}
+\DoxyCodeLine{94     std::string atom3;}
+\DoxyCodeLine{95     }
+\DoxyCodeLine{96     \textcolor{comment}{// Pre-\/computed BEG energy coefficients (computed once at initialization)}}
+\DoxyCodeLine{97     \textcolor{keywordtype}{double} \mbox{\hyperlink{structSimulationParameters_a262ebe5551464eb281baf9e2fb2b73d4}{jota1}}; }
+\DoxyCodeLine{98     \textcolor{keywordtype}{double} \mbox{\hyperlink{structSimulationParameters_a8f761f27ec693f2d79b9e9c9b8e65ded}{jota2}}; }
+\DoxyCodeLine{99     \textcolor{keywordtype}{double} \mbox{\hyperlink{structSimulationParameters_a8e03f09391a5d12bfe0eebc9a9a12a03}{ka1}};   }
+\DoxyCodeLine{100     \textcolor{keywordtype}{double} \mbox{\hyperlink{structSimulationParameters_ae1c35e512d841d1114653d1e3432f410}{ka2}};   }
+\DoxyCodeLine{101     \textcolor{keywordtype}{double} \mbox{\hyperlink{structSimulationParameters_aee2b3812919cfb7a8e30b4498b6757b4}{ele1}};  }
+\DoxyCodeLine{102     \textcolor{keywordtype}{double} \mbox{\hyperlink{structSimulationParameters_a7feb47e54938560354b23f74d8be4531}{ele2}};  }
+\DoxyCodeLine{103 }
+\DoxyCodeLine{104     \mbox{\hyperlink{structSimulationParameters}{SimulationParameters}}(\textcolor{keywordtype}{int} steps, \textcolor{keywordtype}{int} sim, \textcolor{keywordtype}{int} side, \textcolor{keywordtype}{double} w1\_12, \textcolor{keywordtype}{double} w2\_12, \textcolor{keywordtype}{double} w1\_13, }
+\DoxyCodeLine{105                          \textcolor{keywordtype}{double} w2\_13, \textcolor{keywordtype}{double} w1\_23, \textcolor{keywordtype}{double} w2\_23, \textcolor{keywordtype}{double} j1, \textcolor{keywordtype}{double} j2, \textcolor{keywordtype}{double} j3, \textcolor{keywordtype}{double} j4, \textcolor{keywordtype}{double} j5, \textcolor{keywordtype}{double} j6,}
+\DoxyCodeLine{106                          \textcolor{keywordtype}{double} t\_s, \textcolor{keywordtype}{double} t\_e, \textcolor{keywordtype}{double} dt, \textcolor{keywordtype}{double} h\_start, \textcolor{keywordtype}{double} h\_end, }
+\DoxyCodeLine{107                          \textcolor{keywordtype}{double} dh, \textcolor{keywordtype}{int} step\_out, \textcolor{keywordtype}{bool} flag\_red, \textcolor{keywordtype}{bool} loop)}
+\DoxyCodeLine{108         : num\_steps(steps), simulation\_method(sim), lattice\_side(side), }
+\DoxyCodeLine{109         w1\_12(w1\_12), w2\_12(w2\_12), w1\_13(w1\_13), w2\_13(w2\_13), w1\_23(w1\_23), w2\_23(w2\_23), }
+\DoxyCodeLine{110         Jm1(j1), Jm2(j2), Jm3(j3), Jm4(j4), Jm5(j5), Jm6(j6), T\_start(t\_s), T\_end(t\_e), step\_T(dt),H\_start(h\_start), H\_end(h\_end), }
+\DoxyCodeLine{111         step\_H(dh), steps\_to\_output(step\_out), flag\_save\_config(flag\_red), flag\_loop(loop), flag\_compute\_lro(true),}
+\DoxyCodeLine{112         \mbox{\hyperlink{structSimulationParameters_a262ebe5551464eb281baf9e2fb2b73d4}{jota1}}(0.25 * w1\_13),}
+\DoxyCodeLine{113         \mbox{\hyperlink{structSimulationParameters_a8f761f27ec693f2d79b9e9c9b8e65ded}{jota2}}(0.25 * w2\_13),}
+\DoxyCodeLine{114         \mbox{\hyperlink{structSimulationParameters_a8e03f09391a5d12bfe0eebc9a9a12a03}{ka1}}(0.25 * (2 * w1\_12 + 2 * w1\_23 -\/ w1\_13)),}
+\DoxyCodeLine{115         \mbox{\hyperlink{structSimulationParameters_ae1c35e512d841d1114653d1e3432f410}{ka2}}(0.25 * (2 * w2\_12 + 2 * w2\_23 -\/ w2\_13)),}
+\DoxyCodeLine{116         \mbox{\hyperlink{structSimulationParameters_aee2b3812919cfb7a8e30b4498b6757b4}{ele1}}(0.25 * (w1\_12 -\/ w1\_23)),}
+\DoxyCodeLine{117         \mbox{\hyperlink{structSimulationParameters_a7feb47e54938560354b23f74d8be4531}{ele2}}(0.25 * (w2\_12 -\/ w2\_23)) \{\}}
+\DoxyCodeLine{118 \};}
+\DoxyCodeLine{119 }
+\DoxyCodeLine{120 \textcolor{keyword}{inline} std::ostream\& operator<<(std::ostream\& os, \textcolor{keyword}{const} \mbox{\hyperlink{structSimulationParameters}{SimulationParameters}}\& p) \{}
+\DoxyCodeLine{121     os << \textcolor{stringliteral}{"{}  NUM\_STEPS: "{}} << p.num\_steps << \textcolor{charliteral}{'\(\backslash\)n'}}
+\DoxyCodeLine{122        << \textcolor{stringliteral}{"{}  SIMULATION\_METHOD: "{}} << p.simulation\_method << ((p.simulation\_method == 0) ? \textcolor{stringliteral}{"{} (Chemical Exchange)"{}} : ((p.simulation\_method == 1) ? \textcolor{stringliteral}{"{} (Spin Flip)"{}} : \textcolor{stringliteral}{"{} Chemical + Spin Flip"{}})) << \textcolor{charliteral}{'\(\backslash\)n'}}
+\DoxyCodeLine{123        << \textcolor{stringliteral}{"{}  LATTICE\_SIDE: "{}} << p.lattice\_side << \textcolor{charliteral}{'\(\backslash\)n'}}
+\DoxyCodeLine{124        << \textcolor{stringliteral}{"{}  W1\_12: "{}} << p.w1\_12 << \textcolor{stringliteral}{"{} kB"{}} << \textcolor{charliteral}{'\(\backslash\)n'}}
+\DoxyCodeLine{125        << \textcolor{stringliteral}{"{}  W2\_12: "{}} << p.w2\_12 << \textcolor{stringliteral}{"{} kB"{}} << \textcolor{charliteral}{'\(\backslash\)n'}}
+\DoxyCodeLine{126        << \textcolor{stringliteral}{"{}  W1\_13: "{}} << p.w1\_13 << \textcolor{stringliteral}{"{} kB"{}} << \textcolor{charliteral}{'\(\backslash\)n'}}
+\DoxyCodeLine{127        << \textcolor{stringliteral}{"{}  W2\_13: "{}} << p.w2\_13 << \textcolor{stringliteral}{"{} kB"{}} << \textcolor{charliteral}{'\(\backslash\)n'}}
+\DoxyCodeLine{128        << \textcolor{stringliteral}{"{}  W1\_23: "{}} << p.w1\_23 << \textcolor{stringliteral}{"{} kB"{}} << \textcolor{charliteral}{'\(\backslash\)n'}}
+\DoxyCodeLine{129        << \textcolor{stringliteral}{"{}  W2\_23: "{}} << p.w2\_23 << \textcolor{stringliteral}{"{} kB"{}} << \textcolor{charliteral}{'\(\backslash\)n'}}
+\DoxyCodeLine{130        << \textcolor{stringliteral}{"{}  J\_M1: "{}} << p.Jm1 << \textcolor{stringliteral}{"{} kB"{}} << \textcolor{charliteral}{'\(\backslash\)n'}}
+\DoxyCodeLine{131        << \textcolor{stringliteral}{"{}  J\_M2: "{}} << p.Jm2 << \textcolor{stringliteral}{"{} kB"{}} << \textcolor{charliteral}{'\(\backslash\)n'}}
+\DoxyCodeLine{132        << \textcolor{stringliteral}{"{}  J\_M3: "{}} << p.Jm3 << \textcolor{stringliteral}{"{} kB"{}} << \textcolor{charliteral}{'\(\backslash\)n'}}
+\DoxyCodeLine{133        << \textcolor{stringliteral}{"{}  J\_M4: "{}} << p.Jm4 << \textcolor{stringliteral}{"{} kB"{}} << \textcolor{charliteral}{'\(\backslash\)n'}}
+\DoxyCodeLine{134        << \textcolor{stringliteral}{"{}  J\_M5: "{}} << p.Jm5 << \textcolor{stringliteral}{"{} kB"{}} << \textcolor{charliteral}{'\(\backslash\)n'}}
+\DoxyCodeLine{135        << \textcolor{stringliteral}{"{}  J\_M6: "{}} << p.Jm6 << \textcolor{stringliteral}{"{} kB"{}} << \textcolor{charliteral}{'\(\backslash\)n'}}
+\DoxyCodeLine{136        << \textcolor{stringliteral}{"{}  T\_START: "{}} << p.T\_start << \textcolor{stringliteral}{"{} K"{}} << \textcolor{charliteral}{'\(\backslash\)n'}}
+\DoxyCodeLine{137        << \textcolor{stringliteral}{"{}  T\_END: "{}} << p.T\_end << \textcolor{stringliteral}{"{} K"{}} << \textcolor{charliteral}{'\(\backslash\)n'}}
+\DoxyCodeLine{138        << \textcolor{stringliteral}{"{}  STEP\_T: "{}} << p.step\_T << \textcolor{stringliteral}{"{} K"{}} << \textcolor{charliteral}{'\(\backslash\)n'}}
+\DoxyCodeLine{139        << \textcolor{stringliteral}{"{}  H\_UPPER: "{}} << p.H\_start << \textcolor{stringliteral}{"{} muB"{}} << \textcolor{charliteral}{'\(\backslash\)n'}}
+\DoxyCodeLine{140        << \textcolor{stringliteral}{"{}  H\_LOWER: "{}} << p.H\_end << \textcolor{stringliteral}{"{} muB"{}} << \textcolor{charliteral}{'\(\backslash\)n'}}
+\DoxyCodeLine{141        << \textcolor{stringliteral}{"{}  STEP\_H: "{}} << p.step\_H << \textcolor{stringliteral}{"{} muB"{}} << \textcolor{charliteral}{'\(\backslash\)n'}}
+\DoxyCodeLine{142        << \textcolor{stringliteral}{"{}  LOOP\_FLAG: "{}} << (p.flag\_loop ? \textcolor{stringliteral}{"{}true"{}} : \textcolor{stringliteral}{"{}false"{}}) << \textcolor{charliteral}{'\(\backslash\)n'}}
+\DoxyCodeLine{143        << \textcolor{stringliteral}{"{}  STEPS\_TO\_OUTPUT: "{}} << p.steps\_to\_output << \textcolor{charliteral}{'\(\backslash\)n'}}
+\DoxyCodeLine{144        << \textcolor{stringliteral}{"{}  FLAG\_SAVE\_CONFIG: "{}} << (p.flag\_save\_config ? \textcolor{stringliteral}{"{}true"{}} : \textcolor{stringliteral}{"{}false"{}});}
+\DoxyCodeLine{145     \textcolor{keywordflow}{return} os;}
+\DoxyCodeLine{146 \}}
+\DoxyCodeLine{147 }
+\DoxyCodeLine{155 \textcolor{keywordtype}{void} MonteCarloStepChemicalExchange(\mbox{\hyperlink{classLattice}{Lattice}}\& lattice,}
+\DoxyCodeLine{156                                     \textcolor{keyword}{const} \mbox{\hyperlink{structSimulationParameters}{SimulationParameters}}\& params,}
+\DoxyCodeLine{157                                     \mbox{\hyperlink{structBoltzmannDeltaETable}{BoltzmannDeltaETable}}\& table,}
+\DoxyCodeLine{158                                     \mbox{\hyperlink{structMCStepResults}{MCStepResults}}\& stats);}
+\DoxyCodeLine{159 }
+\DoxyCodeLine{168 \textcolor{keywordtype}{void} MonteCarloStepSpinExtH(\mbox{\hyperlink{classLattice}{Lattice}}\& lattice,}
+\DoxyCodeLine{169                             \textcolor{keywordtype}{double} H,}
+\DoxyCodeLine{170                             \textcolor{keyword}{const} \mbox{\hyperlink{structSimulationParameters}{SimulationParameters}}\& params,}
+\DoxyCodeLine{171                             \mbox{\hyperlink{structBoltzmannDeltaETable}{BoltzmannDeltaETable}}\& table,}
+\DoxyCodeLine{172                             \mbox{\hyperlink{structMCStepResults}{MCStepResults}}\& stats);}
+\DoxyCodeLine{173 }
+\DoxyCodeLine{179 \textcolor{keywordtype}{void} SimulationLoop(\textcolor{keyword}{const} \mbox{\hyperlink{structSimulationParameters}{SimulationParameters}}\& params, }
+\DoxyCodeLine{180                     \textcolor{keyword}{const} \textcolor{keywordtype}{char}* file\_in, }
+\DoxyCodeLine{181                     \textcolor{keyword}{const} \textcolor{keywordtype}{char}* file\_out);}
+\DoxyCodeLine{182 }
+\DoxyCodeLine{183 \textcolor{preprocessor}{\#endif }\textcolor{comment}{// SIMULATION\_H}}
+
+\end{DoxyCode}

@@ -1,0 +1,30 @@
+\hypertarget{neighbor__sums_8h_source}{}\doxysection{neighbor\+\_\+sums.\+h}
+\label{neighbor__sums_8h_source}\index{/media/facundo/archivos/documentos\_facundo/unicen\_doctorado/monte\_carlo\_crystal\_order/src/neighbor\_sums.h@{/media/facundo/archivos/documentos\_facundo/unicen\_doctorado/monte\_carlo\_crystal\_order/src/neighbor\_sums.h}}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{1 \textcolor{preprocessor}{\#ifndef NEIGHBOR\_SUMS\_H}}
+\DoxyCodeLine{2 \textcolor{preprocessor}{\#define NEIGHBOR\_SUMS\_H}}
+\DoxyCodeLine{3 }
+\DoxyCodeLine{4 \textcolor{preprocessor}{\#include <array>}}
+\DoxyCodeLine{5 }
+\DoxyCodeLine{6 \textcolor{comment}{// Forward declaration}}
+\DoxyCodeLine{7 \textcolor{keyword}{class }\mbox{\hyperlink{classLattice}{Lattice}};}
+\DoxyCodeLine{8 }
+\DoxyCodeLine{13 \textcolor{keyword}{struct }\mbox{\hyperlink{structNeighborSpeciesSums}{NeighborSpeciesSums}} \{}
+\DoxyCodeLine{14     \textcolor{keywordtype}{int} linNN\_A;}
+\DoxyCodeLine{15     \textcolor{keywordtype}{int} linNN\_N;}
+\DoxyCodeLine{16     \textcolor{keywordtype}{int} cuadNN\_A;}
+\DoxyCodeLine{17     \textcolor{keywordtype}{int} cuadNN\_N;}
+\DoxyCodeLine{18     \textcolor{keywordtype}{int} linNNN\_A;}
+\DoxyCodeLine{19     \textcolor{keywordtype}{int} linNNN\_N;}
+\DoxyCodeLine{20     \textcolor{keywordtype}{int} cuadNNN\_A;}
+\DoxyCodeLine{21     \textcolor{keywordtype}{int} cuadNNN\_N;}
+\DoxyCodeLine{22 \};}
+\DoxyCodeLine{23 }
+\DoxyCodeLine{31 \mbox{\hyperlink{structNeighborSpeciesSums}{NeighborSpeciesSums}} computeNeighborSpeciesSums(\textcolor{keyword}{const} \mbox{\hyperlink{classLattice}{Lattice}}\& lattice, \textcolor{keywordtype}{int} site, \textcolor{keywordtype}{int} siteNeighbor);}
+\DoxyCodeLine{32 }
+\DoxyCodeLine{39 std::array<int, 6> computeNeighborSpinSums(\textcolor{keyword}{const} \mbox{\hyperlink{classLattice}{Lattice}}\& lattice, \textcolor{keywordtype}{int} site);}
+\DoxyCodeLine{40 }
+\DoxyCodeLine{41 \textcolor{preprocessor}{\#endif }\textcolor{comment}{// NEIGHBOR\_SUMS\_H}}
+
+\end{DoxyCode}

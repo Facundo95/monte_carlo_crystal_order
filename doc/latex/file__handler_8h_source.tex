@@ -1,0 +1,20 @@
+\hypertarget{file__handler_8h_source}{}\doxysection{file\+\_\+handler.\+h}
+\label{file__handler_8h_source}\index{/media/facundo/archivos/documentos\_facundo/unicen\_doctorado/monte\_carlo\_crystal\_order/src/file\_handler.h@{/media/facundo/archivos/documentos\_facundo/unicen\_doctorado/monte\_carlo\_crystal\_order/src/file\_handler.h}}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{1 \textcolor{preprocessor}{\#ifndef FILE\_HANDLER\_H}}
+\DoxyCodeLine{2 \textcolor{preprocessor}{\#define FILE\_HANDLER\_H}}
+\DoxyCodeLine{3 }
+\DoxyCodeLine{4 \textcolor{preprocessor}{\#include <fstream>}}
+\DoxyCodeLine{5 \textcolor{preprocessor}{\#include <string>}}
+\DoxyCodeLine{6 }
+\DoxyCodeLine{7 \textcolor{comment}{// Forward declaration}}
+\DoxyCodeLine{8 \textcolor{keyword}{class }\mbox{\hyperlink{classLattice}{Lattice}};}
+\DoxyCodeLine{9 }
+\DoxyCodeLine{19 \textcolor{keywordtype}{bool} OpenOutputParametersFile(\textcolor{keyword}{const} \textcolor{keywordtype}{char}* nombrefile, std::ofstream\& output\_stream, \textcolor{keyword}{const} \mbox{\hyperlink{classLattice}{Lattice}}\& lattice);}
+\DoxyCodeLine{20 }
+\DoxyCodeLine{29 \textcolor{keywordtype}{bool} OpenFinalRedFile(\textcolor{keyword}{const} \textcolor{keywordtype}{char}* nombrefile, \textcolor{keywordtype}{double} Hache, \textcolor{keywordtype}{double} TEMPERA, \textcolor{keywordtype}{int} count, std::ofstream\& output\_stream);}
+\DoxyCodeLine{30 }
+\DoxyCodeLine{31 \textcolor{preprocessor}{\#endif }\textcolor{comment}{// FILE\_HANDLER\_H}}
+
+\end{DoxyCode}

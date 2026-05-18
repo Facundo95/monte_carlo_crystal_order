@@ -1,0 +1,26 @@
+\hypertarget{mc__helpers_8h_source}{}\doxysection{mc\+\_\+helpers.\+h}
+\label{mc__helpers_8h_source}\index{/media/facundo/archivos/documentos\_facundo/unicen\_doctorado/monte\_carlo\_crystal\_order/src/mc\_helpers.h@{/media/facundo/archivos/documentos\_facundo/unicen\_doctorado/monte\_carlo\_crystal\_order/src/mc\_helpers.h}}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{1 \textcolor{preprocessor}{\#ifndef MC\_HELPERS\_H}}
+\DoxyCodeLine{2 \textcolor{preprocessor}{\#define MC\_HELPERS\_H}}
+\DoxyCodeLine{3 }
+\DoxyCodeLine{4 \textcolor{preprocessor}{\#include <cmath>}}
+\DoxyCodeLine{5 }
+\DoxyCodeLine{6 \textcolor{comment}{// Forward declaration}}
+\DoxyCodeLine{7 \textcolor{keyword}{struct }\mbox{\hyperlink{structBoltzmannDeltaETable}{BoltzmannDeltaETable}};}
+\DoxyCodeLine{8 }
+\DoxyCodeLine{15 \textcolor{keyword}{struct }\mbox{\hyperlink{structMCStepResults}{MCStepResults}} \{}
+\DoxyCodeLine{16     \textcolor{keywordtype}{double}\& DeltaEAcum;}
+\DoxyCodeLine{17     \textcolor{keywordtype}{int}\& changesAccepted;}
+\DoxyCodeLine{18     \textcolor{keywordtype}{int}\& changesAttempted;}
+\DoxyCodeLine{19 }
+\DoxyCodeLine{20     \mbox{\hyperlink{structMCStepResults}{MCStepResults}}(\textcolor{keywordtype}{double}\& dE, \textcolor{keywordtype}{int}\& acc, \textcolor{keywordtype}{int}\& att)}
+\DoxyCodeLine{21         : DeltaEAcum(dE), changesAccepted(acc), changesAttempted(att) \{\}}
+\DoxyCodeLine{22 \};}
+\DoxyCodeLine{23 }
+\DoxyCodeLine{30 \textcolor{keywordtype}{bool} metropolisAccept(\textcolor{keywordtype}{double} dE, \mbox{\hyperlink{structBoltzmannDeltaETable}{BoltzmannDeltaETable}}\& table);}
+\DoxyCodeLine{31 }
+\DoxyCodeLine{32 \textcolor{preprocessor}{\#endif }\textcolor{comment}{// MC\_HELPERS\_H}}
+
+\end{DoxyCode}

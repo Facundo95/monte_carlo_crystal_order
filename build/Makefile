@@ -21,7 +21,11 @@ else
     endif
 endif
 
-SRCS = main.cpp simulation.cpp rng.cpp file_handler.cpp lattice.cpp lattice_output.cpp input_parser.cpp mc_helpers.cpp neighbor_sums.cpp sweep_list.cpp beg_hamiltonian.cpp ising_hamiltonian.cpp
+SRCDIR = ../src
+SRCS = $(SRCDIR)/main.cpp $(SRCDIR)/simulation.cpp $(SRCDIR)/rng.cpp $(SRCDIR)/file_handler.cpp $(SRCDIR)/lattice.cpp \
+    $(SRCDIR)/lattice_output.cpp $(SRCDIR)/input_parser.cpp $(SRCDIR)/mc_helpers.cpp \
+    $(SRCDIR)/neighbor_sums.cpp $(SRCDIR)/sweep_list.cpp $(SRCDIR)/beg_hamiltonian.cpp \
+    $(SRCDIR)/ising_hamiltonian.cpp
 OBJS = $(SRCS:.cpp=.o)
 DOXYGEN = doxygen
 DOXYFILE = Doxyfile
@@ -35,7 +39,6 @@ $(TARGET): $(OBJS)
 	$(CXX) $(CXXFLAGS) -c -o $@ $<
 
 clean:
-	# Use -$(RM) to ignore errors if files don't exist
 	-$(RM) $(TARGET) $(OBJS)
 
 doc: $(SRCS) $(DOXYFILE)

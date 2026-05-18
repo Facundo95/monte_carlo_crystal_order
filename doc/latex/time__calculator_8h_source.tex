@@ -1,0 +1,48 @@
+\hypertarget{time__calculator_8h_source}{}\doxysection{time\+\_\+calculator.\+h}
+\label{time__calculator_8h_source}\index{/media/facundo/archivos/documentos\_facundo/unicen\_doctorado/monte\_carlo\_crystal\_order/src/time\_calculator.h@{/media/facundo/archivos/documentos\_facundo/unicen\_doctorado/monte\_carlo\_crystal\_order/src/time\_calculator.h}}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{1 \textcolor{preprocessor}{\#ifndef TIME\_CALCULATOR\_H}}
+\DoxyCodeLine{2 \textcolor{preprocessor}{\#define TIME\_CALCULATOR\_H}}
+\DoxyCodeLine{3 }
+\DoxyCodeLine{4 \textcolor{preprocessor}{\#include <chrono>}}
+\DoxyCodeLine{5 \textcolor{preprocessor}{\#include <iostream>}}
+\DoxyCodeLine{6 \textcolor{preprocessor}{\#include <iomanip>}}
+\DoxyCodeLine{7 }
+\DoxyCodeLine{8 \textcolor{keyword}{class }\mbox{\hyperlink{classTimeCalculator}{TimeCalculator}} \{}
+\DoxyCodeLine{9 \textcolor{keyword}{private}:}
+\DoxyCodeLine{10     std::chrono::time\_point<std::chrono::high\_resolution\_clock> startTime;}
+\DoxyCodeLine{11     std::chrono::time\_point<std::chrono::high\_resolution\_clock> endTime;}
+\DoxyCodeLine{12     \textcolor{keywordtype}{double} durationSeconds;}
+\DoxyCodeLine{13  }
+\DoxyCodeLine{14 \textcolor{keyword}{public}:}
+\DoxyCodeLine{15     \mbox{\hyperlink{classTimeCalculator}{TimeCalculator}}() : durationSeconds(0.0) \{\}}
+\DoxyCodeLine{16 }
+\DoxyCodeLine{17     \textcolor{keywordtype}{void} start() \{}
+\DoxyCodeLine{18         startTime = std::chrono::high\_resolution\_clock::now();}
+\DoxyCodeLine{19     \}}
+\DoxyCodeLine{20  }
+\DoxyCodeLine{21     \textcolor{keywordtype}{void} stop() \{}
+\DoxyCodeLine{22         endTime = std::chrono::high\_resolution\_clock::now();}
+\DoxyCodeLine{23         std::chrono::duration<double> duration = endTime -\/ startTime;}
+\DoxyCodeLine{24         durationSeconds = duration.count();}
+\DoxyCodeLine{25     \}}
+\DoxyCodeLine{26     }
+\DoxyCodeLine{27     \textcolor{keywordtype}{double} getDurationSeconds()\textcolor{keyword}{ const }\{}
+\DoxyCodeLine{28         \textcolor{keywordflow}{return} durationSeconds;}
+\DoxyCodeLine{29     \}}
+\DoxyCodeLine{30     }
+\DoxyCodeLine{31     \textcolor{keywordtype}{void} displayDuration()\textcolor{keyword}{ const }\{}
+\DoxyCodeLine{32         \textcolor{keywordtype}{int} hours = \textcolor{keyword}{static\_cast<}\textcolor{keywordtype}{int}\textcolor{keyword}{>}(durationSeconds / 3600);}
+\DoxyCodeLine{33         \textcolor{keywordtype}{int} minutes = \textcolor{keyword}{static\_cast<}\textcolor{keywordtype}{int}\textcolor{keyword}{>}((durationSeconds -\/ hours * 3600) / 60);}
+\DoxyCodeLine{34         \textcolor{keywordtype}{int} seconds = \textcolor{keyword}{static\_cast<}\textcolor{keywordtype}{int}\textcolor{keyword}{>}(durationSeconds -\/ hours * 3600 -\/ minutes * 60);}
+\DoxyCodeLine{35         std::cout << \textcolor{stringliteral}{"{}Total time: "{}}}
+\DoxyCodeLine{36         << std::setfill(\textcolor{charliteral}{'0'}) << std::setw(2) << hours << \textcolor{stringliteral}{"{}:"{}}}
+\DoxyCodeLine{37         << std::setfill(\textcolor{charliteral}{'0'}) << std::setw(2) << minutes << \textcolor{stringliteral}{"{}:"{}}}
+\DoxyCodeLine{38         << std::setfill(\textcolor{charliteral}{'0'}) << std::setw(2) << seconds << std::endl;}
+\DoxyCodeLine{39     \}}
+\DoxyCodeLine{40 \};}
+\DoxyCodeLine{41 }
+\DoxyCodeLine{42 \textcolor{preprocessor}{\#endif }\textcolor{comment}{// TIME\_CALCULATOR\_H}}
+
+\end{DoxyCode}

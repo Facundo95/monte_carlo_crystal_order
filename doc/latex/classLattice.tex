@@ -1,0 +1,239 @@
+\hypertarget{classLattice}{}\doxysection{Referencia de la Clase Lattice}
+\label{classLattice}\index{Lattice@{Lattice}}
+\doxysubsection*{Clases}
+\begin{DoxyCompactItemize}
+\item 
+struct \mbox{\hyperlink{structLattice_1_1LROParameters}{LROParameters}}
+\item 
+struct \mbox{\hyperlink{structLattice_1_1Observables}{Observables}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Métodos públicos}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{classLattice_a2a2e1e3309efef7bfacbcd1575e28c48}\label{classLattice_a2a2e1e3309efef7bfacbcd1575e28c48}} 
+{\bfseries Lattice} (int LATTICE\+\_\+\+SIDE)
+\item 
+void \mbox{\hyperlink{classLattice_a33ee2474afae05597d23d0572a4da65c}{load\+Initial\+Configuration}} (const std\+::string \&filename)
+\begin{DoxyCompactList}\small\item\em Loads the initial configuration from a specified file. The file should contain the species and spin states for each lattice site. \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{classLattice_a800fbeabcea9a5491834892acb873187}\label{classLattice_a800fbeabcea9a5491834892acb873187}} 
+void {\bfseries initialize\+Neighbors} ()
+\begin{DoxyCompactList}\small\item\em Initializes the neighbor lists for each lattice site. \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{classLattice_acc6bf4835261b667cde2df7dda5d19cc}\label{classLattice_acc6bf4835261b667cde2df7dda5d19cc}} 
+int {\bfseries total\+Sites} () const
+\begin{DoxyCompactList}\small\item\em Returns the total number of sites in the lattice. \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{classLattice_a4ca4028d8652bd4a807bb91a4ff07a50}\label{classLattice_a4ca4028d8652bd4a807bb91a4ff07a50}} 
+const std\+::array$<$ int, 8 $>$ \& {\bfseries get\+Neighbors1} (int site) const
+\begin{DoxyCompactList}\small\item\em Accessor methods for neighbors. \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{classLattice_aaf3aa76ab12c0ff5f906a812c9651076}\label{classLattice_aaf3aa76ab12c0ff5f906a812c9651076}} 
+int {\bfseries get\+Spin} (int site) const
+\begin{DoxyCompactList}\small\item\em Accessors for spin. \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{classLattice_ac8c683ec09f847272f45542115ff254c}\label{classLattice_ac8c683ec09f847272f45542115ff254c}} 
+int {\bfseries get\+Species} (int site) const
+\begin{DoxyCompactList}\small\item\em Accessors for species. \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{classLattice_ab7347b4dee86fa7d659369b9003f5954}\label{classLattice_ab7347b4dee86fa7d659369b9003f5954}} 
+void {\bfseries flip\+Spin} (int site)
+\begin{DoxyCompactList}\small\item\em Mutator for spin. \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{classLattice_a902ad8f076fd46ef09b9e8485a1eaf9b}\label{classLattice_a902ad8f076fd46ef09b9e8485a1eaf9b}} 
+void {\bfseries exchange\+Species} (int site1, int site2)
+\begin{DoxyCompactList}\small\item\em Mutator for species exchange. \end{DoxyCompactList}\item 
+double \mbox{\hyperlink{classLattice_ab07d9483eb8de2b7a1963ddd43db2085}{calculate\+Site\+Magnetic\+Energy}} (int Spin, double j1, double j2, double j3, double j4, double j5, double j6, double H, double sum1, double sum2, double sum3, double sum4, double sum5, double sum6) const
+\begin{DoxyCompactList}\small\item\em Calculates the magnetic energy contribution for a given site (all 6 shells). \end{DoxyCompactList}\item 
+int \mbox{\hyperlink{classLattice_a2f72da907ba468ed8bff9db688ca2e5c}{calculate\+Neighbor\+Spin\+Sum}} (int site, int shell\+\_\+type) const
+\begin{DoxyCompactList}\small\item\em Calculates the sum of neighbor spins for a given shell type. \end{DoxyCompactList}\item 
+int \mbox{\hyperlink{classLattice_ab80070a23bfbd759a52528bb71849733}{calculate\+Neighbor\+Species\+Sum}} (int site, int shell\+\_\+type, int order) const
+\begin{DoxyCompactList}\small\item\em Calculates the sum of neighbor species for a given shell type and order. \end{DoxyCompactList}\item 
+bool \mbox{\hyperlink{classLattice_a10b4c3d221ac6d6f888d633fdea1298e}{save\+Final\+Configuration}} (const char $\ast$nombrefile, double Hache, double TEMPERA, int count)
+\begin{DoxyCompactList}\small\item\em Saves the final configuration to a file and returns the opened ofstream. The output is written in an extended .xyz-\/like format\+: first line is the number of atoms, second line is a comment containing H/\+T/count, and each following line contains\+: Element x y z species spin The returned std\+::ofstream is moved to the caller and remains open. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classLattice_a535b4b5abaddfdb23cacb16d159cfd6a}{write\+Output}} (std\+::ofstream \&parout, int step\+\_\+count, double T, double H, double energy\+Value, bool compute\+LRO=true, bool print\+To\+Console=false) const
+\begin{DoxyCompactList}\small\item\em Write output line to {\ttfamily parout}. Controls which diagnostics are computed. \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{classLattice_a94701ec1f6e9594ac638c554cc125267}\label{classLattice_a94701ec1f6e9594ac638c554cc125267}} 
+void {\bfseries set\+Atom\+Names} (const std\+::string \&a1, const std\+::string \&a2, const std\+::string \&a3)
+\begin{DoxyCompactList}\small\item\em Set element symbols (e.\+g., \char`\"{}\+Cu\char`\"{}, \char`\"{}\+Ni\char`\"{}, \char`\"{}\+Al\char`\"{}) used when parsing/writing .xyz files. \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{classLattice_acab4e0f37753e8ceaff0b6716584c5da}\label{classLattice_acab4e0f37753e8ceaff0b6716584c5da}} 
+const std\+::string \& {\bfseries get\+Atom1} () const
+\begin{DoxyCompactList}\small\item\em Get element symbols for output file headers. \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{classLattice_afb1ac92c95a4feb58fd6145fabf7f6b6}\label{classLattice_afb1ac92c95a4feb58fd6145fabf7f6b6}} 
+const std\+::string \& {\bfseries get\+Atom2} () const
+\item 
+\mbox{\Hypertarget{classLattice_afab4e16f9f1998ddfa411e140c4b43ce}\label{classLattice_afab4e16f9f1998ddfa411e140c4b43ce}} 
+const std\+::string \& {\bfseries get\+Atom3} () const
+\end{DoxyCompactItemize}
+\begin{Indent}\textbf{ Long Range Order (LRO) helpers}\par
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{structLattice_1_1Observables}{Observables}} \mbox{\hyperlink{classLattice_a1a227375e8a496743067486450071c9b}{compute\+Observables}} () const
+\begin{DoxyCompactList}\small\item\em Compute observables (LRO parameters and normalized magnetization) in a single pass. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\end{Indent}
+
+
+\doxysubsection{Documentación de las funciones miembro}
+\mbox{\Hypertarget{classLattice_ab80070a23bfbd759a52528bb71849733}\label{classLattice_ab80070a23bfbd759a52528bb71849733}} 
+\index{Lattice@{Lattice}!calculateNeighborSpeciesSum@{calculateNeighborSpeciesSum}}
+\index{calculateNeighborSpeciesSum@{calculateNeighborSpeciesSum}!Lattice@{Lattice}}
+\doxysubsubsection{\texorpdfstring{calculateNeighborSpeciesSum()}{calculateNeighborSpeciesSum()}}
+{\footnotesize\ttfamily int Lattice\+::calculate\+Neighbor\+Species\+Sum (\begin{DoxyParamCaption}\item[{int}]{site,  }\item[{int}]{shell\+\_\+type,  }\item[{int}]{order }\end{DoxyParamCaption}) const}
+
+
+
+Calculates the sum of neighbor species for a given shell type and order. 
+
+Calculates the sum of species (red\+\_\+flat) for a specific neighbor shell.
+
+
+\begin{DoxyParams}{Parámetros}
+{\em shell\+\_\+type} & Must be 1, 2, 3, or 6. \\
+\hline
+{\em order} & Must be 1 (linear) or 2 (quadratic). \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{classLattice_a2f72da907ba468ed8bff9db688ca2e5c}\label{classLattice_a2f72da907ba468ed8bff9db688ca2e5c}} 
+\index{Lattice@{Lattice}!calculateNeighborSpinSum@{calculateNeighborSpinSum}}
+\index{calculateNeighborSpinSum@{calculateNeighborSpinSum}!Lattice@{Lattice}}
+\doxysubsubsection{\texorpdfstring{calculateNeighborSpinSum()}{calculateNeighborSpinSum()}}
+{\footnotesize\ttfamily int Lattice\+::calculate\+Neighbor\+Spin\+Sum (\begin{DoxyParamCaption}\item[{int}]{site,  }\item[{int}]{shell\+\_\+type }\end{DoxyParamCaption}) const}
+
+
+
+Calculates the sum of neighbor spins for a given shell type. 
+
+Calculates the sum of spins for a specific neighbor shell (3rd or 6th NN).
+
+
+\begin{DoxyParams}{Parámetros}
+{\em shell\+\_\+type} & Must be 3 (3rd NN) or 6 (6th NN). (Original Jm1 and Jm2 (1st and 2nd NN) were 0, so only 3 and 6 are implemented here). \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{classLattice_ab07d9483eb8de2b7a1963ddd43db2085}\label{classLattice_ab07d9483eb8de2b7a1963ddd43db2085}} 
+\index{Lattice@{Lattice}!calculateSiteMagneticEnergy@{calculateSiteMagneticEnergy}}
+\index{calculateSiteMagneticEnergy@{calculateSiteMagneticEnergy}!Lattice@{Lattice}}
+\doxysubsubsection{\texorpdfstring{calculateSiteMagneticEnergy()}{calculateSiteMagneticEnergy()}}
+{\footnotesize\ttfamily double Lattice\+::calculate\+Site\+Magnetic\+Energy (\begin{DoxyParamCaption}\item[{int}]{Spin,  }\item[{double}]{j1,  }\item[{double}]{j2,  }\item[{double}]{j3,  }\item[{double}]{j4,  }\item[{double}]{j5,  }\item[{double}]{j6,  }\item[{double}]{H,  }\item[{double}]{sum1,  }\item[{double}]{sum2,  }\item[{double}]{sum3,  }\item[{double}]{sum4,  }\item[{double}]{sum5,  }\item[{double}]{sum6 }\end{DoxyParamCaption}) const}
+
+
+
+Calculates the magnetic energy contribution for a given site (all 6 shells). 
+
+Calculates the chemical energy contribution for a given site.
+
+
+\begin{DoxyParams}{Parámetros}
+{\em type} & Species type at the site. \\
+\hline
+{\em JOTA1,JOTA2} & Interaction parameters for 1st and 2nd NN. \\
+\hline
+{\em KA1,KA2} & Interaction parameters for 1st and 2nd NN. \\
+\hline
+{\em ELE1,ELE2} & Interaction parameters for 1st and 2nd NN. \\
+\hline
+{\em sum\+Lin1,sum\+Cuad1} & Linear and quadratic sums over 1st NN species. \\
+\hline
+{\em sum\+Lin2,sum\+Cuad2} & Linear and quadratic sums over 2nd NN species.\\
+\hline
+\end{DoxyParams}
+Calculates the magnetic energy contribution for a given site. 
+\begin{DoxyParams}{Parámetros}
+{\em Spin} & Spin state at the site. \\
+\hline
+{\em j3,j6} & Interaction parameters for 3rd and 6th NN. \\
+\hline
+{\em H} & External magnetic field. \\
+\hline
+{\em sum3,sum6} & Sums over neighbor spins for 3rd and 6th NN. \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{classLattice_a1a227375e8a496743067486450071c9b}\label{classLattice_a1a227375e8a496743067486450071c9b}} 
+\index{Lattice@{Lattice}!computeObservables@{computeObservables}}
+\index{computeObservables@{computeObservables}!Lattice@{Lattice}}
+\doxysubsubsection{\texorpdfstring{computeObservables()}{computeObservables()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{structLattice_1_1Observables}{Lattice\+::\+Observables}} Lattice\+::compute\+Observables (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+
+
+Compute observables (LRO parameters and normalized magnetization) in a single pass. 
+
+Calculates and writes the LRO parameters and Magnetization to the output file.
+
+
+\begin{DoxyParams}{Parámetros}
+{\em parout} & Output file stream. \\
+\hline
+{\em step\+\_\+count} & Current simulation step count. \\
+\hline
+{\em T} & Current temperature. \\
+\hline
+{\em H} & Current magnetic field. \\
+\hline
+{\em Delta\+EAcumM} & Accumulated energy change for magnetization. \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{classLattice_a33ee2474afae05597d23d0572a4da65c}\label{classLattice_a33ee2474afae05597d23d0572a4da65c}} 
+\index{Lattice@{Lattice}!loadInitialConfiguration@{loadInitialConfiguration}}
+\index{loadInitialConfiguration@{loadInitialConfiguration}!Lattice@{Lattice}}
+\doxysubsubsection{\texorpdfstring{loadInitialConfiguration()}{loadInitialConfiguration()}}
+{\footnotesize\ttfamily void Lattice\+::load\+Initial\+Configuration (\begin{DoxyParamCaption}\item[{const std\+::string \&}]{filename }\end{DoxyParamCaption})}
+
+
+
+Loads the initial configuration from a specified file. The file should contain the species and spin states for each lattice site. 
+
+
+\begin{DoxyParams}{Parámetros}
+{\em filename} & The path to the input configuration file. \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{classLattice_a10b4c3d221ac6d6f888d633fdea1298e}\label{classLattice_a10b4c3d221ac6d6f888d633fdea1298e}} 
+\index{Lattice@{Lattice}!saveFinalConfiguration@{saveFinalConfiguration}}
+\index{saveFinalConfiguration@{saveFinalConfiguration}!Lattice@{Lattice}}
+\doxysubsubsection{\texorpdfstring{saveFinalConfiguration()}{saveFinalConfiguration()}}
+{\footnotesize\ttfamily bool Lattice\+::save\+Final\+Configuration (\begin{DoxyParamCaption}\item[{const char $\ast$}]{nombrefile,  }\item[{double}]{Hache,  }\item[{double}]{TEMPERA,  }\item[{int}]{count }\end{DoxyParamCaption})}
+
+
+
+Saves the final configuration to a file and returns the opened ofstream. The output is written in an extended .xyz-\/like format\+: first line is the number of atoms, second line is a comment containing H/\+T/count, and each following line contains\+: Element x y z species spin The returned std\+::ofstream is moved to the caller and remains open. 
+
+Saves the final structural configuration to a text file.
+
+
+\begin{DoxyParams}{Parámetros}
+{\em nombrefile} & Name of the output file. \\
+\hline
+{\em Hache} & Current magnetic field. \\
+\hline
+{\em TEMPERA} & Current temperature. \\
+\hline
+{\em count} & Current simulation step count. \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{classLattice_a535b4b5abaddfdb23cacb16d159cfd6a}\label{classLattice_a535b4b5abaddfdb23cacb16d159cfd6a}} 
+\index{Lattice@{Lattice}!writeOutput@{writeOutput}}
+\index{writeOutput@{writeOutput}!Lattice@{Lattice}}
+\doxysubsubsection{\texorpdfstring{writeOutput()}{writeOutput()}}
+{\footnotesize\ttfamily void Lattice\+::write\+Output (\begin{DoxyParamCaption}\item[{std\+::ofstream \&}]{parout,  }\item[{int}]{step\+\_\+count,  }\item[{double}]{T,  }\item[{double}]{H,  }\item[{double}]{energy\+Value,  }\item[{bool}]{compute\+LRO = {\ttfamily true},  }\item[{bool}]{print\+To\+Console = {\ttfamily false} }\end{DoxyParamCaption}) const}
+
+
+
+Write output line to {\ttfamily parout}. Controls which diagnostics are computed. 
+
+
+\begin{DoxyParams}{Parámetros}
+{\em parout} & Output stream. \\
+\hline
+{\em step\+\_\+count} & Current simulation step. \\
+\hline
+{\em T} & Temperature. \\
+\hline
+{\em H} & Magnetic field. \\
+\hline
+{\em energy\+Value} & Energy value to record (e.\+g., total energy). \\
+\hline
+{\em compute\+LRO} & If true, compute and include full LRO parameters; otherwise only magnetization and energy are written. \\
+\hline
+{\em print\+To\+Console} & If true, mirror the output to stdout. \\
+\hline
+\end{DoxyParams}
+
+
+La documentación para esta clase fue generada a partir de los siguientes ficheros\+:\begin{DoxyCompactItemize}
+\item 
+/media/facundo/archivos/documentos\+\_\+facundo/unicen\+\_\+doctorado/monte\+\_\+carlo\+\_\+crystal\+\_\+order/src/lattice.\+h\item 
+/media/facundo/archivos/documentos\+\_\+facundo/unicen\+\_\+doctorado/monte\+\_\+carlo\+\_\+crystal\+\_\+order/src/lattice.\+cpp\end{DoxyCompactItemize}

@@ -1,0 +1,155 @@
+\hypertarget{lattice_8h_source}{}\doxysection{lattice.\+h}
+\label{lattice_8h_source}\index{/media/facundo/archivos/documentos\_facundo/unicen\_doctorado/monte\_carlo\_crystal\_order/src/lattice.h@{/media/facundo/archivos/documentos\_facundo/unicen\_doctorado/monte\_carlo\_crystal\_order/src/lattice.h}}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{1 \textcolor{preprocessor}{\#ifndef LATTICE\_H}}
+\DoxyCodeLine{2 \textcolor{preprocessor}{\#define LATTICE\_H}}
+\DoxyCodeLine{3 }
+\DoxyCodeLine{4 \textcolor{preprocessor}{\#include <vector>}}
+\DoxyCodeLine{5 \textcolor{preprocessor}{\#include <array>}}
+\DoxyCodeLine{6 \textcolor{preprocessor}{\#include <string>}}
+\DoxyCodeLine{7 \textcolor{preprocessor}{\#include <fstream>}}
+\DoxyCodeLine{8 \textcolor{preprocessor}{\#include <algorithm>}}
+\DoxyCodeLine{9 \textcolor{preprocessor}{\#include <cctype>}}
+\DoxyCodeLine{10 }
+\DoxyCodeLine{11 \textcolor{keyword}{struct }\mbox{\hyperlink{structSimulationParameters}{SimulationParameters}};}
+\DoxyCodeLine{12 }
+\DoxyCodeLine{13 \textcolor{comment}{/***}}
+\DoxyCodeLine{14 \textcolor{comment}{ * @class Lattice}}
+\DoxyCodeLine{15 \textcolor{comment}{ * @brief Represents a 3D BCC lattice for Monte Carlo simulations.}}
+\DoxyCodeLine{16 \textcolor{comment}{ *}}
+\DoxyCodeLine{17 \textcolor{comment}{ * This class manages the lattice structure, including spin and species}}
+\DoxyCodeLine{18 \textcolor{comment}{ * configurations, neighbor relationships, and energy calculations.}}
+\DoxyCodeLine{19 \textcolor{comment}{ */}}
+\DoxyCodeLine{20 \textcolor{keyword}{class }\mbox{\hyperlink{classLattice}{Lattice}} \{}
+\DoxyCodeLine{21 \textcolor{keyword}{public}:}
+\DoxyCodeLine{22     \textcolor{keyword}{explicit} \mbox{\hyperlink{classLattice}{Lattice}}(\textcolor{keywordtype}{int} LATTICE\_SIDE)}
+\DoxyCodeLine{23         : m\_side(LATTICE\_SIDE),}
+\DoxyCodeLine{24           m\_depth(2 * LATTICE\_SIDE),}
+\DoxyCodeLine{25           m\_total\_sites(2 * LATTICE\_SIDE * LATTICE\_SIDE * LATTICE\_SIDE),}
+\DoxyCodeLine{26           magn\_flat(m\_total\_sites),}
+\DoxyCodeLine{27           red\_flat(m\_total\_sites),}
+\DoxyCodeLine{28           neighbors1(m\_total\_sites),}
+\DoxyCodeLine{29           neighbors2(m\_total\_sites),}
+\DoxyCodeLine{30           neighbors3(m\_total\_sites),}
+\DoxyCodeLine{31           neighbors4(m\_total\_sites),}
+\DoxyCodeLine{32           neighbors5(m\_total\_sites),    }
+\DoxyCodeLine{33           neighbors6(m\_total\_sites)}
+\DoxyCodeLine{34     \{\}}
+\DoxyCodeLine{35 }
+\DoxyCodeLine{40     \textcolor{keywordtype}{void} \mbox{\hyperlink{classLattice_a33ee2474afae05597d23d0572a4da65c}{loadInitialConfiguration}}(\textcolor{keyword}{const} std::string\& filename);}
+\DoxyCodeLine{41     }
+\DoxyCodeLine{43     \textcolor{keywordtype}{void} \mbox{\hyperlink{classLattice_a800fbeabcea9a5491834892acb873187}{initializeNeighbors}}();}
+\DoxyCodeLine{44 }
+\DoxyCodeLine{46     \textcolor{keywordtype}{int} \mbox{\hyperlink{classLattice_acc6bf4835261b667cde2df7dda5d19cc}{totalSites}}()\textcolor{keyword}{ const }\{ \textcolor{keywordflow}{return} m\_total\_sites; \}}
+\DoxyCodeLine{47 }
+\DoxyCodeLine{49     \textcolor{keyword}{const} std::array<int, 8>\& \mbox{\hyperlink{classLattice_a4ca4028d8652bd4a807bb91a4ff07a50}{getNeighbors1}}(\textcolor{keywordtype}{int} site)\textcolor{keyword}{ const }\{ \textcolor{keywordflow}{return} neighbors1[site]; \}}
+\DoxyCodeLine{50     }
+\DoxyCodeLine{52     \textcolor{keywordtype}{int} \mbox{\hyperlink{classLattice_aaf3aa76ab12c0ff5f906a812c9651076}{getSpin}}(\textcolor{keywordtype}{int} site)\textcolor{keyword}{ const }\{ \textcolor{keywordflow}{return} magn\_flat[site]; \}}
+\DoxyCodeLine{53 }
+\DoxyCodeLine{55     \textcolor{keywordtype}{int} \mbox{\hyperlink{classLattice_ac8c683ec09f847272f45542115ff254c}{getSpecies}}(\textcolor{keywordtype}{int} site)\textcolor{keyword}{ const }\{ \textcolor{keywordflow}{return} red\_flat[site]; \}   }
+\DoxyCodeLine{56     }
+\DoxyCodeLine{58     \textcolor{keywordtype}{void} \mbox{\hyperlink{classLattice_ab7347b4dee86fa7d659369b9003f5954}{flipSpin}}(\textcolor{keywordtype}{int} site) \{ magn\_flat[site] = -\/magn\_flat[site]; \}}
+\DoxyCodeLine{59 }
+\DoxyCodeLine{61     \textcolor{keywordtype}{void} \mbox{\hyperlink{classLattice_a902ad8f076fd46ef09b9e8485a1eaf9b}{exchangeSpecies}}(\textcolor{keywordtype}{int} site1, \textcolor{keywordtype}{int} site2) \{}
+\DoxyCodeLine{62         std::swap(red\_flat[site1], red\_flat[site2]);}
+\DoxyCodeLine{63         std::swap(magn\_flat[site1], magn\_flat[site2]);}
+\DoxyCodeLine{64     \}}
+\DoxyCodeLine{65 }
+\DoxyCodeLine{66     \textcolor{comment}{// Total energy calculation moved to BEG and Ising modules:}}
+\DoxyCodeLine{67     \textcolor{comment}{// use calculateTotalChemicalEnergy(...) + calculateTotalIsingEnergy(...)}}
+\DoxyCodeLine{68 }
+\DoxyCodeLine{69     \textcolor{comment}{// NOTE: chemical energy delta calculation moved to beg\_hamiltonian module}}
+\DoxyCodeLine{70     }
+\DoxyCodeLine{72     \textcolor{keywordtype}{double} \mbox{\hyperlink{classLattice_ab07d9483eb8de2b7a1963ddd43db2085}{calculateSiteMagneticEnergy}}(\textcolor{keywordtype}{int} Spin, }
+\DoxyCodeLine{73                                       \textcolor{keywordtype}{double} j1, \textcolor{keywordtype}{double} j2, \textcolor{keywordtype}{double} j3, \textcolor{keywordtype}{double} j4, \textcolor{keywordtype}{double} j5, \textcolor{keywordtype}{double} j6,}
+\DoxyCodeLine{74                                       \textcolor{keywordtype}{double} H, }
+\DoxyCodeLine{75                                       \textcolor{keywordtype}{double} sum1, \textcolor{keywordtype}{double} sum2, \textcolor{keywordtype}{double} sum3, \textcolor{keywordtype}{double} sum4, \textcolor{keywordtype}{double} sum5, \textcolor{keywordtype}{double} sum6) \textcolor{keyword}{const};}
+\DoxyCodeLine{76     }
+\DoxyCodeLine{78     \textcolor{keywordtype}{int} \mbox{\hyperlink{classLattice_a2f72da907ba468ed8bff9db688ca2e5c}{calculateNeighborSpinSum}}(\textcolor{keywordtype}{int} site, \textcolor{keywordtype}{int} shell\_type) \textcolor{keyword}{const};}
+\DoxyCodeLine{79     }
+\DoxyCodeLine{81     \textcolor{keywordtype}{int} \mbox{\hyperlink{classLattice_ab80070a23bfbd759a52528bb71849733}{calculateNeighborSpeciesSum}}(\textcolor{keywordtype}{int} site, \textcolor{keywordtype}{int} shell\_type, \textcolor{keywordtype}{int} order) \textcolor{keyword}{const};}
+\DoxyCodeLine{82     }
+\DoxyCodeLine{89     \textcolor{keywordtype}{bool} \mbox{\hyperlink{classLattice_a10b4c3d221ac6d6f888d633fdea1298e}{saveFinalConfiguration}}(\textcolor{keyword}{const} \textcolor{keywordtype}{char}* nombrefile, }
+\DoxyCodeLine{90                                 \textcolor{keywordtype}{double} Hache, \textcolor{keywordtype}{double} TEMPERA, }
+\DoxyCodeLine{91                                 \textcolor{keywordtype}{int} count);}
+\DoxyCodeLine{92     }
+\DoxyCodeLine{93 }
+\DoxyCodeLine{103     \textcolor{keywordtype}{void} \mbox{\hyperlink{classLattice_a535b4b5abaddfdb23cacb16d159cfd6a}{writeOutput}}(std::ofstream\& parout,}
+\DoxyCodeLine{104                      \textcolor{keywordtype}{int} step\_count,}
+\DoxyCodeLine{105                      \textcolor{keywordtype}{double} T,}
+\DoxyCodeLine{106                      \textcolor{keywordtype}{double} H,}
+\DoxyCodeLine{107                      \textcolor{keywordtype}{double} energyValue,}
+\DoxyCodeLine{108                      \textcolor{keywordtype}{bool} computeLRO = \textcolor{keyword}{true},}
+\DoxyCodeLine{109                  \textcolor{keywordtype}{bool} printToConsole = \textcolor{keyword}{false}) \textcolor{keyword}{const};}
+\DoxyCodeLine{110 }
+\DoxyCodeLine{112     \textcolor{keywordtype}{void} \mbox{\hyperlink{classLattice_a94701ec1f6e9594ac638c554cc125267}{setAtomNames}}(\textcolor{keyword}{const} std::string\& a1, \textcolor{keyword}{const} std::string\& a2, \textcolor{keyword}{const} std::string\& a3) \{}
+\DoxyCodeLine{113         atom1 = a1;}
+\DoxyCodeLine{114         atom2 = a2;}
+\DoxyCodeLine{115         atom3 = a3;}
+\DoxyCodeLine{116         \textcolor{comment}{// store lowercase versions for case-\/insensitive comparisons}}
+\DoxyCodeLine{117         std::transform(atom1.begin(), atom1.end(), atom1.begin(), [](\textcolor{keywordtype}{unsigned} \textcolor{keywordtype}{char} c)\{ return static\_cast<char>(std::tolower(c)); \});}
+\DoxyCodeLine{118         std::transform(atom2.begin(), atom2.end(), atom2.begin(), [](\textcolor{keywordtype}{unsigned} \textcolor{keywordtype}{char} c)\{ return static\_cast<char>(std::tolower(c)); \});}
+\DoxyCodeLine{119         std::transform(atom3.begin(), atom3.end(), atom3.begin(), [](\textcolor{keywordtype}{unsigned} \textcolor{keywordtype}{char} c)\{ return static\_cast<char>(std::tolower(c)); \});}
+\DoxyCodeLine{120     \}}
+\DoxyCodeLine{121 }
+\DoxyCodeLine{123     \textcolor{keyword}{const} std::string\& \mbox{\hyperlink{classLattice_acab4e0f37753e8ceaff0b6716584c5da}{getAtom1}}()\textcolor{keyword}{ const }\{ \textcolor{keywordflow}{return} atom1; \}}
+\DoxyCodeLine{124     \textcolor{keyword}{const} std::string\& getAtom2()\textcolor{keyword}{ const }\{ \textcolor{keywordflow}{return} atom2; \}}
+\DoxyCodeLine{125     \textcolor{keyword}{const} std::string\& getAtom3()\textcolor{keyword}{ const }\{ \textcolor{keywordflow}{return} atom3; \}}
+\DoxyCodeLine{126 }
+\DoxyCodeLine{129     \textcolor{keyword}{struct }\mbox{\hyperlink{structLattice_1_1LROParameters}{LROParameters}} \{}
+\DoxyCodeLine{130         \textcolor{keywordtype}{double} X\_A, X\_Bup, X\_Bdown, X\_C;}
+\DoxyCodeLine{131         \textcolor{keywordtype}{double} Y\_A, Y\_Bup, Y\_Bdown, Y\_C;}
+\DoxyCodeLine{132         \textcolor{keywordtype}{double} Z\_A, Z\_Bup, Z\_Bdown, Z\_C;}
+\DoxyCodeLine{133     \};}
+\DoxyCodeLine{134 }
+\DoxyCodeLine{135     \textcolor{keyword}{struct }\mbox{\hyperlink{structLattice_1_1Observables}{Observables}} \{}
+\DoxyCodeLine{136         \mbox{\hyperlink{structLattice_1_1LROParameters}{LROParameters}} lro;}
+\DoxyCodeLine{137         \textcolor{keywordtype}{double} normalizedMagnetization;}
+\DoxyCodeLine{138     \};}
+\DoxyCodeLine{139 }
+\DoxyCodeLine{141     \mbox{\hyperlink{structLattice_1_1Observables}{Observables}} \mbox{\hyperlink{classLattice_a1a227375e8a496743067486450071c9b}{computeObservables}}() \textcolor{keyword}{const};}
+\DoxyCodeLine{142 }
+\DoxyCodeLine{144 }
+\DoxyCodeLine{145 \textcolor{keyword}{private}:}
+\DoxyCodeLine{146     \textcolor{keywordtype}{int} m\_side;}
+\DoxyCodeLine{147     \textcolor{keywordtype}{int} m\_depth;}
+\DoxyCodeLine{148     \textcolor{keywordtype}{int} m\_total\_sites;}
+\DoxyCodeLine{149 }
+\DoxyCodeLine{150     std::vector<int> magn\_flat;}
+\DoxyCodeLine{151     std::vector<int> red\_flat;}
+\DoxyCodeLine{152     std::vector<std::array<int, 8>>  neighbors1;}
+\DoxyCodeLine{153     std::vector<std::array<int, 6>>  neighbors2;}
+\DoxyCodeLine{154     std::vector<std::array<int, 12>> neighbors3;}
+\DoxyCodeLine{155     std::vector<std::array<int, 24>>  neighbors4;}
+\DoxyCodeLine{156     std::vector<std::array<int, 8>>  neighbors5;}
+\DoxyCodeLine{157     std::vector<std::array<int, 6>>  neighbors6;}
+\DoxyCodeLine{158     }
+\DoxyCodeLine{160     \textcolor{keyword}{inline} \textcolor{keywordtype}{int} idx3D(\textcolor{keywordtype}{int} x, \textcolor{keywordtype}{int} y, \textcolor{keywordtype}{int} z)\textcolor{keyword}{ const }\{}
+\DoxyCodeLine{161         \textcolor{keywordflow}{return} (x * m\_side + y) * m\_depth + z;}
+\DoxyCodeLine{162     \}}
+\DoxyCodeLine{163 }
+\DoxyCodeLine{165     \textcolor{keyword}{static} \textcolor{keyword}{inline} \textcolor{keywordtype}{void} idxToXYZ(\textcolor{keywordtype}{int} index, \textcolor{keywordtype}{int} side, \textcolor{keywordtype}{int} \&x, \textcolor{keywordtype}{int} \&y, \textcolor{keywordtype}{int} \&z) \{}
+\DoxyCodeLine{166         \textcolor{keywordtype}{int} depth = 2 * side;}
+\DoxyCodeLine{167         \textcolor{keyword}{const} \textcolor{keywordtype}{int} planeSize = side * depth;}
+\DoxyCodeLine{168         x = index / planeSize;}
+\DoxyCodeLine{169         \textcolor{keywordtype}{int} tmp = index -\/ x * planeSize;}
+\DoxyCodeLine{170         y = tmp / depth;}
+\DoxyCodeLine{171         z = tmp -\/ y * depth;}
+\DoxyCodeLine{172     \}}
+\DoxyCodeLine{173 }
+\DoxyCodeLine{175     \textcolor{keyword}{static} \textcolor{keyword}{inline} \textcolor{keywordtype}{int} wrap(\textcolor{keywordtype}{int} v, \textcolor{keywordtype}{int} M) \{}
+\DoxyCodeLine{176         \textcolor{keywordflow}{if} (v < 0) \textcolor{keywordflow}{return} v + M;}
+\DoxyCodeLine{177         \textcolor{keywordflow}{if} (v >= M) \textcolor{keywordflow}{return} v -\/ M;}
+\DoxyCodeLine{178         \textcolor{keywordflow}{return} v;}
+\DoxyCodeLine{179     \}}
+\DoxyCodeLine{180 }
+\DoxyCodeLine{181     \textcolor{comment}{// element symbols (lowercase) used for .xyz parsing and writing}}
+\DoxyCodeLine{182     std::string atom1;}
+\DoxyCodeLine{183     std::string atom2;}
+\DoxyCodeLine{184     std::string atom3;}
+\DoxyCodeLine{185 \};}
+\DoxyCodeLine{186 }
+\DoxyCodeLine{187 \textcolor{preprocessor}{\#endif }\textcolor{comment}{// LATTICE\_H}}
+
+\end{DoxyCode}

@@ -1,0 +1,31 @@
+\hypertarget{beg__hamiltonian_8h_source}{}\doxysection{beg\+\_\+hamiltonian.\+h}
+\label{beg__hamiltonian_8h_source}\index{/media/facundo/archivos/documentos\_facundo/unicen\_doctorado/monte\_carlo\_crystal\_order/src/beg\_hamiltonian.h@{/media/facundo/archivos/documentos\_facundo/unicen\_doctorado/monte\_carlo\_crystal\_order/src/beg\_hamiltonian.h}}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{1 \textcolor{preprocessor}{\#ifndef BEG\_HAMILTONIAN\_H}}
+\DoxyCodeLine{2 \textcolor{preprocessor}{\#define BEG\_HAMILTONIAN\_H}}
+\DoxyCodeLine{3 }
+\DoxyCodeLine{4 \textcolor{preprocessor}{\#include <cmath>}}
+\DoxyCodeLine{5 }
+\DoxyCodeLine{6 \textcolor{comment}{// Forward declaration}}
+\DoxyCodeLine{7 \textcolor{keyword}{class }\mbox{\hyperlink{classLattice}{Lattice}};}
+\DoxyCodeLine{8 \textcolor{keyword}{struct }\mbox{\hyperlink{structNeighborSpeciesSums}{NeighborSpeciesSums}};}
+\DoxyCodeLine{9 }
+\DoxyCodeLine{15 \textcolor{keyword}{struct }\mbox{\hyperlink{structBEGCoefficients}{BEGCoefficients}} \{}
+\DoxyCodeLine{16     \textcolor{keywordtype}{double} \mbox{\hyperlink{structBEGCoefficients_a5ec8139fe6634a57e10d3f3081d35958}{jota1}};  }
+\DoxyCodeLine{17     \textcolor{keywordtype}{double} \mbox{\hyperlink{structBEGCoefficients_ad1ff23b418c424aadb21a6cd8e619390}{jota2}};  }
+\DoxyCodeLine{18     \textcolor{keywordtype}{double} \mbox{\hyperlink{structBEGCoefficients_ab51bd49d2d72dac17c9dad935e05fbf0}{ka1}};    }
+\DoxyCodeLine{19     \textcolor{keywordtype}{double} \mbox{\hyperlink{structBEGCoefficients_a086f26209fb047bd624111f7f1bbef45}{ka2}};    }
+\DoxyCodeLine{20     \textcolor{keywordtype}{double} \mbox{\hyperlink{structBEGCoefficients_a5897a57e69fad6278b4c803b95805ac5}{ele1}};   }
+\DoxyCodeLine{21     \textcolor{keywordtype}{double} \mbox{\hyperlink{structBEGCoefficients_a0dc1a2014410155fd9d23dd3391eba34}{ele2}};   }
+\DoxyCodeLine{22 \};}
+\DoxyCodeLine{23 }
+\DoxyCodeLine{36 \textcolor{keywordtype}{double} calculateDeltaChemicalEnergy(\textcolor{keywordtype}{int} specieA, \textcolor{keywordtype}{int} specieN,}
+\DoxyCodeLine{37                                     \textcolor{keyword}{const} \mbox{\hyperlink{structBEGCoefficients}{BEGCoefficients}}\& coeff,}
+\DoxyCodeLine{38                                     \textcolor{keyword}{const} \mbox{\hyperlink{structNeighborSpeciesSums}{NeighborSpeciesSums}}\& sums);}
+\DoxyCodeLine{39 }
+\DoxyCodeLine{47 \textcolor{keywordtype}{double} calculateTotalChemicalEnergy(\textcolor{keyword}{const} \mbox{\hyperlink{classLattice}{Lattice}}\& lattice, \textcolor{keyword}{const} \mbox{\hyperlink{structBEGCoefficients}{BEGCoefficients}}\& coeff);}
+\DoxyCodeLine{48 }
+\DoxyCodeLine{49 \textcolor{preprocessor}{\#endif }\textcolor{comment}{// BEG\_HAMILTONIAN\_H}}
+
+\end{DoxyCode}

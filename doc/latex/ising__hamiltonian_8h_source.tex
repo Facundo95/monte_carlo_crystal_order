@@ -1,0 +1,36 @@
+\hypertarget{ising__hamiltonian_8h_source}{}\doxysection{ising\+\_\+hamiltonian.\+h}
+\label{ising__hamiltonian_8h_source}\index{/media/facundo/archivos/documentos\_facundo/unicen\_doctorado/monte\_carlo\_crystal\_order/src/ising\_hamiltonian.h@{/media/facundo/archivos/documentos\_facundo/unicen\_doctorado/monte\_carlo\_crystal\_order/src/ising\_hamiltonian.h}}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{1 \textcolor{preprocessor}{\#ifndef ISING\_HAMILTONIAN\_H}}
+\DoxyCodeLine{2 \textcolor{preprocessor}{\#define ISING\_HAMILTONIAN\_H}}
+\DoxyCodeLine{3 }
+\DoxyCodeLine{4 \textcolor{preprocessor}{\#include <array>}}
+\DoxyCodeLine{5 \textcolor{preprocessor}{\#include <cmath>}}
+\DoxyCodeLine{6 }
+\DoxyCodeLine{7 \textcolor{comment}{// Forward declaration}}
+\DoxyCodeLine{8 \textcolor{keyword}{class }\mbox{\hyperlink{classLattice}{Lattice}};}
+\DoxyCodeLine{9 }
+\DoxyCodeLine{14 \textcolor{keyword}{struct }\mbox{\hyperlink{structIsingCouplings}{IsingCouplings}} \{}
+\DoxyCodeLine{15     \textcolor{keywordtype}{double} \mbox{\hyperlink{structIsingCouplings_a521519f624bdb15e0c1770e332069470}{Jm1}}; }
+\DoxyCodeLine{16     \textcolor{keywordtype}{double} \mbox{\hyperlink{structIsingCouplings_a155684b2ba854978f45e5f725e69598b}{Jm2}}; }
+\DoxyCodeLine{17     \textcolor{keywordtype}{double} \mbox{\hyperlink{structIsingCouplings_a1f06d33f9835e66eed5f7c97fa261367}{Jm3}}; }
+\DoxyCodeLine{18     \textcolor{keywordtype}{double} \mbox{\hyperlink{structIsingCouplings_a1da004c012cb730e0411ad0e9d11fcfc}{Jm4}}; }
+\DoxyCodeLine{19     \textcolor{keywordtype}{double} \mbox{\hyperlink{structIsingCouplings_ab4106e92060f407f7dd38c910f8f7fcb}{Jm5}}; }
+\DoxyCodeLine{20     \textcolor{keywordtype}{double} \mbox{\hyperlink{structIsingCouplings_a55f1406e037610b1a71d1504a1f5dc72}{Jm6}}; }
+\DoxyCodeLine{21     }
+\DoxyCodeLine{26     std::array<double, 6> \mbox{\hyperlink{structIsingCouplings_a153f1516fd88def271b1e3db2542d828}{toArray}}()\textcolor{keyword}{ const }\{}
+\DoxyCodeLine{27         \textcolor{keywordflow}{return} \{\mbox{\hyperlink{structIsingCouplings_a521519f624bdb15e0c1770e332069470}{Jm1}}, \mbox{\hyperlink{structIsingCouplings_a155684b2ba854978f45e5f725e69598b}{Jm2}}, \mbox{\hyperlink{structIsingCouplings_a1f06d33f9835e66eed5f7c97fa261367}{Jm3}}, \mbox{\hyperlink{structIsingCouplings_a1da004c012cb730e0411ad0e9d11fcfc}{Jm4}}, \mbox{\hyperlink{structIsingCouplings_ab4106e92060f407f7dd38c910f8f7fcb}{Jm5}}, \mbox{\hyperlink{structIsingCouplings_a55f1406e037610b1a71d1504a1f5dc72}{Jm6}}\};}
+\DoxyCodeLine{28     \}}
+\DoxyCodeLine{29 \};}
+\DoxyCodeLine{30 }
+\DoxyCodeLine{44 \textcolor{keywordtype}{double} calculateDeltaIsingEnergy(\textcolor{keywordtype}{int} spinAtSite,}
+\DoxyCodeLine{45                                  \textcolor{keywordtype}{double} externalField,}
+\DoxyCodeLine{46                                  \textcolor{keyword}{const} \mbox{\hyperlink{structIsingCouplings}{IsingCouplings}}\& couplings,}
+\DoxyCodeLine{47                                  \textcolor{keyword}{const} std::array<int, 6>\& neighborSpinSums);}
+\DoxyCodeLine{48 }
+\DoxyCodeLine{53 \textcolor{keywordtype}{double} calculateTotalIsingEnergy(\textcolor{keyword}{const} \mbox{\hyperlink{classLattice}{Lattice}}\& lattice, \textcolor{keyword}{const} \mbox{\hyperlink{structIsingCouplings}{IsingCouplings}}\& couplings, \textcolor{keywordtype}{double} externalField);}
+\DoxyCodeLine{54 }
+\DoxyCodeLine{55 \textcolor{preprocessor}{\#endif }\textcolor{comment}{// ISING\_HAMILTONIAN\_H}}
+
+\end{DoxyCode}
