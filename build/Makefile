@@ -26,6 +26,7 @@ SRCS = $(SRCDIR)/main.cpp $(SRCDIR)/simulation.cpp $(SRCDIR)/rng.cpp $(SRCDIR)/f
     $(SRCDIR)/lattice_output.cpp $(SRCDIR)/input_parser.cpp $(SRCDIR)/mc_helpers.cpp \
     $(SRCDIR)/neighbor_sums.cpp $(SRCDIR)/sweep_list.cpp $(SRCDIR)/beg_hamiltonian.cpp \
     $(SRCDIR)/ising_hamiltonian.cpp
+    SRCS += $(SRCDIR)/logger.cpp
 OBJS = $(SRCS:.cpp=.o)
 DOXYGEN = doxygen
 DOXYFILE = Doxyfile
