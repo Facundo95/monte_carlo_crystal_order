@@ -4,7 +4,7 @@ Configuration File for Monte Carlo Simulation
 
 --- General Simulation Parameters ---
 SIMULATION_METHOD 1
-NUM_STEPS 100
+NUM_STEPS 1000
 STEPS_TO_OUTPUT 100
 
 --- Lattice parameters ---
@@ -16,12 +16,13 @@ ATOM_1 Mn
 ATOM_2 Ni
 ATOM_3 Al
 
-J_M3 150.0
+J_M2 -123.84
+J_M3 27.86 
 
 --- Temperature Sweep Parameters ---
-T_START 2000.0
-T_END 100.0
-STEP_T 100
+T_START 1500.0
+T_END 100
+STEP_T 50
 
 --- Magnetic Field Sweep Parameters (H) ---
 H_START 0.0

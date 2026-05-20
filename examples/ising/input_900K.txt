@@ -1,0 +1,26 @@
+Configuration File for Monte Carlo Simulation
+
+
+
+--- General Simulation Parameters ---
+SIMULATION_METHOD 1
+NUM_STEPS 5000
+STEPS_TO_OUTPUT 5000
+
+--- Lattice parameters ---
+FILE_ENTRY Ni2AlMn_spin.xyz
+
+LATTICE_SIDE 32
+
+ATOM_1 Mn
+ATOM_2 Ni
+ATOM_3 Al
+
+J_M2 -123.84
+J_M3 27.86 
+
+--- Temperature Sweep Parameters ---
+T_START 900.0
+
+--- Magnetic Field Sweep Parameters (H) ---
+H_START 0.0
