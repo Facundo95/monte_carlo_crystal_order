@@ -84,7 +84,10 @@ std::string slog::makeUnique(const std::string &path) {
         int n = 1;
         std::string newName;
         do {
-            newName = path + "(" + std::to_string(n) + ")";
+            auto pos = path.find_last_of('.');
+            std::string prefix = path.substr(0, pos);
+            std::string suffix = path.substr(pos);
+            newName = prefix + "(" + std::to_string(n) + ")" + suffix;
             ++n;
         } while (fs::exists(newName));
         return newName;

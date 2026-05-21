@@ -428,9 +428,8 @@ bool Lattice::saveFinalConfiguration(const char* nombrefile,
 
     if (ext == ".xyz") {
         // Write extended .xyz header
-        redout << m_total_sites << "\n";
-        redout << "Lattice=\"" << m_side << " 0.0 0.0 0.0 " << m_side << " 0.0 0.0 0.0" << m_depth << "Properties=\"species:S:1:pos:R:3:spin:I:1\"" << "\n";;
-
+        redout << m_total_sites << "\n\n";
+        
         // For each site, write: Element x y z species spin
         for (int site = 0; site < m_total_sites; ++site) {
             int i, j, k;
@@ -450,8 +449,8 @@ bool Lattice::saveFinalConfiguration(const char* nombrefile,
 
             int specie = red_flat[site];
             int spin = magn_flat[site];
-            const char* elem = (specie == 1) ? atom1.c_str() : (specie == 0 ? atom2.c_str() : atom3.c_str());
-
+            std::string elem = (specie == 1) ? atom1.c_str() : (specie == 0 ? atom2.c_str() : atom3.c_str());
+            elem[0] = std::toupper(elem[0]); // Ensure element symbol starts with uppercase
             // Write: ElementSymbol x y z specie spin
             redout << elem << " " << x << " " << y << " " << z << " " << spin << "\n";
         }
