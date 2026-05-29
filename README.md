@@ -19,7 +19,7 @@ The code is organized into modular C++ files for clarity, debugging, and maintai
 | `file_handler.h` / `file_handler.cpp` | Provides helper functions for managing file streams, including opening the output file and checking for errors.|
 | `input_parser.h` / `input_parser.cpp` | Provides helper functions for parsing the input file before passing to the SimulationParameters struct. |
 | `Makefile` | Script for automated compilation, linking, cleaning, and documentation generation.|
-| `input.txt` | Required input file for defining runtime parameters and file names (see Section 4). |
+| `input.in` | Required input file for defining runtime parameters and file names (see Section 4). |
 
 ## 3. Requirements and Compilation
 
@@ -55,9 +55,9 @@ make clean
 
 The simulation requires two types of input files: a configuration file for parameters and an initial configuration file for the lattice state.
 
-**A. Parameter Input (`input.txt`)**
+**A. Parameter Input (`input.in`)**
 
-You must create an `input.txt` file in the project directory using the format `KEY VALUE`. This file dictates the simulation run settings. It's not necessary to name the file as the example, you can use any name and extension you want.
+You must create an `input.in` file in the project directory using the format `KEY VALUE`. This file dictates the simulation run settings. It's not necessary to name the file as the example, you can use any name and extension you want.
 
 ```
 # Example content for input.txt (keys accepted by the parser)
@@ -108,21 +108,21 @@ ATOM_3 Al
 
 **B. Initial Lattice State**
 
-Ensure the file specified by `INITIAL_STATE_FILE` (e.g., `cu-al-mn_0.67-0.25-0.08_365.txt`) is present in the directory.
+Ensure the file specified by `INITIAL_STATE_FILE` (e.g., `cu-al-mn_0.67-0.25-0.08_365.xyz`) is present in the directory.
 
 **C. Execution**
 
-Ensure the `input.txt` and initial state file are ready.
+Ensure the `input.in` and initial state file are ready.
 
 Execute the compiled program:
 
 ```bash
-./mc_simulation -in input.txt
+./mc_simulation -in input.in
 ```
 
 **D. Output**
 
-- The LRO parameters and measurements are written to an output file constructed from `FILE_OUTPUT` (or `FILE_ENTRY` if `FILE_OUTPUT` is omitted) with the `.out` suffix. If that file already exists, the program appends `_new.out` to avoid overwriting.
+- The LRO parameters and measurements are written to an output file constructed from `FILE_OUTPUT` (or `FILE_ENTRY` if `FILE_OUTPUT` is omitted) with the `.out` suffix. If that file already exists, the program appends `(#).out` to avoid overwriting.
 - Final lattice dumps use the `dump_<H>H_<T>K_<count><basefilename>` pattern (see `file_handler.cpp`).
 
 **Deterministic RNG**
