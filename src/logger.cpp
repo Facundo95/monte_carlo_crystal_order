@@ -5,7 +5,14 @@
 #include <chrono>
 #include <ctime>
 #include <iomanip>
-#include <filesystem>
+#include <algorithm>
+
+namespace {
+    bool fileExists(const std::string &path) {
+        std::ifstream file(path.c_str(), std::ios::in);
+        return file.good();
+    }
+}
 
 // streambuf that forwards output to two streambufs (like tee)
 struct dualbuf : public std::streambuf {
@@ -78,20 +85,23 @@ void stop() {
 
 // Public utility to compute a unique filename without renaming anything.
 std::string slog::makeUnique(const std::string &path) {
-    namespace fs = std::filesystem;
-    try {
-        if (!fs::exists(path)) return path;
-        int n = 1;
-        std::string newName;
-        do {
-            auto pos = path.find_last_of('.');
-            std::string prefix = path.substr(0, pos);
-            std::string suffix = path.substr(pos);
-            newName = prefix + "(" + std::to_string(n) + ")" + suffix;
-            ++n;
-        } while (fs::exists(newName));
-        return newName;
-    } catch (...) {
-        return path; // on error, fall back to original
+    if (!fileExists(path)) {
+        return path;
+    }
+
+    std::string prefix = path;
+    std::string suffix;
+    const std::string::size_type pos = path.find_last_of('.');
+
+    if (pos != std::string::npos && pos != 0) {
+        prefix = path.substr(0, pos);
+        suffix = path.substr(pos);
+    }
+
+    for (int n = 1; ; ++n) {
+        const std::string candidate = prefix + "(" + std::to_string(n) + ")" + suffix;
+        if (!fileExists(candidate)) {
+            return candidate;
+        }
     }
 }
