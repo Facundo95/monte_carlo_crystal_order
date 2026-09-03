@@ -2,6 +2,7 @@
 #define MC_HELPERS_H
 
 #include <cmath>
+#include <cstdint>
 
 // Forward declaration
 struct BoltzmannDeltaETable;
@@ -14,10 +15,10 @@ struct BoltzmannDeltaETable;
  */
 struct MCStepResults {
     double& DeltaEAcum;
-    int& changesAccepted;
-    int& changesAttempted;
+    std::uint64_t& changesAccepted;
+    std::uint64_t& changesAttempted;
 
-    MCStepResults(double& dE, int& acc, int& att)
+    MCStepResults(double& dE, std::uint64_t& acc, std::uint64_t& att)
         : DeltaEAcum(dE), changesAccepted(acc), changesAttempted(att) {}
 };
 

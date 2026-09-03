@@ -146,10 +146,10 @@ void SimulationLoop(const SimulationParameters& params,
                 std::cout << "Trabajando a T = " << T << " y H = " << H << std::endl;
             }
 
-            int spinChangesAccepted = 0;
-            int chemicalChangesAccepted = 0;
-            int spinChangesAttempted = 0;
-            int chemicalChangesAttempted = 0;
+            std::uint64_t spinChangesAccepted = 0;
+            std::uint64_t chemicalChangesAccepted = 0;
+            std::uint64_t spinChangesAttempted = 0;
+            std::uint64_t chemicalChangesAttempted = 0;
             double DeltaEAcumM = 0.0;
             double DeltaEAcumC = 0.0;
 
