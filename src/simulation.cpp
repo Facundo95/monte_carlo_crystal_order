@@ -1,6 +1,7 @@
 #include "simulation.h"
 #include "rng.h"
 #include "file_handler.h"
+#include "lattice_output.h"
 #include <stdexcept>
 #include <cstring>
 #include <cstdint>
@@ -141,11 +142,6 @@ void SimulationLoop(const SimulationParameters& params,
                 double magneticE = calculateTotalIsingEnergy(lattice, isingCoupl, H);
                 double currentTotalEnergy = chemicalE + magneticE;
 
-            if (verbose) {
-                std::cout << "----------------------------------------" << std::endl;
-                std::cout << "Trabajando a T = " << T << " y H = " << H << std::endl;
-            }
-
             std::uint64_t spinChangesAccepted = 0;
             std::uint64_t chemicalChangesAccepted = 0;
             std::uint64_t spinChangesAttempted = 0;
@@ -156,6 +152,8 @@ void SimulationLoop(const SimulationParameters& params,
             // Bundle counters into MCStepResults for cleaner function calls
             MCStepResults chemStats(DeltaEAcumC, chemicalChangesAccepted, chemicalChangesAttempted);
             MCStepResults spinStats(DeltaEAcumM, spinChangesAccepted, spinChangesAttempted);
+
+            lattice_output::writeProgressHeader();
 
             for (int contador = 1; contador <= params.num_steps; contador++) {
                 
@@ -182,10 +180,10 @@ void SimulationLoop(const SimulationParameters& params,
                 if (!ok) std::cerr << "WARNING: could not save final configuration for output_count=" << output_count << std::endl;
             }
 
-            if (verbose) {
-                std::cout << "Intercambios de espines aceptados / intentado: " << spinChangesAccepted << "/" << spinChangesAttempted << " en " << params.num_steps << " pasos." << std::endl;
-                std::cout << "Intercambios químicos aceptados / intentado: " << chemicalChangesAccepted << "/" << chemicalChangesAttempted << " en " << params.num_steps << " pasos." << std::endl;
-            }
+            lattice_output::writeProgressRow(lattice, params.num_steps, T, H, 
+                                                (double)(spinChangesAccepted + chemicalChangesAccepted) / 
+                                                (double)(spinChangesAttempted + chemicalChangesAttempted) * 100.0,
+                                                currentTotalEnergy + DeltaEAcumM + DeltaEAcumC);
 
             output_count++;
 

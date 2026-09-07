@@ -1,11 +1,41 @@
 #include "lattice_output.h"
 
+#include <iomanip>
 #include <iostream>
 
 namespace lattice_output {
 
 namespace {
 // no-op helpers removed; extras support was removed.
+}
+
+void writeProgressHeader() {
+    std::cout << std::left
+              << std::setw(12) << "T"
+              << std::setw(12) << "H"
+              << std::setw(12) << "N"
+              << std::setw(20) << "accepted (%)"
+              << std::setw(16) << "magnetization"
+              << std::setw(16) << "energy"
+              << std::endl;
+}
+
+void writeProgressRow(const Lattice& lattice,
+                      int sweep,
+                      double T,
+                      double H,
+                      double acceptancePercentage,
+                      double energyValue) {
+    const auto observables = lattice.computeObservables();
+
+    std::cout << std::left << std::fixed << std::setprecision(6)
+              << std::setw(12) << T
+              << std::setw(12) << H
+              << std::setw(12) << sweep
+              << std::setw(20) << acceptancePercentage
+              << std::setw(16) << observables.normalizedMagnetization
+              << std::setw(16) << energyValue
+              << std::endl;
 }
 
 void writeLROParameters(std::ofstream& parout,

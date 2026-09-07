@@ -11,6 +11,15 @@
 namespace lattice_output {
 
 // Output functions do not accept extra labeled parameters anymore.
+void writeProgressHeader();
+
+void writeProgressRow(const Lattice& lattice,
+                      int sweep,
+                      double T,
+                      double H,
+                      double acceptancePercentage,
+                      double energyValue);
+
 void writeLROParameters(std::ofstream& parout,
                         int step_count,
                         double T,
