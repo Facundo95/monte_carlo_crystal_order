@@ -35,8 +35,13 @@ void MonteCarloStepChemicalExchange(Lattice& lattice,
         BEGCoefficients begCoeff{params.jota1, params.jota2, params.ka1, params.ka2, params.ele1, params.ele2};
         
         // Calculate energy change using BEG Hamiltonian
-        double dETotal = calculateDeltaChemicalEnergy(SpecieAct, SpecieNeigh, begCoeff, sums);
-        
+        double dEQuim = calculateDeltaChemicalEnergy(SpecieAct, SpecieNeigh, begCoeff, sums);
+
+        //calculate the magnetic energy change for swapping species with spins
+        IsingCouplings isingCoeff{params.Jm1, params.Jm2, params.Jm3, params.Jm4, params.Jm5, params.Jm6};
+        double dEMagn = calculateDeltaIsingEnergyForExchange(lattice, site, siteNeighbor, isingCoeff);
+
+        double dETotal = dEQuim + dEMagn;
         // Metropolis acceptance
         if (metropolisAccept(dETotal, table)) {
             lattice.exchangeSpecies(site, siteNeighbor);
@@ -53,8 +58,7 @@ void MonteCarloStepChemicalExchange(Lattice& lattice,
  * @param H The external magnetic field.
  * @param params The simulation parameters.
  * @param table The pre-computed spin Boltzmann table.
- * @param DeltaEAcumM Accumulated energy change for magnetization.
- * @param changesAccepted Counter for accepted changes.
+ * @param stats Result structure aggregating changes
  */
 void MonteCarloStepSpinExtH(Lattice& lattice,
                             double H,
@@ -77,7 +81,7 @@ void MonteCarloStepSpinExtH(Lattice& lattice,
         
         // Calculate energy change using Ising Hamiltonian
         double dETotal = calculateDeltaIsingEnergy(SpinAct, H, isingCoeff, neighborSums);
-        
+
         // Metropolis acceptance
         if (metropolisAccept(dETotal, table)) {
             lattice.flipSpin(site);
@@ -86,7 +90,6 @@ void MonteCarloStepSpinExtH(Lattice& lattice,
         }
     }
 }
-
 
 /**
  * @brief Main simulation loop, iterating over Temperature and Field.
@@ -162,8 +165,8 @@ void SimulationLoop(const SimulationParameters& params,
                 } else if (params.simulation_method == 1) {
                     MonteCarloStepSpinExtH(lattice, H, params, table, spinStats);
                 } else if (params.simulation_method == 2) {
-                    MonteCarloStepChemicalExchange(lattice, params, table, chemStats);
                     MonteCarloStepSpinExtH(lattice, H, params, table, spinStats);
+                    MonteCarloStepChemicalExchange(lattice, params, table, chemStats);
                 }
 
                 double energyAtStep = currentTotalEnergy + DeltaEAcumM + DeltaEAcumC;

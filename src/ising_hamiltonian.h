@@ -47,6 +47,18 @@ double calculateDeltaIsingEnergy(int spinAtSite,
                                  const std::array<int, 6>& neighborSpinSums);
 
 /**
+ * @brief Calculate the magnetic energy change caused by exchanging two spins.
+ *
+ * The field term cancels because a swap preserves total magnetization. The
+ * bond between the exchanged sites is excluded because its spin product is
+ * unchanged.
+ */
+double calculateDeltaIsingEnergyForExchange(const Lattice& lattice,
+                                            int siteA,
+                                            int siteB,
+                                            const IsingCouplings& couplings);
+
+/**
  * @brief Calculate the total magnetic (Ising) energy for the entire lattice,
  * including the external field term and the 1/2 correction for pair counting.
  */

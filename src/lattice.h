@@ -76,6 +76,9 @@ public:
     
     /** @brief Calculates the sum of neighbor spins for a given shell type. */
     int calculateNeighborSpinSum(int site, int shell_type) const;
+
+    /** @brief Calculates a neighbor-spin sum while excluding one site. */
+    int calculateNeighborSpinSumExcluding(int site, int shell_type, int excludedSite) const;
     
     /** @brief Calculates the sum of neighbor species for a given shell type and order. */
     int calculateNeighborSpeciesSum(int site, int shell_type, int order) const;

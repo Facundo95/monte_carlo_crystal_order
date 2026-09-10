@@ -167,15 +167,14 @@ void MonteCarloStepChemicalExchange(Lattice& lattice,
  * @param H The external magnetic field.
  * @param params The simulation parameters.
  * @param table The pre-computed spin Boltzmann table.
- * @param DeltaEAcumM Accumulated energy change for magnetization.
- * @param changesAccepted Counter for accepted changes.
+ * @param stats Result structure aggregating changes
 */
 void MonteCarloStepSpinExtH(Lattice& lattice,
                             double H,
                             const SimulationParameters& params,
                             BoltzmannDeltaETable& table,
                             MCStepResults& stats);
-
+    
 /** @brief Main simulation loop handling temperature and magnetic field sweeps.
  * @param params The simulation parameters.
  * @param file_in Input configuration file

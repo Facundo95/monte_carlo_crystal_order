@@ -26,6 +26,29 @@ double calculateDeltaIsingEnergy(int spinAtSite,
     return dETotal;
 }
 
+double calculateDeltaIsingEnergyForExchange(const Lattice& lattice,
+                                            int siteA,
+                                            int siteB,
+                                            const IsingCouplings& couplings) {
+    const std::array<double, 6> magneticCouplings = couplings.toArray();
+    const double spinA = static_cast<double>(lattice.getSpin(siteA));
+    const double spinB = static_cast<double>(lattice.getSpin(siteB));
+    double deltaEnergy = 0.0;
+
+    for (int shell = 1; shell <= 6; ++shell) {
+        const double sumAroundA = static_cast<double>(
+            lattice.calculateNeighborSpinSumExcluding(siteA, shell, siteB));
+        const double sumAroundB = static_cast<double>(
+            lattice.calculateNeighborSpinSumExcluding(siteB, shell, siteA));
+
+        deltaEnergy -= magneticCouplings[shell - 1] *
+                       ((spinB - spinA) * sumAroundA +
+                        (spinA - spinB) * sumAroundB);
+    }
+
+    return deltaEnergy;
+}
+
 double calculateTotalIsingEnergy(const Lattice& lattice, const IsingCouplings& couplings, double externalField) {
     double totalMagneticE = 0.0;
     double totalMagnetization = 0.0;

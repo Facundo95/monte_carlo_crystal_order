@@ -305,6 +305,47 @@ double Lattice::calculateSiteMagneticEnergy(int Spin,
     return - static_cast<double>(Spin) * (j1 * sum1 + j2 * sum2 + j3 * sum3 + j4 * sum4 + j5 * sum5 + j6 * sum6 + H);
 }
 
+int Lattice::calculateNeighborSpinSumExcluding(int site, int shell_type, int excludedSite) const {
+    int sum = 0;
+
+    switch (shell_type) {
+    case 1:
+        for (int neighbor : neighbors1[site]) {
+            if (neighbor != excludedSite) sum += magn_flat[neighbor];
+        }
+        break;
+    case 2:
+        for (int neighbor : neighbors2[site]) {
+            if (neighbor != excludedSite) sum += magn_flat[neighbor];
+        }
+        break;
+    case 3:
+        for (int neighbor : neighbors3[site]) {
+            if (neighbor != excludedSite) sum += magn_flat[neighbor];
+        }
+        break;
+    case 4:
+        for (int neighbor : neighbors4[site]) {
+            if (neighbor != excludedSite) sum += magn_flat[neighbor];
+        }
+        break;
+    case 5:
+        for (int neighbor : neighbors5[site]) {
+            if (neighbor != excludedSite) sum += magn_flat[neighbor];
+        }
+        break;
+    case 6:
+        for (int neighbor : neighbors6[site]) {
+            if (neighbor != excludedSite) sum += magn_flat[neighbor];
+        }
+        break;
+    default:
+        break;
+    }
+
+    return sum;
+}
+
 /**
  * @brief Calculates and writes the LRO parameters and Magnetization to the output file.
  * @param parout Output file stream.
