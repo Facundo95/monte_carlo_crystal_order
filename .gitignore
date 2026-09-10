@@ -15,7 +15,7 @@ mc_simulation
 *.swp
 *~
 .DS_Store
-
+.github/
 # --- Simulation Outputs ---
 # (Commonly ignored so you don't commit gigabytes of data)
 *.log
