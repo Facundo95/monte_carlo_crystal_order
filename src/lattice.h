@@ -8,6 +8,8 @@
 #include <algorithm>
 #include <cctype>
 
+#include "heisenberg_hamiltonian.h"
+
 struct SimulationParameters;
 
 /***
@@ -24,6 +26,7 @@ public:
           m_depth(2 * LATTICE_SIDE),
           m_total_sites(2 * LATTICE_SIDE * LATTICE_SIDE * LATTICE_SIDE),
           magn_flat(m_total_sites),
+          moments_flat(m_total_sites),
           red_flat(m_total_sites),
           neighbors1(m_total_sites),
           neighbors2(m_total_sites),
@@ -51,11 +54,17 @@ public:
     /** @brief Accessors for spin. */
     int getSpin(int site) const { return magn_flat[site]; }
 
+    /** @brief Accessor for a Heisenberg moment. */
+    const HeisenbergVector& getMoment(int site) const { return moments_flat[site]; }
+
     /** @brief Accessors for species. */
     int getSpecies(int site) const { return red_flat[site]; }   
     
     /** @brief Mutator for spin. */
     void flipSpin(int site) { magn_flat[site] = -magn_flat[site]; }
+
+    /** @brief Mutator for a Heisenberg moment. */
+    void setMoment(int site, const HeisenbergVector& moment) { moments_flat[site] = moment; }
 
     /** @brief Mutator for species exchange. */
     void exchangeSpecies(int site1, int site2) {
@@ -151,6 +160,7 @@ private:
     int m_total_sites;
 
     std::vector<int> magn_flat;
+    std::vector<HeisenbergVector> moments_flat;
     std::vector<int> red_flat;
     std::vector<std::array<int, 8>>  neighbors1;
     std::vector<std::array<int, 6>>  neighbors2;
