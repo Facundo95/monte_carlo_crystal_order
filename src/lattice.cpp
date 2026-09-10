@@ -241,6 +241,36 @@ int Lattice::calculateNeighborSpinSum(int site, int shell_type) const {
     return sum;
 }
 
+HeisenbergVector Lattice::calculateNeighborMomentSum(int site, int shell_type) const {
+    if (shell_type < 1 || shell_type > 6) {
+        throw std::invalid_argument("shell_type options: 1,2,3,4,5 or 6.");
+    }
+
+    HeisenbergVector sum{0.0, 0.0, 0.0};
+    auto addMoment = [&sum, this](int neighbor) {
+        const HeisenbergVector& moment = moments_flat[neighbor];
+        for (std::size_t component = 0; component < sum.size(); ++component) {
+            sum[component] += moment[component];
+        }
+    };
+
+    if (shell_type == 1) {
+        for (int neighbor : neighbors1[site]) addMoment(neighbor);
+    } else if (shell_type == 2) {
+        for (int neighbor : neighbors2[site]) addMoment(neighbor);
+    } else if (shell_type == 3) {
+        for (int neighbor : neighbors3[site]) addMoment(neighbor);
+    } else if (shell_type == 4) {
+        for (int neighbor : neighbors4[site]) addMoment(neighbor);
+    } else if (shell_type == 5) {
+        for (int neighbor : neighbors5[site]) addMoment(neighbor);
+    } else {
+        for (int neighbor : neighbors6[site]) addMoment(neighbor);
+    }
+
+    return sum;
+}
+
 /**
  * @brief Calculates the sum of species (red_flat) for a specific neighbor shell.
  * @param shell_type Must be 1, 2, 3, or 6.

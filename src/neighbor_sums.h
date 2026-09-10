@@ -3,6 +3,8 @@
 
 #include <array>
 
+#include "heisenberg_hamiltonian.h"
+
 // Forward declaration
 class Lattice;
 
@@ -37,5 +39,13 @@ NeighborSpeciesSums computeNeighborSpeciesSums(const Lattice& lattice, int site,
  * @return Array of 6 neighbor spin sums
  */
 std::array<int, 6> computeNeighborSpinSums(const Lattice& lattice, int site);
+
+/**
+ * @brief Compute vector moment sums for shells 1..6 for a given site.
+ * @param lattice The lattice
+ * @param site The site index
+ * @return Array of six vector moment sums
+ */
+HeisenbergNeighborSums computeNeighborMomentSums(const Lattice& lattice, int site);
 
 #endif // NEIGHBOR_SUMS_H

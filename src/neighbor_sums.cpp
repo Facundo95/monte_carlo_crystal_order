@@ -32,3 +32,11 @@ std::array<int, 6> computeNeighborSpinSums(const Lattice& lattice, int site) {
     sums[5] = static_cast<int>(lattice.calculateNeighborSpinSum(site, 6));
     return sums;
 }
+
+HeisenbergNeighborSums computeNeighborMomentSums(const Lattice& lattice, int site) {
+    HeisenbergNeighborSums sums{};
+    for (int shell = 1; shell <= 6; ++shell) {
+        sums[shell - 1] = lattice.calculateNeighborMomentSum(site, shell);
+    }
+    return sums;
+}

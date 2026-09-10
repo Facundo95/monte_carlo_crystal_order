@@ -86,6 +86,9 @@ public:
     /** @brief Calculates the sum of neighbor spins for a given shell type. */
     int calculateNeighborSpinSum(int site, int shell_type) const;
 
+    /** @brief Calculates the vector sum of neighbor moments for a given shell type. */
+    HeisenbergVector calculateNeighborMomentSum(int site, int shell_type) const;
+
     /** @brief Calculates a neighbor-spin sum while excluding one site. */
     int calculateNeighborSpinSumExcluding(int site, int shell_type, int excludedSite) const;
     
