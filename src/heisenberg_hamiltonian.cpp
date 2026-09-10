@@ -1,4 +1,6 @@
 #include "heisenberg_hamiltonian.h"
+#include "lattice.h"
+#include "neighbor_sums.h"
 
 #include <cstddef>
 
@@ -28,4 +30,25 @@ double calculateDeltaHeisenbergEnergy(const HeisenbergVector& currentMoment,
     }
 
     return deltaEnergy;
+}
+
+double calculateTotalHeisenbergEnergy(const Lattice& lattice,
+                                      const HeisenbergCouplings& couplings,
+                                      double externalField) {
+    const std::array<double, 6> magneticCouplings = couplings.toArray();
+    double interactionEnergy = 0.0;
+    double totalZMagnetization = 0.0;
+
+    for (int site = 0; site < lattice.totalSites(); ++site) {
+        const HeisenbergVector& moment = lattice.getMoment(site);
+        totalZMagnetization += moment[zComponent];
+
+        const HeisenbergNeighborSums neighborSums = computeNeighborMomentSums(lattice, site);
+        for (std::size_t shell = 0; shell < magneticCouplings.size(); ++shell) {
+            interactionEnergy += magneticCouplings[shell] *
+                                 dotProduct(moment, neighborSums[shell]);
+        }
+    }
+
+    return -0.5 * interactionEnergy - externalField * totalZMagnetization;
 }

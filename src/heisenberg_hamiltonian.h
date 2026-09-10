@@ -3,6 +3,8 @@
 
 #include <array>
 
+class Lattice;
+
 using HeisenbergVector = std::array<double, 3>;
 using HeisenbergNeighborSums = std::array<HeisenbergVector, 6>;
 
@@ -38,5 +40,15 @@ double calculateDeltaHeisenbergEnergy(const HeisenbergVector& currentMoment,
                                       double externalField,
                                       const HeisenbergCouplings& couplings,
                                       const HeisenbergNeighborSums& neighborSums);
+
+/**
+ * @brief Calculate total Heisenberg energy including exchange and z-directed field.
+ *
+ * Neighbor interactions are counted twice by the per-site sums and corrected by
+ * the factor one half in the exchange contribution.
+ */
+double calculateTotalHeisenbergEnergy(const Lattice& lattice,
+                                      const HeisenbergCouplings& couplings,
+                                      double externalField);
 
 #endif // HEISENBERG_HAMILTONIAN_H
