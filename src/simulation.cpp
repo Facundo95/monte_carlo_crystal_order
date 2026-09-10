@@ -91,6 +91,62 @@ void MonteCarloStepSpinExtH(Lattice& lattice,
     }
 }
 
+void MonteCarloStepHeisenberg(Lattice& lattice,
+                              double H,
+                              const SimulationParameters& params,
+                              BoltzmannDeltaETable& table,
+                              double& sigma,
+                              std::uint64_t& previousSweepAccepted,
+                              std::uint64_t& previousSweepAttempted,
+                              MCStepResults& stats) {
+    constexpr double initialSigma = 60.0;
+    constexpr double minimumSigma = 1e-12;
+
+    if (previousSweepAttempted > 0) {
+        const double previousAcceptanceRate =
+            static_cast<double>(previousSweepAccepted) /
+            static_cast<double>(previousSweepAttempted);
+        if (previousAcceptanceRate >= 1.0) {
+            sigma = initialSigma;
+        } else {
+            sigma *= 0.5 / (1.0 - previousAcceptanceRate);
+        }
+        if (sigma > initialSigma || sigma < minimumSigma) {
+            sigma = initialSigma;
+        }
+    }
+
+    std::uint64_t sweepAccepted = 0;
+    std::uint64_t sweepAttempted = 0;
+    const HeisenbergCouplings couplings{
+        params.Jm1, params.Jm2, params.Jm3,
+        params.Jm4, params.Jm5, params.Jm6
+    };
+
+    for (int site = 0; site < lattice.totalSites(); ++site) {
+        const HeisenbergVector& currentMoment = lattice.getMoment(site);
+        const double momentNorm = std::sqrt(dotProduct(currentMoment, currentMoment));
+        if (momentNorm == 0.0) continue;
+
+        const HeisenbergVector proposedMoment = gaussianSpinProposal(currentMoment, sigma);
+        const HeisenbergNeighborSums neighborSums = computeNeighborMomentSums(lattice, site);
+        const double deltaEnergy = calculateDeltaHeisenbergEnergy(
+            currentMoment, proposedMoment, H, couplings, neighborSums);
+
+        ++sweepAttempted;
+        ++stats.changesAttempted;
+        if (metropolisAccept(deltaEnergy, table)) {
+            lattice.setMoment(site, proposedMoment);
+            ++sweepAccepted;
+            ++stats.changesAccepted;
+            stats.DeltaEAcum += deltaEnergy;
+        }
+    }
+
+    previousSweepAccepted = sweepAccepted;
+    previousSweepAttempted = sweepAttempted;
+}
+
 /**
  * @brief Main simulation loop, iterating over Temperature and Field.
  * @param params The simulation parameters.

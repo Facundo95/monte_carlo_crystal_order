@@ -174,6 +174,16 @@ void MonteCarloStepSpinExtH(Lattice& lattice,
                             const SimulationParameters& params,
                             BoltzmannDeltaETable& table,
                             MCStepResults& stats);
+
+/** @brief Performs one adaptive Gaussian-move sweep for Heisenberg moments. */
+void MonteCarloStepHeisenberg(Lattice& lattice,
+                              double H,
+                              const SimulationParameters& params,
+                              BoltzmannDeltaETable& table,
+                              double& sigma,
+                              std::uint64_t& previousSweepAccepted,
+                              std::uint64_t& previousSweepAttempted,
+                              MCStepResults& stats);
     
 /** @brief Main simulation loop handling temperature and magnetic field sweeps.
  * @param params The simulation parameters.
