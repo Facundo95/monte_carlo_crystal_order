@@ -103,7 +103,8 @@ public:
      */
     bool saveFinalConfiguration(const char* nombrefile, 
                                 double Hache, double TEMPERA, 
-                                int count);
+                                int count,
+                                bool writeHeisenbergMoments = false);
     
 
     /** @brief Write output line to `parout`. Controls which diagnostics are computed.

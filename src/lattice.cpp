@@ -71,9 +71,27 @@ void Lattice::loadInitialConfiguration(const std::string& filename) {
             std::istringstream ss(line);
             std::string atomToken;
             double x,y,z;
-            int spin;
-            if (!(ss >> atomToken >> x >> y >> z >> spin)) {
-                throw std::runtime_error("Linea .xyz mal formada (se esperaba: atom x y z spin): " + line);
+            if (!(ss >> atomToken >> x >> y >> z)) {
+                throw std::runtime_error("Linea .xyz mal formada (se esperaba: atom x y z spin o atom x y z Sx Sy Sz): " + line);
+            }
+
+            std::array<double, 3> moment{0.0, 0.0, 0.0};
+            double firstMomentComponent;
+            if (!(ss >> firstMomentComponent)) {
+                throw std::runtime_error("Linea .xyz mal formada (se esperaba: atom x y z spin o atom x y z Sx Sy Sz): " + line);
+            }
+
+            double secondMomentComponent;
+            double thirdMomentComponent;
+            if (ss >> secondMomentComponent >> thirdMomentComponent) {
+                moment = {firstMomentComponent, secondMomentComponent, thirdMomentComponent};
+            } else {
+                if (std::floor(firstMomentComponent) != firstMomentComponent ||
+                    firstMomentComponent < -1.0 || firstMomentComponent > 1.0) {
+                    throw std::runtime_error("Spin escalar invalido en linea .xyz: " + line);
+                }
+                const int spin = static_cast<int>(firstMomentComponent);
+                moment = {0.0, 0.0, static_cast<double>(spin)};
             }
 
             // atomToken must be an element symbol (no atomic number token allowed)
@@ -101,7 +119,8 @@ void Lattice::loadInitialConfiguration(const std::string& filename) {
 
             int idx = idx3D(wrap(ix,m_side), wrap(iy, m_side), wrap(kz, m_depth));
             red_flat[idx] = specie;
-            magn_flat[idx] = spin;
+            magn_flat[idx] = static_cast<int>(std::round(moment[2]));
+            moments_flat[idx] = moment;
             ++filled;
         }
 
@@ -483,7 +502,8 @@ void Lattice::writeOutput(std::ofstream& parout,
  * @param count Current simulation step count.
  */
 bool Lattice::saveFinalConfiguration(const char* nombrefile, 
-                                    double Hache, double TEMPERA, int count) {
+                                    double Hache, double TEMPERA, int count,
+                                    bool writeHeisenbergMoments) {
     std::ofstream redout;
     if (!OpenFinalRedFile(nombrefile, Hache, TEMPERA, count, redout)) {
         return false;
@@ -519,11 +539,16 @@ bool Lattice::saveFinalConfiguration(const char* nombrefile,
             }
 
             int specie = red_flat[site];
-            int spin = magn_flat[site];
             std::string elem = (specie == 1) ? atom1.c_str() : (specie == 0 ? atom2.c_str() : atom3.c_str());
             elem[0] = std::toupper(elem[0]); // Ensure element symbol starts with uppercase
-            // Write: ElementSymbol x y z specie spin
-            redout << elem << " " << x << " " << y << " " << z << " " << spin << "\n";
+            if (writeHeisenbergMoments) {
+                const HeisenbergVector& moment = moments_flat[site];
+                redout << elem << " " << x << " " << y << " " << z << " "
+                       << moment[0] << " " << moment[1] << " " << moment[2] << "\n";
+            } else {
+                redout << elem << " " << x << " " << y << " " << z << " "
+                       << magn_flat[site] << "\n";
+            }
         }
 
         redout.close();

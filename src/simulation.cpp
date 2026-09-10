@@ -179,7 +179,8 @@ void SimulationLoop(const SimulationParameters& params,
 
             // 3c. Final Configuration Save
             if (params.flag_save_config) {
-                bool ok = lattice.saveFinalConfiguration(file_out, H, T, output_count);
+                bool ok = lattice.saveFinalConfiguration(file_out, H, T, output_count,
+                                                         params.simulation_method == 3);
                 if (!ok) std::cerr << "WARNING: could not save final configuration for output_count=" << output_count << std::endl;
             }
 
