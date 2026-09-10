@@ -178,7 +178,8 @@ void SimulationLoop(const SimulationParameters& params,
     // 3. Monte Carlo Loop Setup
     lattice.initializeNeighbors();
 
-    if (params.simulation_method != 0 && params.simulation_method != 1 && params.simulation_method != 2) {
+    if (params.simulation_method != 0 && params.simulation_method != 1 &&
+        params.simulation_method != 2 && params.simulation_method != 3) {
         std::cerr << "ERROR: Método de simulación desconocido: " << params.simulation_method << std::endl;
         return;
     }
@@ -194,12 +195,21 @@ void SimulationLoop(const SimulationParameters& params,
         auto table = BoltzmannDeltaETable(dEs, T);
         
             for (double H: listaCampos) {
-                // Build BEG and Ising coefficient structs and compute energies via modules
-                BEGCoefficients begCoeff{params.jota1, params.jota2, params.ka1, params.ka2, params.ele1, params.ele2};
-                IsingCouplings isingCoupl{params.Jm1, params.Jm2, params.Jm3, params.Jm4, params.Jm5, params.Jm6};
-                double chemicalE = calculateTotalChemicalEnergy(lattice, begCoeff);
-                double magneticE = calculateTotalIsingEnergy(lattice, isingCoupl, H);
-                double currentTotalEnergy = chemicalE + magneticE;
+                double currentTotalEnergy = 0.0;
+                if (params.simulation_method == 3) {
+                    const HeisenbergCouplings heisenbergCoupl{
+                        params.Jm1, params.Jm2, params.Jm3,
+                        params.Jm4, params.Jm5, params.Jm6
+                    };
+                    currentTotalEnergy = calculateTotalHeisenbergEnergy(
+                        lattice, heisenbergCoupl, H);
+                } else {
+                    BEGCoefficients begCoeff{params.jota1, params.jota2, params.ka1, params.ka2, params.ele1, params.ele2};
+                    IsingCouplings isingCoupl{params.Jm1, params.Jm2, params.Jm3, params.Jm4, params.Jm5, params.Jm6};
+                    double chemicalE = calculateTotalChemicalEnergy(lattice, begCoeff);
+                    double magneticE = calculateTotalIsingEnergy(lattice, isingCoupl, H);
+                    currentTotalEnergy = chemicalE + magneticE;
+                }
 
             std::uint64_t spinChangesAccepted = 0;
             std::uint64_t chemicalChangesAccepted = 0;
@@ -211,6 +221,9 @@ void SimulationLoop(const SimulationParameters& params,
             // Bundle counters into MCStepResults for cleaner function calls
             MCStepResults chemStats(DeltaEAcumC, chemicalChangesAccepted, chemicalChangesAttempted);
             MCStepResults spinStats(DeltaEAcumM, spinChangesAccepted, spinChangesAttempted);
+            double sigma = 60.0;
+            std::uint64_t previousSweepAccepted = 0;
+            std::uint64_t previousSweepAttempted = 0;
 
             lattice_output::writeProgressHeader();
 
@@ -223,6 +236,11 @@ void SimulationLoop(const SimulationParameters& params,
                 } else if (params.simulation_method == 2) {
                     MonteCarloStepSpinExtH(lattice, H, params, table, spinStats);
                     MonteCarloStepChemicalExchange(lattice, params, table, chemStats);
+                } else if (params.simulation_method == 3) {
+                    MonteCarloStepHeisenberg(lattice, H, params, table, sigma,
+                                             previousSweepAccepted,
+                                             previousSweepAttempted,
+                                             spinStats);
                 }
 
                 double energyAtStep = currentTotalEnergy + DeltaEAcumM + DeltaEAcumC;
