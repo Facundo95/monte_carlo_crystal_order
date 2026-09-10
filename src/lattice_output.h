@@ -37,6 +37,17 @@ void writeReducedOutput(std::ofstream& parout,
                         double energyValue,
                         bool printToConsole = false);
 
+void writeVectorOutput(std::ofstream& parout,
+                       int step_count,
+                       double T,
+                       double H,
+                       double normalizedMx,
+                       double normalizedMy,
+                       double normalizedMz,
+                       double normalizedMomentMagnitude,
+                       double energyValue,
+                       bool printToConsole = false);
+
 }
 
 #endif // LATTICE_OUTPUT_H

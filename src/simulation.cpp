@@ -171,7 +171,8 @@ void SimulationLoop(const SimulationParameters& params,
 
     // 2. Setup Output
     std::ofstream parout;
-    if (!OpenOutputParametersFile(file_out, parout, lattice)) {
+    if (!OpenOutputParametersFile(file_out, parout, lattice,
+                                  params.simulation_method == 3)) {
         return; 
     }
     
@@ -247,7 +248,9 @@ void SimulationLoop(const SimulationParameters& params,
 
                     // 3b. Measurement and Output
                 if (contador > (params.num_steps - params.steps_to_output)) {
-                    lattice.writeOutput(parout, contador, T, H, energyAtStep, params.flag_compute_lro, false);
+                    lattice.writeOutput(parout, contador, T, H, energyAtStep,
+                                        params.flag_compute_lro, false,
+                                        params.simulation_method == 3);
                 }
             }
 

@@ -122,7 +122,8 @@ public:
                      double H,
                      double energyValue,
                      bool computeLRO = true,
-                 bool printToConsole = false) const;
+                     bool printToConsole = false,
+                     bool vectorMagnetization = false) const;
 
     /** @brief Set element symbols (e.g., "Cu", "Ni", "Al") used when parsing/writing .xyz files. */
     void setAtomNames(const std::string& a1, const std::string& a2, const std::string& a3) {
@@ -151,6 +152,10 @@ public:
     struct Observables {
         LROParameters lro;
         double normalizedMagnetization;
+        double normalizedMx;
+        double normalizedMy;
+        double normalizedMz;
+        double normalizedMomentMagnitude;
     };
 
     /** @brief Compute observables (LRO parameters and normalized magnetization) in a single pass. */

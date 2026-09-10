@@ -410,6 +410,7 @@ Lattice::Observables Lattice::computeObservables() const {
     int BUpI=0, BUpII=0, BUpIII=0, BUpIV=0, BDownI=0, BDownII=0, BDownIII=0, BDownIV=0; 
     int CI=0, CII=0, CIII=0, CIV=0;
     double totalMagnetization = 0.0;
+    HeisenbergVector totalMoment{0.0, 0.0, 0.0};
 
     // Single traversal computing both LRO counts and magnetization
     for (int site = 0; site < m_total_sites; ++site) {
@@ -443,6 +444,9 @@ Lattice::Observables Lattice::computeObservables() const {
         int species = red_flat[site];
         int spin = magn_flat[site];
         totalMagnetization += spin;
+        for (std::size_t component = 0; component < totalMoment.size(); ++component) {
+            totalMoment[component] += moments_flat[site][component];
+        }
 
         if (species == 1) {
             (*A_ptr)++;
@@ -473,6 +477,13 @@ Lattice::Observables Lattice::computeObservables() const {
     Observables obs;
     obs.lro = lro;
     obs.normalizedMagnetization = totalMagnetization / ENE;
+    obs.normalizedMx = totalMoment[0] / ENE;
+    obs.normalizedMy = totalMoment[1] / ENE;
+    obs.normalizedMz = totalMoment[2] / ENE;
+    obs.normalizedMomentMagnitude = std::sqrt(
+        obs.normalizedMx * obs.normalizedMx +
+        obs.normalizedMy * obs.normalizedMy +
+        obs.normalizedMz * obs.normalizedMz);
     return obs;
 }
 
@@ -484,13 +495,30 @@ void Lattice::writeOutput(std::ofstream& parout,
                           double H,
                           double energyValue,
                           bool computeLRO,
-                          bool printToConsole) const {
+                          bool printToConsole,
+                          bool vectorMagnetization) const {
     if (computeLRO) {
         auto obs = computeObservables();
-        lattice_output::writeLROParameters(parout, step_count, T, H, obs.lro, obs.normalizedMagnetization, energyValue, printToConsole);
+        if (vectorMagnetization) {
+            lattice_output::writeVectorOutput(parout, step_count, T, H,
+                                              obs.normalizedMx, obs.normalizedMy,
+                                              obs.normalizedMz,
+                                              obs.normalizedMomentMagnitude,
+                                              energyValue, printToConsole);
+        } else {
+            lattice_output::writeLROParameters(parout, step_count, T, H, obs.lro, obs.normalizedMagnetization, energyValue, printToConsole);
+        }
     } else {
         auto obs = computeObservables();
-        lattice_output::writeReducedOutput(parout, step_count, T, H, obs.normalizedMagnetization, energyValue, printToConsole);
+        if (vectorMagnetization) {
+            lattice_output::writeVectorOutput(parout, step_count, T, H,
+                                              obs.normalizedMx, obs.normalizedMy,
+                                              obs.normalizedMz,
+                                              obs.normalizedMomentMagnitude,
+                                              energyValue, printToConsole);
+        } else {
+            lattice_output::writeReducedOutput(parout, step_count, T, H, obs.normalizedMagnetization, energyValue, printToConsole);
+        }
     }
 }
 

@@ -79,4 +79,28 @@ void writeReducedOutput(std::ofstream& parout,
     }
 }
 
+void writeVectorOutput(std::ofstream& parout,
+                       int step_count,
+                       double T,
+                       double H,
+                       double normalizedMx,
+                       double normalizedMy,
+                       double normalizedMz,
+                       double normalizedMomentMagnitude,
+                       double energyValue,
+                       bool printToConsole) {
+    parout << step_count << "\t" << H << "\t" << T << "\t"
+           << normalizedMx << "\t" << normalizedMy << "\t"
+           << normalizedMz << "\t" << normalizedMomentMagnitude << "\t"
+           << energyValue << "\t" << std::endl;
+
+    if (printToConsole) {
+        std::cout << "Step=" << step_count << " H=" << H << " T=" << T
+                  << " | Mx=" << normalizedMx << " My=" << normalizedMy
+                  << " Mz=" << normalizedMz << " | |M|="
+                  << normalizedMomentMagnitude << " | E=" << energyValue
+                  << std::endl;
+    }
+}
+
 } // namespace lattice_output

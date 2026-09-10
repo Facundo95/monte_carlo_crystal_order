@@ -15,7 +15,10 @@
  * @param lattice The Lattice object to access atom names.
  * @return bool True if the file was successfully opened, false otherwise.
  */
-bool OpenOutputParametersFile(const char* nombrefile, std::ofstream& output_stream, const Lattice& lattice) {
+bool OpenOutputParametersFile(const char* nombrefile,
+                              std::ofstream& output_stream,
+                              const Lattice& lattice,
+                              bool vectorMagnetization) {
     // 1. Construct the base output filename with .out extension.
     std::string filename(nombrefile);
     auto pos = filename.find_last_of('.');
@@ -55,11 +58,15 @@ bool OpenOutputParametersFile(const char* nombrefile, std::ofstream& output_stre
     std::string Z_BDown = "z_" + lattice.getAtom2() + "_down";
     std::string Z_C = "z_" + lattice.getAtom3();
 
-    output_stream << "# step\th\ttemperature\t"
-                  << X_A << "\t" << X_BUp << "\t" << X_BDown << "\t" << X_C << "\t"
-                  << Y_A << "\t" << Y_BUp << "\t" << Y_BDown << "\t" << Y_C << "\t"
-                  << Z_A << "\t" << Z_BUp << "\t" << Z_BDown << "\t" << Z_C << "\t"
-                  << "magnetization\tetotal\n";
+    if (vectorMagnetization) {
+        output_stream << "# step\th\ttemperature\tMx\tMy\tMz\t|M|\tetotal\n";
+    } else {
+        output_stream << "# step\th\ttemperature\t"
+                      << X_A << "\t" << X_BUp << "\t" << X_BDown << "\t" << X_C << "\t"
+                      << Y_A << "\t" << Y_BUp << "\t" << Y_BDown << "\t" << Y_C << "\t"
+                      << Z_A << "\t" << Z_BUp << "\t" << Z_BDown << "\t" << Z_C << "\t"
+                      << "magnetization\tetotal\n";
+    }
 
     return true;
 }
