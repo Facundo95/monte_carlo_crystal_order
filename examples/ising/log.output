@@ -1,0 +1,51 @@
+=== Run: 2026-09-11 15:27:38 ===
+   _________    ____  __    ____  _____    __  _______  _   ___________________
+  / ____/   |  / __ \/ /   / __ \/ ___/   /  |/  / __ \/ | / /_  __/ ____/ ___/
+ / /   / /| | / /_/ / /   / / / /\__ \   / /|_/ / / / /  |/ / / / / __/  \__ \
+/ /___/ ___ |/ _, _/ /___/ /_/ /___/ /  / /  / / /_/ / /|  / / / / /___ ___/ / 
+\____/_/  |_/_/ |_/_____\/____//____/  /_/  /_/\____/_/ |_/ /_/ /_____//____/  
+                                                                               
+--- Carlos Montes Iniciando (C++17) ---
+WARNING: Unrecognized parameter 'Configuration' at line 1
+WARNING: Unrecognized parameter '---' at line 5
+WARNING: Unrecognized parameter '---' at line 10
+WARNING: Unrecognized parameter '---' at line 23
+WARNING: Unrecognized parameter '---' at line 26
+Archivo de entrada encontrado: input_100K.in
+Parametros de la simulacion:
+  NUM_STEPS: 5000
+  SIMULATION_METHOD: 1 (Spin Flip)
+  LATTICE_SIDE: 32
+  W1_12: 0 kB
+  W2_12: 0 kB
+  W1_13: 0 kB
+  W2_13: 0 kB
+  W1_23: 0 kB
+  W2_23: 0 kB
+  J_M1: 0 kB
+  J_M2: -123.84 kB
+  J_M3: 27.86 kB
+  J_M4: 0 kB
+  J_M5: 0 kB
+  J_M6: 0 kB
+  T_START: 100 K
+  T_END: 100 K
+  STEP_T: 1 K
+  H_UPPER: 0 muB
+  H_LOWER: 0 muB
+  STEP_H: 1 muB
+  LOOP_FLAG: false
+  STEPS_TO_OUTPUT: 5000
+  FLAG_SAVE_CONFIG: false
+  FLAG_VERBOSE: true
+  ATOM_1: Mn
+  ATOM_2: Ni
+  ATOM_3: Al
+
+Estructura inicial tomada de: Ni2AlMn_spin.xyz
+Archivo de salida de la simulacion: Ni2AlMn_spin_100K.xyz
+T           H           N           accepted (%)        magnetization   energy          
+100.000000  0.000000    5000        0.326005            0.249329        -2724039.360000 
+Total time: 00:00:10
+=== End Run ===
+

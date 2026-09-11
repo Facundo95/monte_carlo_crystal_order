@@ -21,11 +21,11 @@ BEGIN { srand() }
     } 
     else {
         # Por defecto el valor es 0.0
-        val = "0.0"
+        val = "0.0 0.0 0.0"
         
         # Si el primer campo coincide con el elemento pasado por comando
         if ($1 == target) {
-            val = (rand() < 0.5) ? "1.0" : "-1.0"
+            val = (rand() < 0.5) ? "0.0 0.0 1.0" : "0.0 0.0 -1.0"
         }
         
         # Imprimir la línea original seguida de la nueva columna
