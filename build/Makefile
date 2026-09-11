@@ -4,6 +4,7 @@ CXXFLAGS = -O3 -std=c++17 -Wall -Wextra -g
 
 # Default settings for Unix/Linux
 TARGET = mc_simulation
+TEST_TARGET = test_heisenberg
 RM = rm -f
 
 # Check for Windows environments (cmd.exe or PowerShell)
@@ -28,6 +29,8 @@ SRCS = $(SRCDIR)/main.cpp $(SRCDIR)/simulation.cpp $(SRCDIR)/rng.cpp $(SRCDIR)/f
     $(SRCDIR)/ising_hamiltonian.cpp $(SRCDIR)/heisenberg_hamiltonian.cpp
     SRCS += $(SRCDIR)/logger.cpp
 OBJS = $(SRCS:.cpp=.o)
+TEST_SRCS = ../tests/test_heisenberg.cpp $(filter-out $(SRCDIR)/main.cpp,$(SRCS))
+TEST_OBJS = $(TEST_SRCS:.cpp=.o)
 DOXYGEN = doxygen
 DOXYFILE = Doxyfile
 
@@ -36,11 +39,17 @@ all: $(TARGET)
 $(TARGET): $(OBJS)
 	$(CXX) $(CXXFLAGS) -o $@ $^
 
+test-heisenberg: $(TEST_TARGET)
+	./$(TEST_TARGET)
+
+$(TEST_TARGET): $(TEST_OBJS)
+	$(CXX) $(CXXFLAGS) -o $@ $^
+
 %.o: %.cpp
-	$(CXX) $(CXXFLAGS) -c -o $@ $<
+	$(CXX) $(CXXFLAGS) -I$(SRCDIR) -c -o $@ $<
 
 clean:
-	-$(RM) $(TARGET) $(OBJS)
+	-$(RM) $(TARGET) $(TEST_TARGET) $(OBJS) $(TEST_OBJS)
 
 doc: $(SRCS) $(DOXYFILE)
 	@echo "--- Generating Doxygen documentation... ---"
