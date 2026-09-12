@@ -9,7 +9,7 @@ fi
 
 target_element="$1"
 input_file="$2"
-output_file="procesado_${input_file}"
+output_file="spin_${input_file}"
 
 awk -v target="$target_element" '
 BEGIN { srand() } 
