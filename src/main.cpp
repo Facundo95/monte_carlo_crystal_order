@@ -63,8 +63,10 @@ int main(int argc, char* argv[]) {
     std::cout << "Parametros de la simulacion:" << std::endl;
     std::cout << params << std::endl;
 
-    // 3. Start the simulation loop using the read data
+    double total_sites = 2 * params.lattice_side * params.lattice_side * params.lattice_side;
     std::cout << "Estructura inicial tomada de: " << file_in << std::endl;
+    std::cout << "Numero de sitios en la red: " << total_sites << std::endl;
+    std::cout << "Tamano de la red (side): " << params.lattice_side << std::endl;
     std::cout << "Archivo de salida de la simulacion: " << file_out << std::endl;
         
     // Pass the parameters to the main simulation loop
