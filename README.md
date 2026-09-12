@@ -69,7 +69,6 @@ FILE_OUTPUT   cu-al-mn_0.67-0.25-0.08_out
 # --- Simulation Parameters ---
 NUM_STEPS         100000
 SIMULATION_METHOD 1        # 0 = chemical exchange, 1 = spin flip
-LATTICE_SIDE      32
 
 # --- Interaction parameters (optional; at least one J_M* must be non-zero) ---
 J_M3 150.0
@@ -103,6 +102,7 @@ ATOM_3 Al
 
 # Notes:
 # - Keys are case-sensitive and must match the names above (e.g., FILE_ENTRY, T_START, ATOM_1).
+# - The lattice side is calculated from the number of sites in FILE_ENTRY (2 * side^3 for the BCC lattice).
 # - If FILE_OUTPUT is omitted, the program uses FILE_ENTRY as the base for output files.
 ```
 

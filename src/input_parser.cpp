@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 #include <cctype>
+#include <cmath>
 #include "simulation.h"
 
 /**
@@ -117,6 +118,68 @@ static bool isValidAtomicSymbol(const std::string& symbol) {
 }
 
 /**
+ * @brief Determines the BCC lattice side from the number of sites in an input file.
+ */
+static bool determineLatticeSide(const std::string& filename, int& lattice_side) {
+    std::ifstream lattice_file(filename);
+    if (!lattice_file.is_open()) {
+        std::cerr << "ERROR: No se pudo abrir el archivo de configuracion inicial: " << filename << std::endl;
+        return false;
+    }
+
+    const auto extension_position = filename.find_last_of('.');
+    std::string extension = extension_position == std::string::npos
+        ? ""
+        : filename.substr(extension_position);
+    std::transform(extension.begin(), extension.end(), extension.begin(),
+                   [](unsigned char character) { return static_cast<char>(std::tolower(character)); });
+
+    long long site_count = 0;
+    if (extension == ".xyz") {
+        std::string line;
+        if (!std::getline(lattice_file, line)) {
+            std::cerr << "ERROR: El archivo de configuracion inicial esta vacio: " << filename << std::endl;
+            return false;
+        }
+
+        while (std::getline(lattice_file, line)) {
+            if (line.empty() || line[0] == '#' || line.find("Lattice=") != std::string::npos ||
+                line.find("Properties=") != std::string::npos) {
+                continue;
+            }
+            ++site_count;
+        }
+    } else if (extension == ".fl") {
+        int value;
+        while (lattice_file >> value) {
+            ++site_count;
+        }
+    } else {
+        std::cerr << "ERROR: Formato de archivo no soportado para determinar el tamano de la red: "
+                  << filename << std::endl;
+        return false;
+    }
+
+    if (site_count <= 0 || site_count % 2 != 0) {
+        std::cerr << "ERROR: El archivo de configuracion contiene " << site_count
+                  << " sitios; se esperaba un total 2 * side^3." << std::endl;
+        return false;
+    }
+
+    const long long sites_per_sublattice = site_count / 2;
+    const long long estimated_side = static_cast<long long>(
+        std::llround(std::cbrt(static_cast<double>(sites_per_sublattice))));
+    if (estimated_side <= 0 || 2 * estimated_side * estimated_side * estimated_side != site_count) {
+        std::cerr << "ERROR: El numero de sitios (" << site_count
+                  << ") no corresponde a una red BCC cubica: 2 * side^3." << std::endl;
+        return false;
+    }
+
+    lattice_side = static_cast<int>(estimated_side);
+    return true;
+}
+
+/**
  * @brief Reads simulation parameters and a list of input filenames from a text file.
  * * @param input_filename The path to the input configuration file (e.g., "input.txt").
  * @param params_out Reference to store the constructed SimulationParameters struct.
@@ -137,7 +200,7 @@ bool readInputFile(const std::string& input_filename, SimulationParameters& para
     // Temporary storage for required parameters before constructing SimulationParameters
     int num_steps = 100;  // Default value
     int simulation_method = 1;  // Default: Ising Hamiltonian
-    int lattice_side = 32;  // Default small lattice
+    int lattice_side = 0;
     double w1_12 = 0.0, w2_12 = 0.0, w1_13 = 0.0, w2_13 = 0.0, w1_23 = 0.0, w2_23 = 0.0;
     double Jm1 = 0.0, Jm2 = 0.0, Jm3 = 0.0, Jm4 = 0.0, Jm5 = 0.0, Jm6 = 0.0;
     double T_start = 0.0, T_end = 0.0, step_T = 1.0;
@@ -170,9 +233,6 @@ bool readInputFile(const std::string& input_filename, SimulationParameters& para
         }
         else if (key == "SIMULATION_METHOD") {
             extractIntValue(ss, simulation_method);
-        }
-        else if (key == "LATTICE_SIDE") {
-            extractIntValue(ss, lattice_side);
         }
         else if (key == "W1_12") {
             extractFloatValue(ss, w1_12);
@@ -323,6 +383,10 @@ bool readInputFile(const std::string& input_filename, SimulationParameters& para
 
     if (file_in.empty()) {
         std::cerr << "ERROR: No se encontraron archivos de simulación (FILE_ENTRY) en el archivo de entrada." << std::endl;
+        return false;
+    }
+
+    if (!determineLatticeSide(file_in, lattice_side)) {
         return false;
     }
 

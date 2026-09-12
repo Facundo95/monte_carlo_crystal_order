@@ -10,8 +10,6 @@ STEPS_TO_OUTPUT 5000
 --- Lattice parameters ---
 FILE_ENTRY Ni2AlMn_spin.xyz
 
-LATTICE_SIDE 32
-
 ATOM_1 Mn
 ATOM_2 Ni
 ATOM_3 Al
