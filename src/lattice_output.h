@@ -26,6 +26,8 @@ void writeLROParameters(std::ofstream& parout,
                         double H,
                         const Lattice::LROParameters& lro,
                         double normalizedMagnetization,
+                        double normalizedMagnetization_3,
+                        double normalizedMagnetization_4,
                         double energyValue,
                         bool printToConsole = false);
 

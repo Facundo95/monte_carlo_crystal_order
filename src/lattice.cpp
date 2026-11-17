@@ -512,7 +512,10 @@ void Lattice::writeOutput(std::ofstream& parout,
                                               obs.normalizedMomentMagnitude,
                                               energyValue, printToConsole);
         } else {
-            lattice_output::writeLROParameters(parout, step_count, T, H, obs.lro, obs.normalizedMagnetization, energyValue, printToConsole);
+            lattice_output::writeLROParameters(parout, step_count, T, H, 
+                                            obs.lro, obs.normalizedMagnetization, 
+                                            obs.magnetization_3, obs.magnetization_4, 
+                                            energyValue, printToConsole);
         }
     } else {
         auto obs = computeObservables();
