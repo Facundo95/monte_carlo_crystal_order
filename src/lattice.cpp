@@ -410,6 +410,8 @@ Lattice::Observables Lattice::computeObservables() const {
     int BUpI=0, BUpII=0, BUpIII=0, BUpIV=0, BDownI=0, BDownII=0, BDownIII=0, BDownIV=0; 
     int CI=0, CII=0, CIII=0, CIV=0;
     double totalMagnetization = 0.0;
+    double magnetization_3 = 0.0;
+    double magnetization_4 = 0.0;
     HeisenbergVector totalMoment{0.0, 0.0, 0.0};
 
     // Single traversal computing both LRO counts and magnetization
@@ -426,6 +428,14 @@ Lattice::Observables Lattice::computeObservables() const {
         int* BDown_ptr = nullptr;
         int* C_ptr = nullptr;
 
+        // Increment counters based on species (red[site] = 1, 0, or -1)
+        int species = red_flat[site];
+        int spin = magn_flat[site];
+        totalMagnetization += spin;
+        for (std::size_t component = 0; component < totalMoment.size(); ++component) {
+            totalMoment[component] += moments_flat[site][component];
+        }
+
         if (Z_is_even) {
             if (XY_sum_is_even) {
                 A_ptr = &AI; BUp_ptr = &BUpI; BDown_ptr = &BDownI; C_ptr = &CI;
@@ -435,17 +445,11 @@ Lattice::Observables Lattice::computeObservables() const {
         } else {
             if (XY_sum_is_even) {
                 A_ptr = &AIII; BUp_ptr = &BUpIII; BDown_ptr = &BDownIII; C_ptr = &CIII;
+                magnetization_3 += spin;
             } else {
                 A_ptr = &AIV; BUp_ptr = &BUpIV; BDown_ptr = &BDownIV; C_ptr = &CIV;
+                magnetization_4 += spin;
             }
-        }
-
-        // Increment counters based on species (red[site] = 1, 0, or -1)
-        int species = red_flat[site];
-        int spin = magn_flat[site];
-        totalMagnetization += spin;
-        for (std::size_t component = 0; component < totalMoment.size(); ++component) {
-            totalMoment[component] += moments_flat[site][component];
         }
 
         if (species == 1) {
@@ -476,6 +480,8 @@ Lattice::Observables Lattice::computeObservables() const {
 
     Observables obs;
     obs.lro = lro;
+    obs.magnetization_3 = magnetization_3 / ENE;
+    obs.magnetization_4 = magnetization_4 / ENE;
     obs.normalizedMagnetization = totalMagnetization / ENE;
     obs.normalizedMx = totalMoment[0] / ENE;
     obs.normalizedMy = totalMoment[1] / ENE;

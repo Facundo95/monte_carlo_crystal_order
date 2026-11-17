@@ -151,6 +151,8 @@ public:
 
     struct Observables {
         LROParameters lro;
+        double magnetization_3;
+        double magnetization_4;
         double normalizedMagnetization;
         double normalizedMx;
         double normalizedMy;

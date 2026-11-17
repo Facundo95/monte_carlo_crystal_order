@@ -44,6 +44,8 @@ void writeLROParameters(std::ofstream& parout,
                         double H,
                         const Lattice::LROParameters& lro,
                         double normalizedMagnetization,
+                        double normalizedMagnetization_3,
+                        double normalizedMagnetization_4,
                         double energyValue,
                         bool printToConsole) {
     parout << step_count << "\t" << H << "\t" << T << "\t"
@@ -51,13 +53,15 @@ void writeLROParameters(std::ofstream& parout,
            << lro.Y_A << "\t" << lro.Y_Bup << "\t" << lro.Y_Bdown << "\t" << lro.Y_C << "\t"
            << lro.Z_A << "\t" << lro.Z_Bup << "\t" << lro.Z_Bdown << "\t" << lro.Z_C << "\t"
            << normalizedMagnetization << "\t"
+           << normalizedMagnetization_3 << "\t"
+           << normalizedMagnetization_4 << "\t"
            << energyValue;
     parout << "\t" << std::endl;
 
     if (printToConsole) {
         std::cout << "Step=" << step_count << " H=" << H << " T=" << T << " | "
                   << "X_A=" << lro.X_A << " X_Bup=" << lro.X_Bup << " X_Bdown=" << lro.X_Bdown << " X_C=" << lro.X_C
-                  << " | mag=" << normalizedMagnetization << " | E=" << energyValue;
+                  << " | mag=" << normalizedMagnetization << " | mag3=" << normalizedMagnetization_3 << " | mag4=" << normalizedMagnetization_4 << " | E=" << energyValue;
         std::cout << std::endl;
     }
 }

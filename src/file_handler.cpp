@@ -65,7 +65,7 @@ bool OpenOutputParametersFile(const char* nombrefile,
                       << X_A << "\t" << X_BUp << "\t" << X_BDown << "\t" << X_C << "\t"
                       << Y_A << "\t" << Y_BUp << "\t" << Y_BDown << "\t" << Y_C << "\t"
                       << Z_A << "\t" << Z_BUp << "\t" << Z_BDown << "\t" << Z_C << "\t"
-                      << "magnetization\tetotal\n";
+                      << "magnetization_total\tmagnetization_3\tmagnetization_4\tetotal\n";
     }
 
     return true;
